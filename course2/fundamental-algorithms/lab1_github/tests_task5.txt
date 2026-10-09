@@ -1,0 +1,214 @@
+# Тесты для задания 5 (программа lab1_task5)
+#
+# Как запустить:  Linux:   bash run_tests.sh 5              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 5   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: " 7"
+#   input: строка, которую "вводит пользователь" (для задания 10)
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   outre: то же, но шаблоном (регулярное выражение) - для случайных чисел
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+#   file:  какой файл программа должна создать; fout: строки этого файла
+# Строки, начинающиеся с #, - комментарии.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+#
+# Вещественные числа здесь посчитаны программой, собранной zig на Windows.
+# При сборке gcc на Linux последняя цифра может отличаться - тогда тест
+# покажет FAIL с почти одинаковыми числами, это не ошибка программы.
+
+program: lab1_task5
+
+# ============================================================
+# Обычные значения
+# ============================================================
+
+name: eps 1e-6, x = 0.5
+args: 1e-6 0.5
+out: eps = 1e-06, x = 0.5
+out:
+out: Series:
+out:   a.   1.6487212
+out:   b.   0.8775825
+out:   c.   2.9004867
+out:   d.   -0.1055722
+out:
+out: Integrals from 0 to 1:
+out:   a.   0.8224668
+out:   b.   0.8556245
+out:   c.   0.9999993
+out:   d.   0.7834301
+code: 0
+
+name: eps 1e-9, x = 0.9
+args: 1e-9 0.9
+out: eps = 1e-09, x = 0.9
+out:
+out: Series:
+out:   a.   2.4596031105
+out:   b.   0.6216099677
+out:   c.   85.9544726186
+out:   d.   -0.2567058542
+out:
+out: Integrals from 0 to 1:
+out:   a.   0.8224670332
+out:   b.   0.8556243920
+out:   c.   0.9999999793  (eps is too small, this is the best we can get)
+out:   d.   0.7834305106
+code: 0
+
+name: x = 0
+args: 1e-6 0
+out: eps = 1e-06, x = 0
+out:
+out: Series:
+out:   a.   1.0000000
+out:   b.   1.0000000
+out:   c.   1.0000000
+out:   d.   0.0000000
+out:
+out: Integrals from 0 to 1:
+out:   a.   0.8224668
+out:   b.   0.8556245
+out:   c.   0.9999993
+out:   d.   0.7834301
+code: 0
+
+name: отрицательный x
+args: 1e-6 -0.5
+out: eps = 1e-06, x = -0.5
+out:
+out: Series:
+out:   a.   0.6065306
+out:   b.   0.8775825
+out:   c.   2.9004867
+out:   d.   -0.1055722
+out:
+out: Integrals from 0 to 1:
+out:   a.   0.8224668
+out:   b.   0.8556245
+out:   c.   0.9999993
+out:   d.   0.7834301
+code: 0
+
+name: грубая точность
+args: 0.01 0.3
+out: eps = 0.01, x = 0.3
+out:
+out: Series:
+out:   a.   1.34
+out:   b.   0.95
+out:   c.   1.47
+out:   d.   -0.04
+out:
+out: Integrals from 0 to 1:
+out:   a.   0.82
+out:   b.   0.86
+out:   c.   0.99
+out:   d.   0.78
+code: 0
+
+# ============================================================
+# Особые случаи
+# ============================================================
+
+name: |x| >= 1: ряды c и d расходятся
+args: 1e-3 2
+out: eps = 0.001, x = 2
+out:
+out: Series:
+out:   a.   7.389
+out:   b.   -0.416
+out:   c.   series does not converge for this x (need |x| < 1)
+out:   d.   series does not converge for this x (need |x| < 1)
+out:
+out: Integrals from 0 to 1:
+out:   a.   0.822
+out:   b.   0.856
+out:   c.   0.999
+out:   d.   0.783
+code: 0
+
+name: x = -30: точность недостижима из-за округлений
+args: 1e-6 -30
+out: eps = 1e-06, x = -30
+out:
+out: Series:
+out:   a.   0.0000056  (eps is too small, this is the best we can get)
+out:   b.   0.1541920  (eps is too small, this is the best we can get)
+out:   c.   series does not converge for this x (need |x| < 1)
+out:   d.   series does not converge for this x (need |x| < 1)
+out:
+out: Integrals from 0 to 1:
+out:   a.   0.8224668
+out:   b.   0.8556245
+out:   c.   0.9999993
+out:   d.   0.7834301
+code: 0
+
+name: x = 800: e^x не помещается в double
+args: 1e-3 800
+out: eps = 0.001, x = 800
+out:
+out: Series:
+out:   a.   result is too big (overflow)
+out:   b.   result is too big (overflow)
+out:   c.   series does not converge for this x (need |x| < 1)
+out:   d.   series does not converge for this x (need |x| < 1)
+out:
+out: Integrals from 0 to 1:
+out:   a.   0.822
+out:   b.   0.856
+out:   c.   0.999
+out:   d.   0.783
+code: 0
+
+# ============================================================
+# Ошибки
+# ============================================================
+
+name: без аргументов
+args:
+err: Usage: lab1_task5 <eps> <x>
+err: Example: lab1_task5 1e-6 0.5
+code: 1
+
+name: один аргумент
+args: 1e-6
+err: Usage: lab1_task5 <eps> <x>
+err: Example: lab1_task5 1e-6 0.5
+code: 1
+
+name: три аргумента
+args: 1e-6 0.5 1
+err: Usage: lab1_task5 <eps> <x>
+err: Example: lab1_task5 1e-6 0.5
+code: 1
+
+name: eps = 0
+args: 0 0.5
+err: Error: eps must be between 0 and 1
+code: 1
+
+name: eps = 1
+args: 1 0.5
+err: Error: eps must be between 0 and 1
+code: 1
+
+name: eps не число
+args: abc 0.5
+err: Error: 'abc' is not a number
+code: 1
+
+name: x не число
+args: 1e-6 x
+err: Error: 'x' is not a number
+code: 1
+
+name: x = inf
+args: 1e-6 inf
+err: Error: bad number 'inf'
+code: 1

@@ -1,0 +1,263 @@
+# Тесты для задания 3 (программа lab1_task3)
+#
+# Как запустить:  Linux:   bash run_tests.sh 3              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 3   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: " 7"
+#   input: строка, которую "вводит пользователь" (для задания 10)
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   outre: то же, но шаблоном (регулярное выражение) - для случайных чисел
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+#   file:  какой файл программа должна создать; fout: строки этого файла
+# Строки, начинающиеся с #, - комментарии.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab1_task3
+
+# ============================================================
+# Флаг -q: квадратные уравнения
+# ============================================================
+
+name: 6 разных перестановок
+args: -q 1e-9 1 -3 2
+out: 1*x^2 + -3*x + 2 = 0:  x1 = 2, x2 = 1
+out: 1*x^2 + 2*x + -3 = 0:  x1 = 1, x2 = -3
+out: -3*x^2 + 1*x + 2 = 0:  x1 = -0.666667, x2 = 1
+out: -3*x^2 + 2*x + 1 = 0:  x1 = -0.333333, x2 = 1
+out: 2*x^2 + 1*x + -3 = 0:  x1 = 1, x2 = -1.5
+out: 2*x^2 + -3*x + 1 = 0:  x1 = 1, x2 = 0.5
+code: 0
+
+name: есть одинаковые: 3 перестановки
+args: -q 1e-9 1 2 1
+out: 1*x^2 + 2*x + 1 = 0:  x = -1
+out: 1*x^2 + 1*x + 2 = 0:  x1 = -0.5 + 1.32288i, x2 = -0.5 - 1.32288i
+out: 2*x^2 + 1*x + 1 = 0:  x1 = -0.25 + 0.661438i, x2 = -0.25 - 0.661438i
+code: 0
+
+name: все одинаковые: 1 уравнение, комплексные корни
+args: -q 1e-9 1 1 1
+out: 1*x^2 + 1*x + 1 = 0:  x1 = -0.5 + 0.866025i, x2 = -0.5 - 0.866025i
+code: 0
+
+name: все нули: любое x
+args: -q 1e-9 0 0 0
+out: 0*x^2 + 0*x + 0 = 0:  any x is a root
+code: 0
+
+name: нули: линейные и 'нет корней'
+args: -q 1e-9 2 0 0
+out: 2*x^2 + 0*x + 0 = 0:  x = 0
+out: 0*x^2 + 2*x + 0 = 0:  x = 0
+out: 0*x^2 + 0*x + 2 = 0:  no roots
+code: 0
+
+name: линейные и комплексные
+args: -q 1e-9 0 1 2
+out: 0*x^2 + 1*x + 2 = 0:  x = -2
+out: 0*x^2 + 2*x + 1 = 0:  x = -0.5
+out: 1*x^2 + 0*x + 2 = 0:  x1 = 0 + 1.41421i, x2 = 0 - 1.41421i
+out: 1*x^2 + 2*x + 0 = 0:  x1 = 0, x2 = -2
+out: 2*x^2 + 0*x + 1 = 0:  x1 = 0 + 0.707107i, x2 = 0 - 0.707107i
+out: 2*x^2 + 1*x + 0 = 0:  x1 = 0, x2 = -0.5
+code: 0
+
+name: дробные коэффициенты
+args: -q 1e-9 0.5 -1.5 1
+out: 0.5*x^2 + -1.5*x + 1 = 0:  x1 = 2, x2 = 1
+out: 0.5*x^2 + 1*x + -1.5 = 0:  x1 = 1, x2 = -3
+out: -1.5*x^2 + 0.5*x + 1 = 0:  x1 = -0.666667, x2 = 1
+out: -1.5*x^2 + 1*x + 0.5 = 0:  x1 = -0.333333, x2 = 1
+out: 1*x^2 + 0.5*x + -1.5 = 0:  x1 = 1, x2 = -1.5
+out: 1*x^2 + -1.5*x + 0.5 = 0:  x1 = 1, x2 = 0.5
+code: 0
+
+name: eps = 0.1 склеивает 1 и 1.05
+args: -q 0.1 1 1.05 2
+out: 1*x^2 + 1.05*x + 2 = 0:  x1 = -0.525 + 1.31315i, x2 = -0.525 - 1.31315i
+out: 1*x^2 + 2*x + 1.05 = 0:  x1 = -1 + 0.223607i, x2 = -1 - 0.223607i
+out: 2*x^2 + 1*x + 1.05 = 0:  x1 = -0.25 + 0.680074i, x2 = -0.25 - 0.680074i
+code: 0
+
+name: флаг через /
+args: /q 1e-9 1 -3 2
+out: 1*x^2 + -3*x + 2 = 0:  x1 = 2, x2 = 1
+out: 1*x^2 + 2*x + -3 = 0:  x1 = 1, x2 = -3
+out: -3*x^2 + 1*x + 2 = 0:  x1 = -0.666667, x2 = 1
+out: -3*x^2 + 2*x + 1 = 0:  x1 = -0.333333, x2 = 1
+out: 2*x^2 + 1*x + -3 = 0:  x1 = 1, x2 = -1.5
+out: 2*x^2 + -3*x + 1 = 0:  x1 = 1, x2 = 0.5
+code: 0
+
+# ============================================================
+# Флаг -m: кратность
+# ============================================================
+
+name: 10 кратно 5
+args: -m 10 5
+out: 10 is a multiple of 5
+code: 0
+
+name: 10 не кратно 3
+args: -m 10 3
+out: 10 is not a multiple of 3
+code: 0
+
+name: отрицательное делимое
+args: -m -10 5
+out: -10 is a multiple of 5
+code: 0
+
+name: отрицательный делитель
+args: -m 10 -5
+out: 10 is a multiple of -5
+code: 0
+
+name: число кратно самому себе
+args: -m 7 7
+out: 7 is a multiple of 7
+code: 0
+
+name: меньшее не кратно большему
+args: -m 3 6
+out: 3 is not a multiple of 6
+code: 0
+
+name: LLONG_MIN и -1: без падения
+args: -m -9223372036854775808 -1
+out: -9223372036854775808 is a multiple of -1
+code: 0
+
+name: LLONG_MAX = 7^2 * 73 * ... кратно 7
+args: -m 9223372036854775807 7
+out: 9223372036854775807 is a multiple of 7
+code: 0
+
+name: первое = 0: ошибка
+args: -m 0 5
+err: Error: numbers must not be 0
+code: 1
+
+name: второе = 0: ошибка
+args: -m 5 0
+err: Error: numbers must not be 0
+code: 1
+
+name: дробное число: ошибка
+args: -m 1.5 2
+err: Error: '1.5' is not an integer
+code: 1
+
+name: не число
+args: -m abc 2
+err: Error: 'abc' is not an integer
+code: 1
+
+name: слишком большое
+args: -m 99999999999999999999 1
+err: Error: number '99999999999999999999' is too big
+code: 1
+
+# ============================================================
+# Флаг -t: прямоугольный треугольник
+# ============================================================
+
+name: 3 4 5 - да
+args: -t 1e-9 3 4 5
+out: 3, 4, 5 can be sides of a right triangle
+code: 0
+
+name: порядок не важен: 5 3 4
+args: -t 1e-9 5 3 4
+out: 5, 3, 4 can be sides of a right triangle
+code: 0
+
+name: 6 8 10 - да
+args: -t 1e-9 6 8 10
+out: 6, 8, 10 can be sides of a right triangle
+code: 0
+
+name: 2 3 4 - нет
+args: -t 1e-9 2 3 4
+out: 2, 3, 4 can not be sides of a right triangle
+code: 0
+
+name: 1 1 1.41421356 при eps 1e-9 - нет
+args: -t 1e-9 1 1 1.41421356
+out: 1, 1, 1.41421 can not be sides of a right triangle
+code: 0
+
+name: 1 1 1.41421356 при eps 1e-6 - да
+args: -t 1e-6 1 1 1.41421356
+out: 1, 1, 1.41421 can be sides of a right triangle
+code: 0
+
+name: отрицательная сторона - нет
+args: -t 1e-9 -3 4 5
+out: -3, 4, 5 can not be sides of a right triangle
+code: 0
+
+name: нулевая сторона - нет
+args: -t 1e-9 0 4 4
+out: 0, 4, 4 can not be sides of a right triangle
+code: 0
+
+# ============================================================
+# Ошибки
+# ============================================================
+
+name: без аргументов
+args:
+err: Usage: lab1_task3 -q <eps> <a> <b> <c>
+err:        lab1_task3 -m <a> <b>
+err:        lab1_task3 -t <eps> <a> <b> <c>
+code: 1
+
+name: неверный флаг
+args: -x 1
+err: Error: wrong flag '-x'
+code: 1
+
+name: -q: мало чисел
+args: -q 1e-9 1 2
+err: Error: flag -q needs 4 numbers
+code: 1
+
+name: -m: мало чисел
+args: -m 10
+err: Error: flag -m needs 2 numbers
+code: 1
+
+name: -m: много чисел
+args: -m 10 5 1
+err: Error: flag -m needs 2 numbers
+code: 1
+
+name: -t: нет eps
+args: -t 3 4 5
+err: Error: flag -t needs 4 numbers
+code: 1
+
+name: eps = 0
+args: -q 0 1 2 3
+err: Error: eps must be more than 0
+code: 1
+
+name: eps < 0
+args: -t -1 3 4 5
+err: Error: eps must be more than 0
+code: 1
+
+name: не число
+args: -q 1e-9 a 2 3
+err: Error: 'a' is not a number
+code: 1
+
+name: бесконечность
+args: -q 1e-9 inf 1 1
+err: Error: bad number 'inf'
+code: 1

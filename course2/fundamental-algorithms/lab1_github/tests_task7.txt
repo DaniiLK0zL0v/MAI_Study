@@ -1,0 +1,131 @@
+# Тесты для задания 7 (программа lab1_task7)
+#
+# Как запустить:  Linux:   bash run_tests.sh 7              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 7   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: " 7"
+#   input: строка, которую "вводит пользователь" (для задания 10)
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   outre: то же, но шаблоном (регулярное выражение) - для случайных чисел
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+#   file:  какой файл программа должна создать; fout: строки этого файла
+# Строки, начинающиеся с #, - комментарии.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab1_task7
+
+# ============================================================
+# -r: чередование лексем
+# ============================================================
+
+name: file1, file2
+args: -r tests_data/task7_f1.txt tests_data/task7_f2.txt tests_data/res7.txt
+out: Done. Result is in 'tests_data/res7.txt'
+code: 0
+file: tests_data/res7.txt
+fout: one A two B three C four D E F
+
+name: файлы наоборот
+args: -r tests_data/task7_f2.txt tests_data/task7_f1.txt tests_data/res7.txt
+out: Done. Result is in 'tests_data/res7.txt'
+code: 0
+file: tests_data/res7.txt
+fout: A one B two C three D four E F
+
+name: первый пустой
+args: -r tests_data/task7_empty.txt tests_data/task7_f2.txt tests_data/res7.txt
+out: Done. Result is in 'tests_data/res7.txt'
+code: 0
+file: tests_data/res7.txt
+fout: A B C D E F
+
+name: второй пустой
+args: -r tests_data/task7_f1.txt tests_data/task7_empty.txt tests_data/res7.txt
+out: Done. Result is in 'tests_data/res7.txt'
+code: 0
+file: tests_data/res7.txt
+fout: one two three four
+
+name: оба пустые
+args: -r tests_data/task7_empty.txt tests_data/task7_empty.txt tests_data/res7.txt
+out: Done. Result is in 'tests_data/res7.txt'
+code: 0
+file: tests_data/res7.txt
+
+name: флаг через /
+args: /r tests_data/task7_f1.txt tests_data/task7_f2.txt tests_data/res7.txt
+out: Done. Result is in 'tests_data/res7.txt'
+code: 0
+file: tests_data/res7.txt
+fout: one A two B three C four D E F
+
+# ============================================================
+# -a: преобразование лексем по номеру
+# ============================================================
+
+name: 25 лексем: 2-я, 5-я, 10-я, 15-я, 20-я, 25-я
+args: -a tests_data/task7_in.txt tests_data/res7.txt
+out: Done. Result is in 'tests_data/res7.txt'
+code: 0
+file: tests_data/res7.txt
+fout: T1 t2 T3 t4 12465 t6 T7 t8 T9 131012111232 AB cd Hello world 101142 cd EF gh IJ 12231230 w21 w22 w23 w24 1276265
+
+name: пустой файл
+args: -a tests_data/task7_empty.txt tests_data/res7.txt
+out: Done. Result is in 'tests_data/res7.txt'
+code: 0
+file: tests_data/res7.txt
+
+# ============================================================
+# Ошибки
+# ============================================================
+
+name: без аргументов
+args:
+err: Usage: lab1_task7 -r <file1> <file2> <output>
+err:        lab1_task7 -a <input> <output>
+code: 1
+
+name: неверный флаг
+args: -x a b
+err: Error: wrong flag '-x'
+code: 1
+
+name: -r: не хватает файла
+args: -r tests_data/task7_f1.txt tests_data/task7_f2.txt
+err: Error: flag -r needs 3 file names
+code: 1
+
+name: -a: не хватает файла
+args: -a tests_data/task7_in.txt
+err: Error: flag -a needs 2 file names
+code: 1
+
+name: -a: выход = вход
+args: -a tests_data/task7_in.txt tests_data/task7_in.txt
+err: Error: output file must be different from input files
+code: 1
+
+name: -r: выход = второй вход
+args: -r tests_data/task7_f1.txt tests_data/task7_f2.txt tests_data/task7_f2.txt
+err: Error: output file must be different from input files
+code: 1
+
+name: -r: нет первого файла
+args: -r tests_data/nofile.txt tests_data/task7_f2.txt tests_data/res7.txt
+err: Error: can not open file 'tests_data/nofile.txt'
+code: 1
+
+name: -r: нет второго файла
+args: -r tests_data/task7_f1.txt tests_data/nofile.txt tests_data/res7.txt
+err: Error: can not open file 'tests_data/nofile.txt'
+code: 1
+
+name: -a: нет файла
+args: -a tests_data/nofile.txt tests_data/res7.txt
+err: Error: can not open file 'tests_data/nofile.txt'
+code: 1

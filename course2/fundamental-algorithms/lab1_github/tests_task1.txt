@@ -1,0 +1,449 @@
+# Тесты для задания 1 (программа lab1_task1)
+#
+# Как запустить:  Linux:   bash run_tests.sh 1              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 1   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: " 7"
+#   input: строка, которую "вводит пользователь" (для задания 10)
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   outre: то же, но шаблоном (регулярное выражение) - для случайных чисел
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+#   file:  какой файл программа должна создать; fout: строки этого файла
+# Строки, начинающиеся с #, - комментарии.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab1_task1
+
+# ============================================================
+# Флаг -h: кратные x от 1 до 100
+# ============================================================
+
+name: кратные 7
+args: -h 7
+out: Multiples of 7 (1..100):
+out: 7 14 21 28 35 42 49 56 63 70 77 84 91 98
+code: 0
+
+name: кратные 25
+args: -h 25
+out: Multiples of 25 (1..100):
+out: 25 50 75 100
+code: 0
+
+name: x = 1: все числа 1..100
+args: -h 1
+out: Multiples of 1 (1..100):
+out: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100
+code: 0
+
+name: x = 100: одно число
+args: -h 100
+out: Multiples of 100 (1..100):
+out: 100
+code: 0
+
+name: x = 101: кратных нет
+args: -h 101
+out: No multiples of 101 in 1..100
+code: 0
+
+name: отрицательное x
+args: -h -13
+out: Multiples of -13 (1..100):
+out: 13 26 39 52 65 78 91
+code: 0
+
+name: LLONG_MIN: без переполнения
+args: -h -9223372036854775808
+out: No multiples of -9223372036854775808 in 1..100
+code: 0
+
+name: x = 0: ошибка
+args: -h 0
+err: Error: x can not be 0
+code: 1
+
+# ============================================================
+# Флаг -p: простое / составное
+# ============================================================
+
+name: 2 - простое
+args: -p 2
+out: 2 is prime
+code: 0
+
+name: 3 - простое
+args: -p 3
+out: 3 is prime
+code: 0
+
+name: 17 - простое
+args: -p 17
+out: 17 is prime
+code: 0
+
+name: 9 = 3*3 - составное
+args: -p 9
+out: 9 is composite
+code: 0
+
+name: 49 = 7*7 - составное
+args: -p 49
+out: 49 is composite
+code: 0
+
+name: 91 = 7*13 - составное
+args: -p 91
+out: 91 is composite
+code: 0
+
+name: 1 - ни то ни другое
+args: -p 1
+out: 1 is not prime and not composite
+code: 0
+
+name: 0 - ни то ни другое
+args: -p 0
+out: 0 is not prime and not composite
+code: 0
+
+name: -5 - ни то ни другое
+args: -p -5
+out: -5 is not prime and not composite
+code: 0
+
+name: 2147483647 - простое (число Мерсенна)
+args: -p 2147483647
+out: 2147483647 is prime
+code: 0
+
+name: 2147483646 - чётное, составное
+args: -p 2147483646
+out: 2147483646 is composite
+code: 0
+
+name: LLONG_MAX = 7^2 * 73 * ... - составное
+args: -p 9223372036854775807
+out: 9223372036854775807 is composite
+code: 0
+
+# ============================================================
+# Флаг -s: цифры в 16-ричной системе
+# ============================================================
+
+name: 255 = ff
+args: -s 255
+out: f f
+code: 0
+
+name: 0
+args: -s 0
+out: 0
+code: 0
+
+name: 4096 = 1000
+args: -s 4096
+out: 1 0 0 0
+code: 0
+
+name: 300 = 12c
+args: -s 300
+out: 1 2 c
+code: 0
+
+name: 26 = 1a
+args: -s 26
+out: 1 a
+code: 0
+
+name: отрицательное
+args: -s -255
+out: -f f
+code: 0
+
+name: 2147483647 (2^31 - 1)
+args: -s 2147483647
+out: 7 f f f f f f f
+code: 0
+
+name: LLONG_MAX
+args: -s 9223372036854775807
+out: 7 f f f f f f f f f f f f f f f
+code: 0
+
+name: LLONG_MIN: без переполнения
+args: -s -9223372036854775808
+out: -8 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+code: 0
+
+# ============================================================
+# Флаг -e: таблица степеней
+# ============================================================
+
+name: x = 1
+args: -e 1
+out:   base            1
+out:      1            1
+out:      2            2
+out:      3            3
+out:      4            4
+out:      5            5
+out:      6            6
+out:      7            7
+out:      8            8
+out:      9            9
+out:     10           10
+code: 0
+
+name: x = 3
+args: -e 3
+out:   base            1            2            3
+out:      1            1            1            1
+out:      2            2            4            8
+out:      3            3            9           27
+out:      4            4           16           64
+out:      5            5           25          125
+out:      6            6           36          216
+out:      7            7           49          343
+out:      8            8           64          512
+out:      9            9           81          729
+out:     10           10          100         1000
+code: 0
+
+name: x = 10 (максимум, 10^10)
+args: -e 10
+out:   base            1            2            3            4            5            6            7            8            9           10
+out:      1            1            1            1            1            1            1            1            1            1            1
+out:      2            2            4            8           16           32           64          128          256          512         1024
+out:      3            3            9           27           81          243          729         2187         6561        19683        59049
+out:      4            4           16           64          256         1024         4096        16384        65536       262144      1048576
+out:      5            5           25          125          625         3125        15625        78125       390625      1953125      9765625
+out:      6            6           36          216         1296         7776        46656       279936      1679616     10077696     60466176
+out:      7            7           49          343         2401        16807       117649       823543      5764801     40353607    282475249
+out:      8            8           64          512         4096        32768       262144      2097152     16777216    134217728   1073741824
+out:      9            9           81          729         6561        59049       531441      4782969     43046721    387420489   3486784401
+out:     10           10          100         1000        10000       100000      1000000     10000000    100000000   1000000000  10000000000
+code: 0
+
+name: x = 0: ошибка
+args: -e 0
+err: Error: for -e x must be from 1 to 10
+code: 1
+
+name: x = 11: ошибка
+args: -e 11
+err: Error: for -e x must be from 1 to 10
+code: 1
+
+# ============================================================
+# Флаг -a: сумма 1..x
+# ============================================================
+
+name: x = 1
+args: -a 1
+out: Sum 1..1 = 1
+code: 0
+
+name: x = 10
+args: -a 10
+out: Sum 1..10 = 55
+code: 0
+
+name: x = 100
+args: -a 100
+out: Sum 1..100 = 5050
+code: 0
+
+name: 2147483647: большая сумма без переполнения
+args: -a 2147483647
+out: Sum 1..2147483647 = 2305843008139952128
+code: 0
+
+name: LLONG_MAX: сумма не помещается в unsigned long long
+args: -a 9223372036854775807
+err: Error: the sum is too big
+code: 1
+
+name: x = 0: ошибка
+args: -a 0
+err: Error: for -a x must be 1 or more
+code: 1
+
+name: x < 0: ошибка
+args: -a -5
+err: Error: for -a x must be 1 or more
+code: 1
+
+# ============================================================
+# Флаг -f: факториал
+# ============================================================
+
+name: 0! = 1
+args: -f 0
+out: 0! = 1
+code: 0
+
+name: 1! = 1
+args: -f 1
+out: 1! = 1
+code: 0
+
+name: 5! = 120
+args: -f 5
+out: 5! = 120
+code: 0
+
+name: 10!
+args: -f 10
+out: 10! = 3628800
+code: 0
+
+name: 20! - максимум для unsigned long long
+args: -f 20
+out: 20! = 2432902008176640000
+code: 0
+
+name: 21! - переполнение
+args: -f 21
+err: Error: 21! is too big
+code: 1
+
+name: огромное x - тоже переполнение, без зависания
+args: -f 1000000000
+err: Error: 1000000000! is too big
+code: 1
+
+name: x < 0: ошибка
+args: -f -1
+err: Error: for -f x must be 0 or more
+code: 1
+
+# ============================================================
+# Флаги: запись и порядок
+# ============================================================
+
+name: флаг через /
+args: /s 255
+out: f f
+code: 0
+
+name: число перед флагом
+args: 17 -p
+out: 17 is prime
+code: 0
+
+name: число перед флагом через /
+args: 255 /s
+out: f f
+code: 0
+
+name: отрицательное число перед флагом
+args: -5 -p
+out: -5 is not prime and not composite
+code: 0
+
+name: незнакомая буква
+args: -z 5
+err: Error: wrong flag
+code: 1
+
+name: две буквы
+args: -hh 5
+err: Error: wrong flag
+code: 1
+
+name: большая буква
+args: -H 5
+err: Error: wrong flag
+code: 1
+
+name: без - и /
+args: h 5
+err: Error: wrong flag
+code: 1
+
+name: только минус
+args: - 5
+err: Error: wrong flag
+code: 1
+
+# ============================================================
+# Ввод числа
+# ============================================================
+
+name: плюс перед числом - можно
+args: -h +7
+out: Multiples of 7 (1..100):
+out: 7 14 21 28 35 42 49 56 63 70 77 84 91 98
+code: 0
+
+name: ведущие нули - можно
+args: -f 005
+out: 5! = 120
+code: 0
+
+name: буквы вместо числа
+args: -h abc
+err: Error: 'abc' is not a number
+code: 1
+
+name: буквы после числа
+args: -h 12abc
+err: Error: '12abc' is not a number
+code: 1
+
+name: дробное число
+args: -f 5.0
+err: Error: '5.0' is not a number
+code: 1
+
+name: пробел перед числом
+args: -h " 7"
+err: Error: ' 7' is not a number
+code: 1
+
+name: пробел после числа
+args: -h "7 "
+err: Error: '7 ' is not a number
+code: 1
+
+name: LLONG_MAX + 1 - уже не помещается
+args: -s 9223372036854775808
+err: Error: number '9223372036854775808' is too big
+code: 1
+
+name: слишком большое число
+args: -a 99999999999999999999
+err: Error: number '99999999999999999999' is too big
+code: 1
+
+name: вместо числа второй флаг
+args: -p -h
+err: Error: '-h' is not a number
+code: 1
+
+# ============================================================
+# Количество аргументов
+# ============================================================
+
+name: без аргументов
+args:
+err: Usage: lab1_task1 <flag> <number>
+err: Flags: -h, -p, -s, -e, -a, -f (or /h, /p, ...)
+code: 1
+
+name: один аргумент
+args: -p
+err: Usage: lab1_task1 <flag> <number>
+err: Flags: -h, -p, -s, -e, -a, -f (or /h, /p, ...)
+code: 1
+
+name: три аргумента
+args: -p 1 2
+err: Usage: lab1_task1 <flag> <number>
+err: Flags: -h, -p, -s, -e, -a, -f (or /h, /p, ...)
+code: 1

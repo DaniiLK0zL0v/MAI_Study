@@ -1,0 +1,160 @@
+# Тесты для задания 2 (программа lab1_task2)
+#
+# Как запустить:  Linux:   bash run_tests.sh 2              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 2   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: " 7"
+#   input: строка, которую "вводит пользователь" (для задания 10)
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   outre: то же, но шаблоном (регулярное выражение) - для случайных чисел
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+#   file:  какой файл программа должна создать; fout: строки этого файла
+# Строки, начинающиеся с #, - комментарии.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+#
+# Вещественные числа здесь посчитаны программой, собранной zig на Windows.
+# При сборке gcc на Linux последняя цифра может отличаться - тогда тест
+# покажет FAIL с почти одинаковыми числами, это не ошибка программы.
+
+program: lab1_task2
+
+# ============================================================
+# Вычисление констант
+# ============================================================
+
+name: eps = 0.001
+args: 0.001
+out: eps = 0.001
+out:
+out: const   method    value                error        note
+out: e       limit     2.718                6.63e-04
+out: e       series    2.718                2.26e-04
+out: e       equation  2.718                2.01e-05
+out: pi      limit     3.142                7.67e-04
+out: pi      series    3.141                5.00e-04
+out: pi      equation  3.141                4.79e-04
+out: ln 2    limit     0.694                9.39e-04
+out: ln 2    series    0.693                5.00e-04
+out: ln 2    equation  0.693                2.76e-04
+out: sqrt 2  limit     1.414                2.05e-04
+out: sqrt 2  series    1.413                9.57e-04
+out: sqrt 2  equation  1.415                3.37e-04
+out: gamma   limit     0.571                6.68e-03     eps is too small for this method
+out: gamma   series    0.577                1.67e-04
+out: gamma   equation  0.585                8.23e-03
+out:
+out: error = |value - real value|, real value is taken from a table
+code: 0
+
+name: eps = 1e-6
+args: 1e-6
+out: eps = 1e-06
+out:
+out: const   method    value                error        note
+out: e       limit     2.7182812            6.48e-07
+out: e       series    2.7182815            3.03e-07
+out: e       equation  2.7182822            3.94e-07
+out: pi      limit     3.1415934            7.49e-07
+out: pi      series    3.1415922            5.00e-07
+out: pi      equation  3.1415925            1.51e-07
+out: ln 2    limit     0.6931481            9.16e-07
+out: ln 2    series    0.6931467            5.00e-07
+out: ln 2    equation  0.6931472            1.90e-09
+out: sqrt 2  limit     1.4142137            1.78e-07
+out: sqrt 2  series    1.4142126            9.35e-07
+out: sqrt 2  equation  1.4142137            9.50e-08
+out: gamma   limit     0.5705359            6.68e-03     eps is too small for this method
+out: gamma   series    0.5772158            1.59e-07
+out: gamma   equation  0.5772271            1.15e-05     eps is too small for this method
+out:
+out: error = |value - real value|, real value is taken from a table
+code: 0
+
+name: eps = 0.5 (грубо)
+args: 0.5
+out: eps = 0.5
+out:
+out: const   method    value                error        note
+out: e       limit     2.2                  4.68e-01
+out: e       series    2.5                  2.18e-01
+out: e       equation  2.8                  3.17e-02
+out: pi      limit     3.6                  4.14e-01
+out: pi      series    2.9                  2.46e-01
+out: pi      equation  3.2                  1.08e-01
+out: ln 2    limit     0.8                  1.35e-01
+out: ln 2    series    0.5                  1.93e-01
+out: ln 2    equation  0.8                  5.69e-02
+out: sqrt 2  limit     1.5                  3.94e-02
+out: sqrt 2  series    1.2                  2.25e-01
+out: sqrt 2  equation  1.2                  1.64e-01
+out: gamma   limit     0.3                  2.31e-01
+out: gamma   series    0.6                  4.09e-02
+out: gamma   equation  0.8                  1.73e-01
+out:
+out: error = |value - real value|, real value is taken from a table
+code: 0
+
+# ============================================================
+# Ошибки ввода eps
+# ============================================================
+
+name: без аргументов
+args:
+err: Usage: lab1_task2 <eps>
+err: Example: lab1_task2 1e-6
+code: 1
+
+name: два аргумента
+args: 1e-3 1e-3
+err: Usage: lab1_task2 <eps>
+err: Example: lab1_task2 1e-6
+code: 1
+
+name: не число
+args: abc
+err: Error: 'abc' is not a number
+code: 1
+
+name: мусор после числа
+args: 1e-3x
+err: Error: '1e-3x' is not a number
+code: 1
+
+name: eps = 0
+args: 0
+err: Error: eps must be between 0 and 1
+code: 1
+
+name: eps < 0
+args: -0.001
+err: Error: eps must be between 0 and 1
+code: 1
+
+name: eps = 1
+args: 1
+err: Error: eps must be between 0 and 1
+code: 1
+
+name: eps > 1
+args: 5
+err: Error: eps must be between 0 and 1
+code: 1
+
+name: слишком маленькое (1e-400): strtod даёт 0
+args: 1e-400
+err: Error: eps must be between 0 and 1
+code: 1
+
+name: бесконечность
+args: inf
+err: Error: bad number 'inf'
+code: 1
+
+name: nan
+args: nan
+err: Error: bad number 'nan'
+code: 1

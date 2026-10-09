@@ -1,0 +1,313 @@
+# Тесты для задания 10 (программа lab1_task10)
+#
+# Как запустить:  Linux:   bash run_tests.sh 10              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 10   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: " 7"
+#   input: строка, которую "вводит пользователь" (для задания 10)
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   outre: то же, но шаблоном (регулярное выражение) - для случайных чисел
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+#   file:  какой файл программа должна создать; fout: строки этого файла
+# Строки, начинающиеся с #, - комментарии.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab1_task10
+
+# ============================================================
+# Обычный ввод
+# ============================================================
+
+name: base 16: пример из разбора
+args:
+input: 16
+input: FF
+input: -1A0
+input: 00010
+input: Stop
+out: Enter base (2..36): Enter numbers in base 16 (letters A-Z, capital), "Stop" to finish:
+out: Max by absolute value:
+out:   base 16: -1A0
+out:   base  9: -512
+out:   base 18: -152
+out:   base 27: -FB
+out:   base 36: -BK
+out: Sum:
+out:   base 16: -91
+out:   base  9: -171
+out:   base 18: -81
+out:   base 27: -5A
+out:   base 36: -41
+code: 0
+
+name: base 10
+args:
+input: 10
+input: 255
+input: -100
+input: 7
+input: Stop
+out: Enter base (2..36): Enter numbers in base 10 (letters A-Z, capital), "Stop" to finish:
+out: Max by absolute value:
+out:   base 10: 255
+out:   base  9: 313
+out:   base 18: E3
+out:   base 27: 9C
+out:   base 36: 73
+out: Sum:
+out:   base 10: 162
+out:   base  9: 200
+out:   base 18: 90
+out:   base 27: 60
+out:   base 36: 4I
+code: 0
+
+name: base 2
+args:
+input: 2
+input: 1010
+input: -1111
+input: 0
+input: Stop
+out: Enter base (2..36): Enter numbers in base 2 (letters A-Z, capital), "Stop" to finish:
+out: Max by absolute value:
+out:   base  2: -1111
+out:   base  9: -16
+out:   base 18: -F
+out:   base 27: -F
+out:   base 36: -F
+out: Sum:
+out:   base  2: -101
+out:   base  9: -5
+out:   base 18: -5
+out:   base 27: -5
+out:   base 36: -5
+code: 0
+
+name: base 36: одинаковый модуль - первое
+args:
+input: 36
+input: ZZ
+input: -ZZ
+input: Stop
+out: Enter base (2..36): Enter numbers in base 36 (letters A-Z, capital), "Stop" to finish:
+out: Max by absolute value:
+out:   base 36: ZZ
+out:   base  9: 1688
+out:   base 18: 3HH
+out:   base 27: 1KQ
+out:   base 36: ZZ
+out: Sum:
+out:   base 36: 0
+out:   base  9: 0
+out:   base 18: 0
+out:   base 27: 0
+out:   base 36: 0
+code: 0
+
+name: сумма = 0
+args:
+input: 10
+input: 5
+input: -5
+input: Stop
+out: Enter base (2..36): Enter numbers in base 10 (letters A-Z, capital), "Stop" to finish:
+out: Max by absolute value:
+out:   base 10: 5
+out:   base  9: 5
+out:   base 18: 5
+out:   base 27: 5
+out:   base 36: 5
+out: Sum:
+out:   base 10: 0
+out:   base  9: 0
+out:   base 18: 0
+out:   base 27: 0
+out:   base 36: 0
+code: 0
+
+# ============================================================
+# Неверный ввод
+# ============================================================
+
+name: неверные основания, потом верное
+args:
+input: abc
+input: 1
+input: 37
+input: -5
+input:
+input: 10
+input: 42
+input: Stop
+out: Enter base (2..36): Wrong base, try again
+out: Enter base (2..36): Wrong base, try again
+out: Enter base (2..36): Wrong base, try again
+out: Enter base (2..36): Wrong base, try again
+out: Enter base (2..36): Wrong base, try again
+out: Enter base (2..36): Enter numbers in base 10 (letters A-Z, capital), "Stop" to finish:
+out: Max by absolute value:
+out:   base 10: 42
+out:   base  9: 46
+out:   base 18: 26
+out:   base 27: 1F
+out:   base 36: 16
+out: Sum:
+out:   base 10: 42
+out:   base  9: 46
+out:   base 18: 26
+out:   base 27: 1F
+out:   base 36: 16
+code: 0
+
+name: маленькие буквы и чужие цифры пропускаются
+args:
+input: 16
+input: ff
+input: G
+input: -
+input:
+input: 1F
+input: Stop
+out: Enter base (2..36): Enter numbers in base 16 (letters A-Z, capital), "Stop" to finish:
+out: 'ff' is not a number in base 16, skipped
+out: 'G' is not a number in base 16, skipped
+out: '-' is not a number in base 16, skipped
+out: '' is not a number in base 16, skipped
+out: Max by absolute value:
+out:   base 16: 1F
+out:   base  9: 34
+out:   base 18: 1D
+out:   base 27: 14
+out:   base 36: V
+out: Sum:
+out:   base 16: 1F
+out:   base  9: 34
+out:   base 18: 1D
+out:   base 27: 14
+out:   base 36: V
+code: 0
+
+name: слишком длинная строка пропускается
+args:
+input: 10
+input: 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+input: 5
+input: Stop
+out: Enter base (2..36): Enter numbers in base 10 (letters A-Z, capital), "Stop" to finish:
+out: Line is too long, skipped
+out: Max by absolute value:
+out:   base 10: 5
+out:   base  9: 5
+out:   base 18: 5
+out:   base 27: 5
+out:   base 36: 5
+out: Sum:
+out:   base 10: 5
+out:   base  9: 5
+out:   base 18: 5
+out:   base 27: 5
+out:   base 36: 5
+code: 0
+
+name: слишком большое число пропускается
+args:
+input: 10
+input: 99999999999999999999
+input: 3
+input: Stop
+out: Enter base (2..36): Enter numbers in base 10 (letters A-Z, capital), "Stop" to finish:
+out: '99999999999999999999' is too big, skipped
+out: Max by absolute value:
+out:   base 10: 3
+out:   base  9: 3
+out:   base 18: 3
+out:   base 27: 3
+out:   base 36: 3
+out: Sum:
+out:   base 10: 3
+out:   base  9: 3
+out:   base 18: 3
+out:   base 27: 3
+out:   base 36: 3
+code: 0
+
+name: stop маленькими - это не Stop
+args:
+input: 10
+input: stop
+input: 4
+input: Stop
+out: Enter base (2..36): Enter numbers in base 10 (letters A-Z, capital), "Stop" to finish:
+out: 'stop' is not a number in base 10, skipped
+out: Max by absolute value:
+out:   base 10: 4
+out:   base  9: 4
+out:   base 18: 4
+out:   base 27: 4
+out:   base 36: 4
+out: Sum:
+out:   base 10: 4
+out:   base  9: 4
+out:   base 18: 4
+out:   base 27: 4
+out:   base 36: 4
+code: 0
+
+# ============================================================
+# Конец ввода
+# ============================================================
+
+name: сразу Stop - чисел нет
+args:
+input: 10
+input: Stop
+out: Enter base (2..36): Enter numbers in base 10 (letters A-Z, capital), "Stop" to finish:
+out: No numbers were entered
+code: 0
+
+name: конец ввода без Stop
+args:
+input: 10
+input: 3
+input: 4
+out: Enter base (2..36): Enter numbers in base 10 (letters A-Z, capital), "Stop" to finish:
+out: Max by absolute value:
+out:   base 10: 4
+out:   base  9: 4
+out:   base 18: 4
+out:   base 27: 4
+out:   base 36: 4
+out: Sum:
+out:   base 10: 7
+out:   base  9: 7
+out:   base 18: 7
+out:   base 27: 7
+out:   base 36: 7
+code: 0
+
+name: пустой ввод
+args:
+out: Enter base (2..36):
+err:
+err: Error: no input
+code: 1
+
+name: переполнение суммы
+args:
+input: 10
+input: 9223372036854775807
+input: 1
+input: Stop
+out: Enter base (2..36): Enter numbers in base 10 (letters A-Z, capital), "Stop" to finish:
+err: Error: the sum is too big
+code: 1
+
+name: лишний аргумент командной строки
+args: x
+err: Usage: lab1_task10 (no arguments, input from console)
+code: 1

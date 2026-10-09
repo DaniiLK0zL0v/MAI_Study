@@ -1,0 +1,10 @@
+# Подавление одного ложного срабатывания Dr. Memory в стартовом коде (до main, не код программы):
+#   ___chkstk_ms               - проба стека из compiler_rt (zig, stack_probe.zig)
+#   _pei386_runtime_relocator  - стартовый код mingw-w64 (crt/pseudo-reloc.c)
+#   __tmainCRTStartup, mainCRTStartup
+# ___chkstk_ms читает память ниже вершины стека, чтобы заранее выделить страницы под
+# большой кадр; Dr. Memory считает это обращением за пределы стека.
+UNADDRESSABLE ACCESS
+name=startup stack probe (false positive)
+*!___chkstk_ms
+*!_pei386_runtime_relocator

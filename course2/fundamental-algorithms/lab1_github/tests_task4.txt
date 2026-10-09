@@ -1,0 +1,185 @@
+# Тесты для задания 4 (программа lab1_task4)
+#
+# Как запустить:  Linux:   bash run_tests.sh 4              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 4   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: " 7"
+#   input: строка, которую "вводит пользователь" (для задания 10)
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   outre: то же, но шаблоном (регулярное выражение) - для случайных чисел
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+#   file:  какой файл программа должна создать; fout: строки этого файла
+# Строки, начинающиеся с #, - комментарии.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab1_task4
+
+# ============================================================
+# Действия (выходной файл out_ + имя)
+# ============================================================
+
+name: -d: убрать цифры
+args: -d tests_data/task4_in.txt
+out: Done. Result is in 'tests_data/out_task4_in.txt'
+code: 0
+file: tests_data/out_task4_in.txt
+fout: Hello, World !
+fout: abc  def	#$%
+fout:
+fout: last line
+
+name: -i: латинские буквы в каждой строке
+args: -i tests_data/task4_in.txt
+out: Done. Result is in 'tests_data/out_task4_in.txt'
+code: 0
+file: tests_data/out_task4_in.txt
+fout: 10
+fout: 6
+fout: 0
+fout: 8
+
+name: -s: прочие символы в каждой строке
+args: -s tests_data/task4_in.txt
+out: Done. Result is in 'tests_data/out_task4_in.txt'
+code: 0
+file: tests_data/out_task4_in.txt
+fout: 2
+fout: 4
+fout: 0
+fout: 0
+
+name: -a: замена на hex-коды
+args: -a tests_data/task4_in.txt
+out: Done. Result is in 'tests_data/out_task4_in.txt'
+code: 0
+file: tests_data/out_task4_in.txt
+fout: 48656C6C6F2C20576F726C642012321
+fout: 61626320452064656609232425
+fout:
+fout: 6C617374206C696E65207
+
+name: флаг через /
+args: /i tests_data/task4_in.txt
+out: Done. Result is in 'tests_data/out_task4_in.txt'
+code: 0
+file: tests_data/out_task4_in.txt
+fout: 10
+fout: 6
+fout: 0
+fout: 8
+
+# ============================================================
+# Флаги с n (выходной файл задан)
+# ============================================================
+
+name: -ni
+args: -ni tests_data/task4_in.txt tests_data/res4.txt
+out: Done. Result is in 'tests_data/res4.txt'
+code: 0
+file: tests_data/res4.txt
+fout: 10
+fout: 6
+fout: 0
+fout: 8
+
+name: -nd
+args: -nd tests_data/task4_in.txt tests_data/res4.txt
+out: Done. Result is in 'tests_data/res4.txt'
+code: 0
+file: tests_data/res4.txt
+fout: Hello, World !
+fout: abc  def	#$%
+fout:
+fout: last line
+
+name: /ns
+args: /ns tests_data/task4_in.txt tests_data/res4.txt
+out: Done. Result is in 'tests_data/res4.txt'
+code: 0
+file: tests_data/res4.txt
+fout: 2
+fout: 4
+fout: 0
+fout: 0
+
+name: -na
+args: -na tests_data/task4_in.txt tests_data/res4.txt
+out: Done. Result is in 'tests_data/res4.txt'
+code: 0
+file: tests_data/res4.txt
+fout: 48656C6C6F2C20576F726C642012321
+fout: 61626320452064656609232425
+fout:
+fout: 6C617374206C696E65207
+
+# ============================================================
+# Особые файлы
+# ============================================================
+
+name: последняя строка без перевода строки
+args: -i tests_data/task4_noeol.txt
+out: Done. Result is in 'tests_data/out_task4_noeol.txt'
+code: 0
+file: tests_data/out_task4_noeol.txt
+fout: 3
+fout: 3
+
+name: пустой файл -> пустой результат
+args: -i tests_data/task4_empty.txt
+out: Done. Result is in 'tests_data/out_task4_empty.txt'
+code: 0
+file: tests_data/out_task4_empty.txt
+
+# ============================================================
+# Ошибки
+# ============================================================
+
+name: без аргументов
+args:
+err: Usage: lab1_task4 <flag> <input file> [output file]
+err: Flags: -d -i -s -a, with output file: -nd -ni -ns -na
+code: 1
+
+name: нет файла
+args: -d tests_data/nofile.txt
+err: Error: can not open file 'tests_data/nofile.txt'
+code: 1
+
+name: вход и выход совпадают
+args: -nd tests_data/task4_in.txt tests_data/task4_in.txt
+err: Error: input and output must be different files
+code: 1
+
+name: с n, но без выходного файла
+args: -nd tests_data/task4_in.txt
+err: Error: wrong number of arguments for flag '-nd'
+code: 1
+
+name: без n, но с лишним файлом
+args: -d tests_data/task4_in.txt tests_data/res4.txt
+err: Error: wrong number of arguments for flag '-d'
+code: 1
+
+name: неверная буква
+args: -x tests_data/task4_in.txt
+err: Error: wrong flag '-x'
+code: 1
+
+name: n после буквы
+args: -dn tests_data/task4_in.txt
+err: Error: wrong flag '-dn'
+code: 1
+
+name: только n
+args: -n tests_data/task4_in.txt
+err: Error: wrong flag '-n'
+code: 1
+
+name: две буквы
+args: -di tests_data/task4_in.txt
+err: Error: wrong flag '-di'
+code: 1

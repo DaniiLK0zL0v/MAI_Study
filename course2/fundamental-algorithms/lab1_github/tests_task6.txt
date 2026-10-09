@@ -1,0 +1,79 @@
+# Тесты для задания 6 (программа lab1_task6)
+#
+# Как запустить:  Linux:   bash run_tests.sh 6              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 6   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: " 7"
+#   input: строка, которую "вводит пользователь" (для задания 10)
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   outre: то же, но шаблоном (регулярное выражение) - для случайных чисел
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+#   file:  какой файл программа должна создать; fout: строки этого файла
+# Строки, начинающиеся с #, - комментарии.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab1_task6
+
+# ============================================================
+# Демонстрация всех 6 функций
+# ============================================================
+
+name: без аргументов - полный вывод
+args:
+out: 1. Convex polygon
+out:    square (0,0) (2,0) (2,2) (0,2): convex
+out:    (0,0) (2,0) (1,0.5) (1,2):       not convex
+out:    (0,0) (1,1) (2,2) on one line:   not convex
+out:    star (5 points):                 not convex
+out:    2 points:                        error, need at least 3
+out:
+out: 2. Polynomial
+out:    x^2 - 3x + 2 at x = 2:     0
+out:    2x^3 - 1 at x = 3:         53
+out:    7 (degree 0) at x = -1.5:  7
+out:    x^2 at x = 1e200:          overflow
+out:
+out: 3. Kaprekar numbers
+out:    base 10, from 1 9 10 45 55 99 100 297 703:
+out:    1 9 45 55 99 297 703
+out:    base 16, from 1 6 a F 10 33 ff 100:
+out:    1 6 a F 33 ff
+out:    base 10, "4z": error, not a number in this base
+out:
+out: 4. Geometric mean (eps 1e-9)
+out:    4, 9:          6
+out:    1, 10, 100:    10
+out:    1e200 x 3:     1e+200 (no overflow thanks to logarithms)
+out:    5, 0, 7:       0
+out:    -4, 9:         error, negative number
+out:
+out: 5. Fast power (eps 1e-9)
+out:    2 ^ 10 = 1024
+out:    2 ^ -3 = 0.125
+out:    1.5 ^ 0 = 1
+out:    0 ^ -1 = error, division by zero
+out:    -3 ^ 3 = -27
+out:    10 ^ 400 = error, too big
+out:
+out: 6. Dichotomy
+out:    x^2 - 2 = 0   on [0, 2], eps 1e-3 : x = 1.414550781250
+out:    x^2 - 2 = 0   on [0, 2], eps 1e-12: x = 1.414213562373
+out:    cos x = x     on [0, 1], eps 1e-6 : x = 0.739084720612
+out:    x^3 - x = 2   on [1, 2], eps 1e-9 : x = 1.521379706915
+out:    e^x = 3x      on [1, 2], eps 1e-6 : x = 1.512134075165
+out:    e^x = 3x      on [2, 3], eps 1e-6 : no sign change, no root here
+out:    x^2 - 2 = 0   on [2, 0], eps 1e-6 : error, need a < b
+code: 0
+
+# ============================================================
+# Ошибки
+# ============================================================
+
+name: лишний аргумент
+args: 1
+err: Usage: lab1_task6 (no arguments)
+code: 1
