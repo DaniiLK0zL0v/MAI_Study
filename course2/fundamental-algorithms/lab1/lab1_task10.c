@@ -2,52 +2,77 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <stdint.h>   /* SIZE_MAX - самое большое size_t */
 
 /* Статус-коды */
 typedef enum {
     OK,
-    INVALID_ARGS,      /* NULL, плохое основание, маленький буфер */
+    INVALID_ARGS,      /* NULL, плохое основание */
     INVALID_NUMBER,    /* строка не число в данной системе */
     OVERFLOW_ERROR,    /* не помещается в long long */
-    LINE_TOO_LONG,
+    ALLOC_ERROR,       /* malloc / realloc не смог выделить память */
     END_OF_INPUT       /* ввод закончился (Ctrl+Z / Ctrl+D) */
 } status_code;
 
-#define LINE_SIZE 128   /* максимум символов в строке ввода */
+#define START_SIZE 16   /* начальный размер буфера строки; если не хватит - увеличиваем вдвое */
 
-/* Прочитать одну строку из потока in (у нас это консоль, stdin) без '\n'.
-   Если строка длиннее буфера - дочитываем ее до конца и сообщаем об ошибке */
-status_code read_line(FILE *in, char *buf, const size_t razmer) {
-    /* fgets принимает размер как int, поэтому больше INT_MAX нельзя */
-    if (in == NULL || buf == NULL || razmer < 2 || razmer > INT_MAX) {
+/* Прочитать одну строку любой длины из потока in (у нас это консоль, stdin) без '\n'.
+   Строка кладется в динамическую память: *line - адрес нового блока, освобождает вызывающий.
+   Длину строки заранее не знаем, поэтому читаем по одному символу в буфер,
+   а когда буфер заполнится - увеличиваем его вдвое через realloc */
+status_code read_line(FILE *in, char **line) {
+    if (in == NULL || line == NULL) {
         return INVALID_ARGS;
     }
-    /* fgets читает строку вместе с '\n', но не больше razmer - 1 символов,
-       и ставит '\0' в конце. NULL - читать нечего (конец ввода) */
-    if (fgets(buf, (int)razmer, in) == NULL) {
+    size_t razmer = START_SIZE;   /* сколько байт выделено */
+    size_t dlina = 0;             /* сколько символов уже прочитали */
+    char *buf = (char *)malloc(razmer);
+    if (buf == NULL) {
+        return ALLOC_ERROR;
+    }
+
+    /* fgetc возвращает int, а не char: кроме 256 значений байта ему нужно
+       еще отдельное значение EOF (конец ввода), которое не совпадает ни с одним байтом */
+    int ch = fgetc(in);
+    /* ничего не прочитали - ввод закончился (Ctrl+D в Linux, Ctrl+Z в Windows) */
+    if (ch == EOF) {
+        free(buf);
         return END_OF_INPUT;
     }
-    size_t dlina = strlen(buf);
-    /* '\n' в конце - строка влезла целиком; убираем его, заменяя на '\0' */
-    if (dlina > 0 && buf[dlina - 1] == '\n') {
-        buf[dlina - 1] = '\0';
-        /* в Windows-файлах перед '\n' бывает '\r' */
-        if (dlina > 1 && buf[dlina - 2] == '\r') {
-            buf[dlina - 2] = '\0';
+    while (ch != EOF && ch != '\n') {
+        /* Место нужно под этот символ и под '\0' в конце: если dlina + 1 == razmer,
+           после записи для '\0' места не останется - увеличиваем заранее.
+           Вдвое, а не на 1 байт: тогда realloc вызывается редко (16, 32, 64, ...),
+           и чтение длинной строки остается быстрым */
+        if (dlina + 1 >= razmer) {
+            /* razmer * 2 не должен "перескочить" через SIZE_MAX */
+            if (razmer > SIZE_MAX / 2) {
+                free(buf);
+                return ALLOC_ERROR;
+            }
+            /* Результат realloc кладем во временную переменную: если realloc вернет NULL,
+               старый блок остается живым, и его надо освободить. Написали бы
+               buf = realloc(buf, ...) - при ошибке потеряли бы адрес старого блока (утечка) */
+            char *bolshe = (char *)realloc(buf, razmer * 2);
+            if (bolshe == NULL) {
+                free(buf);
+                return ALLOC_ERROR;
+            }
+            buf = bolshe;
+            razmer *= 2;
         }
-        return OK;
+        buf[dlina] = (char)ch;
+        dlina++;
+        ch = fgetc(in);
     }
-    if (feof(in)) {
-        return OK;   /* последняя строка без '\n' */
+    buf[dlina] = '\0';
+
+    /* в Windows-файлах строка кончается на "\r\n" - '\r' тоже убираем */
+    if (dlina > 0 && buf[dlina - 1] == '\r') {
+        buf[dlina - 1] = '\0';
     }
-    /* '\n' не влез в буфер - строка слишком длинная, выбрасываем остаток */
-    /* читаем и выбрасываем символы до конца строки, иначе остаток
-       попал бы в следующий вызов как новая строка. Тело цикла пустое -
-       вся работа в условии */
-    int ch;
-    while ((ch = fgetc(in)) != '\n' && ch != EOF) {
-    }
-    return LINE_TOO_LONG;
+    *line = buf;
+    return OK;
 }
 
 /* Цифра -> значение. По заданию цифры больше 9 - только ЗАГЛАВНЫЕ буквы.
@@ -102,40 +127,51 @@ status_code parse_in_base(const char *str, const int base, long long *chislo) {
     return OK;
 }
 
-/* Число -> строка в системе base (без ведущих нулей, со знаком) */
-status_code to_base(const long long chislo, const int base, char *buf, const size_t razmer) {
-    if (buf == NULL || base < 2 || base > 36) {
+/* Число -> строка в системе base (без ведущих нулей, со знаком).
+   Строка создается в динамической памяти ровно нужного размера:
+   *rez - ее адрес, освобождает вызывающий */
+status_code to_base(const long long chislo, const int base, char **rez) {
+    if (rez == NULL || base < 2 || base > 36) {
         return INVALID_ARGS;
     }
     const char cifry[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     /* модуль через unsigned: для LLONG_MIN обычный -x переполнился бы */
-    unsigned long long val = (chislo < 0) ? 0ULL - (unsigned long long)chislo
-                                          : (unsigned long long)chislo;
-    /* Перевод: остаток от деления на base - очередная цифра с конца, cifry[ostatok] - ее символ.
-       Пример 10 в base 2: 10 % 2 = 0, 5 % 2 = 1, 2 % 2 = 0, 1 % 2 = 1 -> в tmp "0101", наоборот "1010".
-       do-while, а не while: у нуля тоже должна быть цифра "0" */
-    char tmp[70];   /* 64 цифры в base 2 + запас */
+    unsigned long long modul = (chislo < 0) ? 0ULL - (unsigned long long)chislo
+                                            : (unsigned long long)chislo;
+
+    /* 1) Сколько цифр у числа: делим копию модуля на base, пока не станет 0.
+          do-while, а не while: у нуля тоже одна цифра "0" */
     size_t cnt = 0;
+    unsigned long long val = modul;
     do {
-        tmp[cnt] = cifry[val % (unsigned long long)base];
         val /= (unsigned long long)base;
         cnt++;
     } while (val > 0);
 
-    size_t nuzhno = cnt + (chislo < 0 ? 1 : 0) + 1;   /* цифры + минус + '\0' */
-    if (nuzhno > razmer) {
-        return INVALID_ARGS;
+    /* 2) Память: цифры + минус (если число отрицательное) + '\0' */
+    size_t nuzhno = cnt + (chislo < 0 ? 1 : 0) + 1;
+    char *str = (char *)malloc(nuzhno);
+    if (str == NULL) {
+        return ALLOC_ERROR;
     }
-    /* buf[pos++] = ... - записать в позицию pos, потом увеличить pos.
-       tmp[--cnt] - сначала уменьшить cnt, потом взять элемент: идем от последней цифры к первой */
-    size_t pos = 0;
+
+    /* 3) Цифры. Остаток от деления на base - очередная цифра с конца, cifry[ostatok] - ее символ.
+          Поэтому пишем их сразу с конца строки, от места nuzhno - 2 влево - разворачивать не нужно.
+          Пример 10 в base 2: 10 % 2 = 0, 5 % 2 = 1, 2 % 2 = 0, 1 % 2 = 1 -> справа налево "1010" */
+    str[nuzhno - 1] = '\0';
+    size_t pos = nuzhno - 1;   /* место, левее которого пишем следующую цифру */
+    val = modul;
+    do {
+        pos--;
+        str[pos] = cifry[val % (unsigned long long)base];
+        val /= (unsigned long long)base;
+    } while (val > 0);
+    /* после цифр слева осталось ровно одно место - под минус (если он нужен) */
     if (chislo < 0) {
-        buf[pos++] = '-';
+        str[0] = '-';
     }
-    while (cnt > 0) {
-        buf[pos++] = tmp[--cnt];   /* цифры шли с конца - разворачиваем */
-    }
-    buf[pos] = '\0';
+
+    *rez = str;
     return OK;
 }
 
@@ -171,16 +207,18 @@ status_code print_in_bases(const char *name, const long long chislo, const int b
     }
     /* bases[0] = 0 - заглушка: на первом шаге берем основание, введенное пользователем,
        дальше 9, 18, 27, 36 из массива */
-    char buf[80];
     const int bases[5] = {0, 9, 18, 27, 36};
     printf("%s:\n", name);
     for (int i = 0; i < 5; i++) {
         int b = (i == 0) ? base : bases[i];
-        status_code sc = to_base(chislo, b, buf, sizeof(buf));
+        /* to_base выделяет строку через malloc - напечатали и сразу освободили */
+        char *str = NULL;
+        status_code sc = to_base(chislo, b, &str);
         if (sc != OK) {
             return sc;
         }
-        printf("  base %2d: %s\n", b, buf);
+        printf("  base %2d: %s\n", b, str);
+        free(str);
     }
     return OK;
 }
@@ -193,23 +231,35 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     /* "internal error" ниже - запасная ветка для статусов, которые появиться
-       не могут: INVALID_ARGS (main передает правильные адреса и буфер нужного размера).
-       Пользователь это сообщение не увидит; если увидел - ошибка в самом коде программы */
-    char line[LINE_SIZE];
+       не могут: INVALID_ARGS (main передает правильные адреса и основания).
+       Пользователь это сообщение не увидит; если увидел - ошибка в самом коде программы.
+       Каждую строку read_line выделяет через malloc, поэтому после разбора строки
+       (и перед каждым выходом из программы) делаем free(line) */
+    char *line = NULL;
     int base = 0;
 
     /* 1) основание: спрашиваем, пока не введут правильное */
     while (1) {
         printf("Enter base (2..36): ");
-        status_code sc = read_line(stdin, line, sizeof(line));
+        status_code sc = read_line(stdin, &line);
         if (sc == END_OF_INPUT) {
             fprintf(stderr, "\nError: no input\n");
             return 1;
+        } else if (sc == ALLOC_ERROR) {
+            fprintf(stderr, "\nError: not enough memory\n");
+            return 1;
+        } else if (sc != OK) {
+            fprintf(stderr, "\nError: internal error\n");
+            return 1;
         }
         /* основание вводится в десятичной системе. Условия проверяются слева направо:
-           строка прочиталась, это число, и оно от 2 до 36. Иначе спрашиваем снова */
+           это число, и оно от 2 до 36. Строка больше не нужна - освобождаем сразу,
+           до проверки результата, чтобы не забыть ни в одной ветке */
         long long b = 0;
-        if (sc == OK && parse_in_base(line, 10, &b) == OK && b >= 2 && b <= 36) {
+        int horoshee = (parse_in_base(line, 10, &b) == OK && b >= 2 && b <= 36);
+        free(line);
+        line = NULL;
+        if (horoshee) {
             base = (int)b;
             break;
         }
@@ -224,28 +274,37 @@ int main(int argc, char *argv[]) {
     int kolvo = 0;
 
     while (1) {
-        status_code sc = read_line(stdin, line, sizeof(line));
+        status_code sc = read_line(stdin, &line);
         if (sc == END_OF_INPUT) {
             break;   /* конец ввода без Stop - считаем тем, что есть */
-        }
-        if (sc == LINE_TOO_LONG) {
-            printf("Line is too long, skipped\n");
-            continue;
+        } else if (sc == ALLOC_ERROR) {
+            fprintf(stderr, "Error: not enough memory\n");
+            return 1;
+        } else if (sc != OK) {
+            fprintf(stderr, "Error: internal error\n");
+            return 1;
         }
         if (strcmp(line, "Stop") == 0) {
+            free(line);
             break;
         }
 
-        /* неправильная строка - не ошибка программы: сообщаем и ждем следующую */
+        /* неправильная строка - не ошибка программы: сообщаем и ждем следующую.
+           Сообщение печатает line, поэтому освобождаем ее после printf */
         long long x = 0;
         sc = parse_in_base(line, base, &x);
         if (sc == INVALID_NUMBER) {
             printf("'%s' is not a number in base %d, skipped\n", line, base);
+            free(line);
             continue;
         } else if (sc == OVERFLOW_ERROR) {
             printf("'%s' is too big, skipped\n", line);
+            free(line);
             continue;
         }
+        /* число разобрано, строка больше не нужна */
+        free(line);
+        line = NULL;
 
         if (add_checked(&summa, x) != OK) {
             fprintf(stderr, "Error: the sum is too big\n");
@@ -268,8 +327,15 @@ int main(int argc, char *argv[]) {
         printf("No numbers were entered\n");
         return 0;
     }
-    if (print_in_bases("Max by absolute value", max_chislo, base) != OK ||
-        print_in_bases("Sum", summa, base) != OK) {
+    /* print_in_bases может вернуть ALLOC_ERROR (строку для перевода не выделили) */
+    status_code sc = print_in_bases("Max by absolute value", max_chislo, base);
+    if (sc == OK) {
+        sc = print_in_bases("Sum", summa, base);
+    }
+    if (sc == ALLOC_ERROR) {
+        fprintf(stderr, "Error: not enough memory\n");
+        return 1;
+    } else if (sc != OK) {
         fprintf(stderr, "Error: internal error\n");
         return 1;
     }
