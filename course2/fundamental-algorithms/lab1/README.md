@@ -8,7 +8,7 @@
 
 ## Состав
 
-| Задание | Исходный код | Тесты | Входные данные (`tests_data/`) |
+| Задание | Исходный код | Тесты (`tests/`) | Входные данные (`tests/data/`) |
 |---|---|---|---|
 | 1 | `lab1_task1.c` | `tests_task1.txt` | - (аргументы командной строки) |
 | 2 | `lab1_task2.c` | `tests_task2.txt` | - |
@@ -25,26 +25,30 @@
 
 ## Сборка и проверка
 
+Программы собираются в папку `build/`.
+
 ```sh
-make                              # gcc -std=c99 -Wall -Wextra -Wpedantic -g ... -lm
+make                              # gcc -std=c99 -Wall -Wextra -Wpedantic -g ... -lm  ->  build/lab1_taskN
 make test                         # все тесты
 make memcheck                     # все тесты под valgrind
 bash run_tests.sh 4               # тесты одного задания
 bash run_tests.sh --memcheck 4    # то же под valgrind
-make clean
+./build/lab1_task1 -p 17          # запуск одной программы
+make clean                        # удалить build/
 ```
 
-Файл тестов: первая значимая строка `program: <имя>`, далее блоки, разделенные пустой строкой.
+Файл тестов (`tests/tests_taskN.txt`): первая значимая строка `program: <имя>`, далее блоки, разделенные пустой строкой.
 Поля блока: `args` (аргументы; аргумент с пробелами - в кавычках), `input` (строка стандартного ввода),
 `out` / `outre` (строка stdout; `outre` - регулярное выражение POSIX ERE), `err` (строка stderr), `code` (код возврата),
 `file` / `fout` (файл, который должна создать программа, и его строки). Строки сравниваются целиком, без учета пробелов в конце.
+Пути в тестах (`tests/data/...`) указаны относительно корня репозитория: `run_tests.sh` запускает программы из него.
 
 ## Проверка утечек и ошибок памяти
 
 Для заданий с динамическим выделением памяти требуется проверка valgrind (Linux) или Dr. Memory (Windows).
 
-**Linux.** `make memcheck` запускает каждый тест из `tests_task*.txt` (включая ветви с ошибочным вводом, стандартный ввод задания 10
-и выходные файлы заданий 4, 7, 8) под
+**Linux.** `make memcheck` запускает каждый тест из `tests/tests_task*.txt` (включая ветви с ошибочным вводом,
+стандартный ввод задания 10 и выходные файлы заданий 4, 7, 8) под
 
 ```sh
 valgrind -q --leak-check=full --show-leak-kinds=definite,indirect,possible \
@@ -53,9 +57,13 @@ valgrind -q --leak-check=full --show-leak-kinds=definite,indirect,possible \
 
 Тест считается непройденным, если valgrind завершился с кодом 99 (ошибка доступа к памяти или утечка); в конце выводится итог по каждому заданию.
 
-**Windows.** Dr. Memory 2.6.0, `drmemory -batch -suppress drmemory_startup.supp -- <программа> <аргументы>`.
-Задания 2, 4, 8, 9: 0 ошибок, 0 утечек (`leaks` и `possible leaks`). Подавлено одно срабатывание `UNADDRESSABLE ACCESS`,
-возникающее до вызова `main`:
+Результат проверки (Ubuntu в WSL 2, gcc 15.2.0, valgrind 3.26.0): сборка с `-Werror` без предупреждений,
+214 из 214 тестов, valgrind - 0 ошибок и 0 утечек во всех 10 заданиях. Та же проверка выполняется
+GitHub Actions при каждом push (`.github/workflows/check.yml`); результат - во вкладке Actions.
+
+**Windows.** Dr. Memory 2.6.0 (`drmemory -batch -- <программа> <аргументы>`) и heob 4.2 (`heob64 -a1 -f1`).
+Задания 2, 4, 8, 9: 0 ошибок, 0 утечек. Dr. Memory сообщает одно срабатывание `UNADDRESSABLE ACCESS`
+до вызова `main`, оно подавлено отдельным файлом:
 
 ```
 ___chkstk_ms                 compiler_rt (zig), stack_probe.zig
@@ -70,20 +78,17 @@ mainCRTStartup
 
 ## Сборка на Windows: zig вместо MinGW
 
-На Windows программы собирались командой `zig cc` (zig 0.16.0):
+На Windows программы собирались командой `zig cc` (zig 0.16.0) с флагами
+`-std=c99 -Wall -Wextra -Wpedantic -g -fno-sanitize=undefined`:
 
 - `zig cc` - драйвер clang 21.1.0 (LLVM), а не GCC из дистрибутива MinGW;
 - при цели по умолчанию `x86_64-windows-gnu` от mingw-w64 берутся только заголовки и стартовый код;
   исполняемые файлы импортируют Universal CRT (`api-ms-win-crt-*.dll`), `msvcrt.dll` не импортируется,
   `__USE_MINGW_ANSI_STDIO` равно 0, то есть `printf` - из UCRT, который поддерживает форматы C99 (`%lld`, `%zu`).
   Известные проблемы связки MinGW + `msvcrt.dll` (форматы `%lld`/`%zu`, `long double`) к этим сборкам не относятся;
-  `long double` в коде не используется;
-- код также компилируется для `x86_64-linux-gnu`
-  (`zig cc -target x86_64-linux-gnu -std=c99 -Wall -Wextra -Wpedantic -Wconversion -Wshadow`) без предупреждений.
+  `long double` в коде не используется.
 
 Чтобы поведение не зависело от платформы, целые значения из командной строки хранятся в `long long`
 (`long` на Windows занимает 4 байта, на Linux - 8), а псевдослучайные числа в задании 9 дает собственный генератор,
 а не `rand()`, у которого разный диапазон в разных библиотеках и скрытое глобальное состояние.
-
-Локально gcc и valgrind не запускались. Сборку gcc с `-Werror`, тесты и проверку valgrind на Ubuntu выполняет
-GitHub Actions (`.github/workflows/check.yml`); результат - во вкладке Actions репозитория.
+Те же 214 тестов проходят и на Windows.

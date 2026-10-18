@@ -27,6 +27,8 @@ status_code parse_double(const char *str, double *chislo) {
     if (str[0] == '\0' || isspace((unsigned char)str[0])) {
         return INVALID_NUMBER;
     }
+    /* strtod читает число с начала строки и записывает в end адрес первого
+       символа, который уже не вошел в число */
     char *end = NULL;
     double val = strtod(str, &end);
     /* end == str - не прочитали ни одной цифры; *end != '\0' - после числа мусор */
@@ -53,6 +55,8 @@ status_code ratio_a(const double x, const long n, double *rez) {
     if (rez == NULL || n < 0) {
         return INVALID_ARGS;
     }
+    /* Как получено отношение: делим (n+1)-е слагаемое на n-е, все лишнее сокращается.
+       x^(n+1) / (n+1)!  :  x^n / n!  =  x / (n+1) */
     /* x^n / n!  ->  x / (n+1) */
     *rez = x / (double)(n + 1);
     return OK;
@@ -95,10 +99,14 @@ status_code sum_series(const double x, const double eps, const double first, con
     if (ratio == NULL || summa == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
+    /* slag - текущее слагаемое, s - сумма уже сложенных слагаемых */
     double slag = first;
     double s = 0.0;
     double max_slag = fabs(first);   /* самое большое слагаемое - для оценки ошибки округления */
 
+    /* На каждом шаге: если слагаемое уже меньше eps - стоп, ответ готов.
+       Иначе прибавляем его к сумме и получаем следующее: slag * otnoshenie.
+       MAX_TERMS - защита от вечного цикла */
     for (long n = n0; n < n0 + MAX_TERMS; n++) {
         if (fabs(slag) < eps) {
             *summa = s;
@@ -116,6 +124,7 @@ status_code sum_series(const double x, const double eps, const double first, con
             return sc;
         }
         slag *= otnoshenie;
+        /* при большом x (например, e^1000) числа перестают влезать в double и становятся inf */
         if (isinf(s) || isinf(slag)) {
             return OVERFLOW_ERROR;
         }
@@ -128,6 +137,7 @@ status_code sum_series(const double x, const double eps, const double first, con
     return PRECISION_LIMIT;
 }
 
+/* Каждый ряд - это вызов sum_series со своим первым слагаемым и своей функцией отношения */
 /* a. sum x^n / n!, n от 0 (это e^x) */
 status_code series_a(const double x, const double eps, double *summa) {
     return sum_series(x, eps, 1.0, 0, ratio_a, summa);
@@ -164,6 +174,8 @@ status_code series_d(const double x, const double eps, double *summa) {
    Подынтегральные функции проверяют, что x в области определения
    (границы точные, поэтому без eps), значение кладут в rez. */
 
+/* f_a ... f_d - подынтегральные функции. Одинаковые параметры у всех четырех нужны,
+   чтобы передавать их в midpoint и integral через указатель на функцию */
 status_code f_a(const double x, double *rez) {
     if (rez == NULL) {
         return INVALID_ARGS;
@@ -213,6 +225,8 @@ status_code midpoint(status_code (*f)(const double, double *), const long n, dou
     if (f == NULL || rez == NULL || n <= 0) {
         return INVALID_ARGS;
     }
+    /* h - ширина одной части. Прямоугольник i: от i*h до (i+1)*h, высота - значение
+       в его середине (i + 0.5) * h. Интеграл ~ сумма площадей = (сумма высот) * h */
     double h = 1.0 / (double)n;
     double s = 0.0;
     for (long i = 0; i < n; i++) {
@@ -231,6 +245,8 @@ status_code integral(status_code (*f)(const double, double *), const double eps,
     if (f == NULL || rez == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
+    /* считаем при n = 1, 2, 4, 8 ... частях; prev - прошлое значение, cur - новое.
+       Два соседних почти совпали (разница < eps) - точность достигнута */
     double prev = 0.0;
     status_code sc = midpoint(f, 1, &prev);
     if (sc != OK) {
@@ -257,6 +273,9 @@ status_code print_result(const char *name, const status_code sc, const double va
     if (name == NULL || digits < 0) {
         return INVALID_ARGS;
     }
+    /* печатаем по статусу; %-4s - название шириной 4 по левому краю,
+       %.*f - число знаков после точки берется из аргумента digits.
+       default - запасная ветка для статусов, которых здесь быть не может (INVALID_ARGS) */
     switch (sc) {
         case OK:
             printf("  %-4s %.*f\n", name, digits, val);
@@ -298,6 +317,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    /* читаем два числа: argv[1] в eps, argv[2] в x. kuda - адрес, куда положить очередное */
     double eps = 0.0, x = 0.0;
     for (int i = 1; i <= 2; i++) {
         double *kuda = (i == 1) ? &eps : &x;
@@ -317,9 +337,15 @@ int main(int argc, char *argv[]) {
 
     int digits = 0;
     if (digits_for_eps(eps, &digits) != OK) {
-        fprintf(stderr, "Error: something went wrong\n");
+        fprintf(stderr, "Error: internal error\n");
         return 1;
     }
+    /* "internal error" здесь и ниже - запасная ветка для статусов, которые появиться
+       не могут: INVALID_ARGS (main передает правильные адреса, eps уже проверен).
+       Пользователь это сообщение не увидит; если увидел - ошибка в самом коде программы.
+
+       series[i] и funcs[i] - массивы указателей на функции: чтобы не писать
+       4 одинаковых блока, вызываем их в цикле: series[i](x, eps, &val) */
     const char *names[4] = {"a.", "b.", "c.", "d."};
     status_code (*series[4])(const double, const double, double *) = {
         series_a, series_b, series_c, series_d
@@ -331,17 +357,18 @@ int main(int argc, char *argv[]) {
         double val = 0.0;
         status_code sc = series[i](x, eps, &val);
         if (print_result(names[i], sc, val, digits) != OK) {
-            fprintf(stderr, "Error: something went wrong\n");
+            fprintf(stderr, "Error: internal error\n");
             return 1;
         }
     }
 
+    /* те же 4 строки результатов, но для интегралов; x тут не нужен - отрезок всегда [0, 1] */
     printf("\nIntegrals from 0 to 1:\n");
     for (int i = 0; i < 4; i++) {
         double val = 0.0;
         status_code sc = integral(funcs[i], eps, &val);
         if (print_result(names[i], sc, val, digits) != OK) {
-            fprintf(stderr, "Error: something went wrong\n");
+            fprintf(stderr, "Error: internal error\n");
             return 1;
         }
     }

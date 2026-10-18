@@ -23,11 +23,11 @@ program: lab1_task8
 # ============================================================
 
 name: разные числа
-args: tests_data/task8_in.txt tests_data/res8.txt
-out: Done. Result is in 'tests_data/res8.txt'
+args: tests/data/task8_in.txt tests/data/res8.txt
+out: Done. Result is in 'tests/data/res8.txt'
 out: Skipped 2 words that are not numbers
 code: 0
-file: tests_data/res8.txt
+file: tests/data/res8.txt
 fout: 0 2 0
 fout: 1 2 1
 fout: 10 2 2
@@ -45,27 +45,27 @@ fout: 15 6 11
 fout: Z9 36 1269
 
 name: очень большие числа
-args: tests_data/task8_big.txt tests_data/res8.txt
-out: Done. Result is in 'tests_data/res8.txt'
+args: tests/data/task8_big.txt tests/data/res8.txt
+out: Done. Result is in 'tests/data/res8.txt'
 code: 0
-file: tests_data/res8.txt
+file: tests/data/res8.txt
 fout: ZZZZZZZZZZZZZZZZZZZZ 36 too_big
 fout: 1111111111111111111111111111111111111111111111111111111111111111111111 2 too_big
 fout: 7FFFFFFFFFFFFFFF 16 9223372036854775807
 fout: 8000000000000000 9 1647129056757192
 
 name: пустой файл
-args: tests_data/task8_empty.txt tests_data/res8.txt
-out: Done. Result is in 'tests_data/res8.txt'
+args: tests/data/task8_empty.txt tests/data/res8.txt
+out: Done. Result is in 'tests/data/res8.txt'
 code: 0
-file: tests_data/res8.txt
+file: tests/data/res8.txt
 
 name: только не-числа
-args: tests_data/task8_bad.txt tests_data/res8.txt
-out: Done. Result is in 'tests_data/res8.txt'
+args: tests/data/task8_bad.txt tests/data/res8.txt
+out: Done. Result is in 'tests/data/res8.txt'
 out: Skipped 3 words that are not numbers
 code: 0
-file: tests_data/res8.txt
+file: tests/data/res8.txt
 
 # ============================================================
 # Ошибки
@@ -77,21 +77,21 @@ err: Usage: lab1_task8 <input file> <output file>
 code: 1
 
 name: один аргумент
-args: tests_data/task8_in.txt
+args: tests/data/task8_in.txt
 err: Usage: lab1_task8 <input file> <output file>
 code: 1
 
 name: три аргумента
-args: tests_data/task8_in.txt tests_data/res8.txt x
+args: tests/data/task8_in.txt tests/data/res8.txt x
 err: Usage: lab1_task8 <input file> <output file>
 code: 1
 
 name: вход = выход
-args: tests_data/task8_in.txt tests_data/task8_in.txt
+args: tests/data/task8_in.txt tests/data/task8_in.txt
 err: Error: input and output must be different files
 code: 1
 
 name: нет файла
-args: tests_data/nofile.txt tests_data/res8.txt
-err: Error: can not open file 'tests_data/nofile.txt'
+args: tests/data/nofile.txt tests/data/res8.txt
+err: Error: can not open file 'tests/data/nofile.txt'
 code: 1

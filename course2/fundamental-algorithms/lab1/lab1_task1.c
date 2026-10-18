@@ -20,6 +20,8 @@ status_code parse_long_long(const char *str, long long *chislo) {
     if (str == NULL || chislo == NULL) {
         return INVALID_ARGS;
     }
+    /* i - откуда начинаются цифры, otric - был ли минус (1 - да, 0 - нет).
+       Если первый символ знак, запоминаем его и цифры читаем со второго символа */
     size_t i = 0;
     int otric = 0;
     if (str[0] == '-' || str[0] == '+') {
@@ -37,18 +39,31 @@ status_code parse_long_long(const char *str, long long *chislo) {
         }
     }
 
-    /* модуль копим в unsigned long long: модуль LLONG_MIN на 1 больше LLONG_MAX */
+    /* Число собираем без знака (модуль), знак ставим в самом конце.
+       predel - самый большой модуль, который еще влезет в long long:
+         положительное: LLONG_MAX     = 9223372036854775807
+         отрицательное: LLONG_MAX + 1 = 9223372036854775808 (это модуль LLONG_MIN)
+       Второе в long long уже не влезает, поэтому модуль копим в unsigned long long */
     unsigned long long predel = otric ? (unsigned long long)LLONG_MAX + 1 : (unsigned long long)LLONG_MAX;
     unsigned long long modul = 0;
+    /* читаем цифры слева направо: "123" -> 1 -> 12 -> 123 (каждый раз modul * 10 + цифра) */
     for (; str[i] != '\0'; i++) {
+        /* символ цифры -> ее значение: '7' - '0' = 7, коды цифр в таблице идут подряд */
         unsigned long long cifra = (unsigned long long)(str[i] - '0');
-        /* modul * 10 + cifra > predel  <=>  modul > (predel - cifra) / 10 */
+        /* Проверяем ДО умножения: если сначала умножить, а число не влезет,
+           значение "перескочит" через ноль и ошибку уже не заметить.
+           modul * 10 + cifra > predel  <=>  modul > (predel - cifra) / 10 */
         if (modul > (predel - cifra) / 10) {
             return OVERFLOW_ERROR;
         }
         modul = modul * 10 + cifra;
     }
 
+    /* Ставим знак. Три случая:
+       1) минуса не было - модуль и есть ответ;
+       2) минус и модуль ровно predel - это LLONG_MIN. Его нельзя получить как -(long long)modul:
+          сначала modul переводится в long long, а 9223372036854775808 туда не помещается;
+       3) обычное отрицательное число - переводим в long long (влезет) и меняем знак */
     if (!otric) {
         *chislo = (long long)modul;
     } else if (modul == predel) {
@@ -64,7 +79,10 @@ status_code parse_flag(const char *arg, char *flag) {
     if (arg == NULL || flag == NULL) {
         return INVALID_ARGS;
     }
-    /* ровно 2 символа: первый '-' или '/', второй - буква */
+    /* ровно 2 символа: первый '-' или '/', второй - буква.
+       arg[1] == '\0' - строка из одного символа ("-"),
+       arg[2] != '\0' - символов больше двух ("-pp").
+       arg[2] читать безопасно: до него дойдем, только если arg[1] не конец строки */
     if ((arg[0] != '-' && arg[0] != '/') || arg[1] == '\0' || arg[2] != '\0') {
         return INVALID_FLAG;
     }
@@ -98,9 +116,12 @@ status_code find_multiples(const long long x, long long *kratnye, const int max_
     *kolvo = 0;
     /* идем шагами: shag, 2*shag, 3*shag ... пока не больше 100 */
     for (long long i = shag; i <= 100; i += shag) {
+        /* в массиве нет места под еще одно число */
         if (*kolvo >= max_kolvo) {
             return BUFFER_TOO_SMALL;
         }
+        /* кладем число в первую свободную ячейку и сдвигаем счетчик.
+           Скобки в (*kolvo)++ обязательны: без них ++ сдвинул бы сам указатель */
         kratnye[*kolvo] = i;
         (*kolvo)++;
     }
@@ -127,7 +148,8 @@ status_code check_prime(const long long x, int *rez) {
         return OK;
     }
 
-    /* перебираем нечетные делители до корня из x.
+    /* Перебираем нечетные делители до корня из x.
+       Почему хватит корня: если x = a * b и a > корня, то b < корня - его мы уже проверили.
        delitel <= x / delitel - то же, что delitel * delitel <= x, но без переполнения */
     for (long long delitel = 3; delitel <= x / delitel; delitel += 2) {
         if (x % delitel == 0) {
@@ -148,10 +170,12 @@ status_code hex_digits(const long long x, char *cifry, const int razmer, int *dl
         return INVALID_ARGS;
     }
 
-    /* hex_chars[ostatok] - символ цифры */
+    /* hex_chars[ostatok] - символ цифры: hex_chars[10] = 'a', hex_chars[15] = 'f' */
     const char hex_chars[] = "0123456789abcdef";
 
-    /* модуль x. Для LLONG_MIN обычный -x переполнится, поэтому считаем в unsigned */
+    /* Модуль x. Для LLONG_MIN обычный -x переполнится, поэтому считаем в unsigned.
+       0ULL - (unsigned long long)x: вычитание в unsigned идет "по кругу",
+       и для отрицательного x получается ровно его модуль, даже для LLONG_MIN */
     unsigned long long val = (x < 0) ? 0ULL - (unsigned long long)x : (unsigned long long)x;
 
     /* у нуля одна цифра, цикл ниже его бы пропустил */
@@ -161,10 +185,11 @@ status_code hex_digits(const long long x, char *cifry, const int razmer, int *dl
         return OK;
     }
 
-    /* в одном байте ровно 2 hex-цифры */
+    /* в одном байте ровно 2 hex-цифры: 8 байт -> максимум 16 цифр */
     char tmp[2 * sizeof(unsigned long long)];
     int cnt = 0;
-    /* делим на 16: остаток - очередная цифра с конца */
+    /* делим на 16: остаток - очередная цифра с конца.
+       Например 255: 255 % 16 = 15 -> 'f', 255 / 16 = 15; 15 % 16 = 15 -> 'f', 15 / 16 = 0 - стоп */
     while (val > 0) {
         tmp[cnt] = hex_chars[val % 16];
         val /= 16;
@@ -174,7 +199,7 @@ status_code hex_digits(const long long x, char *cifry, const int razmer, int *dl
     if (cnt > razmer) {
         return BUFFER_TOO_SMALL;
     }
-    /* в tmp цифры задом наперед - разворачиваем */
+    /* в tmp цифры задом наперед - разворачиваем: последняя из tmp идет первой в cifry */
     for (int i = 0; i < cnt; i++) {
         cifry[i] = tmp[cnt - 1 - i];
     }
@@ -191,6 +216,9 @@ status_code power_table(const long long x, long long tablica[10][10]) {
         return VALUE_OUT_OF_RANGE;
     }
 
+    /* Внешний цикл - строка таблицы (основание), внутренний - столбец (показатель).
+       Индексы массива с нуля, а числа с единицы, поэтому пишем в [osn - 1][pok - 1].
+       Самое большое значение 10^10 - в long long помещается */
     for (int osn = 1; osn <= 10; osn++) {
         long long stepen = 1;
         for (int pok = 1; pok <= x; pok++) {
@@ -210,9 +238,12 @@ status_code sum_naturals(const long long x, unsigned long long *summa) {
         return INVALID_NUMBER;
     }
 
+    /* считаем x * (x + 1) / 2 как a * b, где a = x, b = x + 1 */
     unsigned long long a = (unsigned long long)x;
     unsigned long long b = a + 1;
-    /* одно из двух соседних чисел четное - делим на 2 его, чтобы не переполниться раньше времени */
+    /* Из двух соседних чисел одно всегда четное - делим на 2 его.
+       Если сначала перемножить, а потом делить, x * (x + 1) может не влезть,
+       хотя сам ответ (в 2 раза меньше) влез бы */
     if (a % 2 == 0) {
         a /= 2;
     } else {
@@ -249,14 +280,16 @@ status_code calc_factorial(const long long x, unsigned long long *fact) {
 }
 
 int main(int argc, char *argv[]) {
-    /* нужно ровно 2 аргумента: флаг и число */
+    /* нужно ровно 2 аргумента: флаг и число (argv[0] - имя самой программы) */
     if (argc != 3) {
         fprintf(stderr, "Usage: lab1_task1 <flag> <number>\n");
         fprintf(stderr, "Flags: -h, -p, -s, -e, -a, -f (or /h, /p, ...)\n");
         return 1;
     }
 
-    /* флаг может стоять и первым, и вторым: "-p 17" и "17 -p" */
+    /* Флаг может стоять и первым, и вторым: "-p 17" и "17 -p".
+       Сначала считаем, что флаг - argv[1], а число - argv[2].
+       Если argv[1] не флаг, пробуем наоборот: флаг argv[2], число argv[1] */
     char flag = '\0';
     const char *chislo_str = argv[2];
     if (parse_flag(argv[1], &flag) != OK) {
@@ -284,14 +317,25 @@ int main(int argc, char *argv[]) {
             return 1;
     }
 
-    /* выполняем действие по флагу; каждый case в {} - чтобы объявлять переменные */
+    /* Выполняем действие по флагу; каждый case в {} - чтобы объявлять переменные.
+       Все case устроены одинаково:
+         1) завели переменную под ответ и передали ее адрес в функцию;
+         2) проверили статус: если не OK - сообщение об ошибке в stderr и выход с кодом 1;
+         3) если OK - печатаем ответ, который функция положила в переменную.
+       "internal error" - запасная ветка для статусов, которые здесь появиться не могут:
+       INVALID_ARGS (передали NULL) и BUFFER_TOO_SMALL (мал массив). main передает
+       правильные адреса и массивы нужного размера, так что пользователь это сообщение
+       не увидит. Если увидел - значит, ошибка в самом коде программы */
     switch (flag) {
         case 'h': {
+            /* кратные x от 1 до 100. Ошибки пользователя: x = 0.
+               NO_MULTIPLES - не ошибка: просто сообщаем, что кратных нет (|x| > 100) */
             long long kratnye[100];  /* максимум 100 кратных (при x = 1) */
             int kolvo = 0;
             sc = find_multiples(x, kratnye, 100, &kolvo);
             if (sc == OK) {
                 printf("Multiples of %lld (1..100):\n", x);
+                /* числа через пробел: пробел ставим перед каждым, кроме первого */
                 for (int i = 0; i < kolvo; i++) {
                     if (i > 0) {
                         printf(" ");
@@ -305,19 +349,21 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: x can not be 0\n");
                 return 1;
             } else {
-                fprintf(stderr, "Error: something went wrong\n");
+                fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
             break;
         }
 
         case 'p': {
+            /* простое ли x. Ошибок от пользователя тут не бывает: ответ есть для любого x */
             int rez = 0;
             sc = check_prime(x, &rez);
             if (sc != OK) {
-                fprintf(stderr, "Error: something went wrong\n");
+                fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
+            /* три ответа функции: 1 - простое, 0 - составное, -1 - ни то ни другое (0, 1, отрицательные) */
             if (rez == 1) {
                 printf("%lld is prime\n", x);
             } else if (rez == 0) {
@@ -329,17 +375,20 @@ int main(int argc, char *argv[]) {
         }
 
         case 's': {
+            /* x в 16-ричной системе, цифры через пробел. Ошибок от пользователя тут не бывает */
+            /* 16 символов - максимум hex-цифр у 8-байтного числа */
             char cifry[2 * sizeof(unsigned long long)];
             int dlina = 0;
             sc = hex_digits(x, cifry, (int)sizeof(cifry), &dlina);
             if (sc != OK) {
-                fprintf(stderr, "Error: something went wrong\n");
+                fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
             /* минус печатаем сами, функция работает с модулем */
             if (x < 0) {
                 printf("-");
             }
+            /* cifry - не строка (в конце нет '\0'), поэтому печатаем по одному символу */
             for (int i = 0; i < dlina; i++) {
                 if (i > 0) {
                     printf(" ");
@@ -351,16 +400,19 @@ int main(int argc, char *argv[]) {
         }
 
         case 'e': {
+            /* таблица степеней 1..10 в степенях 1..x. Ошибка пользователя: x не от 1 до 10 */
             long long tablica[10][10];
             sc = power_table(x, tablica);
             if (sc == VALUE_OUT_OF_RANGE) {
                 fprintf(stderr, "Error: for -e x must be from 1 to 10\n");
                 return 1;
             } else if (sc != OK) {
-                fprintf(stderr, "Error: something went wrong\n");
+                fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
 
+            /* %6s и %12d - ширина столбца: число дополняется пробелами слева,
+               чтобы столбцы стояли ровно. 12 - хватает на 10^10 */
             /* шапка: показатели степени */
             printf("%6s", "base");
             for (int pok = 1; pok <= x; pok++) {
@@ -380,6 +432,9 @@ int main(int argc, char *argv[]) {
         }
 
         case 'a': {
+            /* сумма 1 + 2 + ... + x. Ошибки пользователя: x < 1 (INVALID_NUMBER)
+               и слишком большой x, сумма не влезает в unsigned long long (OVERFLOW_ERROR).
+               %llu - печать unsigned long long, %lld - long long */
             unsigned long long summa = 0;
             sc = sum_naturals(x, &summa);
             if (sc == INVALID_NUMBER) {
@@ -389,7 +444,7 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: the sum is too big\n");
                 return 1;
             } else if (sc != OK) {
-                fprintf(stderr, "Error: something went wrong\n");
+                fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
             printf("Sum 1..%lld = %llu\n", x, summa);
@@ -397,6 +452,8 @@ int main(int argc, char *argv[]) {
         }
 
         case 'f': {
+            /* факториал x. Ошибки пользователя: x < 0 (INVALID_NUMBER)
+               и x > 20 - уже 21! не влезает в unsigned long long (OVERFLOW_ERROR) */
             unsigned long long fact = 0;
             sc = calc_factorial(x, &fact);
             if (sc == INVALID_NUMBER) {
@@ -406,7 +463,7 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: %lld! is too big\n", x);
                 return 1;
             } else if (sc != OK) {
-                fprintf(stderr, "Error: something went wrong\n");
+                fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
             printf("%lld! = %llu\n", x, fact);

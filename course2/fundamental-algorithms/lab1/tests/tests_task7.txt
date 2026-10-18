@@ -23,44 +23,44 @@ program: lab1_task7
 # ============================================================
 
 name: file1, file2
-args: -r tests_data/task7_f1.txt tests_data/task7_f2.txt tests_data/res7.txt
-out: Done. Result is in 'tests_data/res7.txt'
+args: -r tests/data/task7_f1.txt tests/data/task7_f2.txt tests/data/res7.txt
+out: Done. Result is in 'tests/data/res7.txt'
 code: 0
-file: tests_data/res7.txt
+file: tests/data/res7.txt
 fout: one A two B three C four D E F
 
 name: файлы наоборот
-args: -r tests_data/task7_f2.txt tests_data/task7_f1.txt tests_data/res7.txt
-out: Done. Result is in 'tests_data/res7.txt'
+args: -r tests/data/task7_f2.txt tests/data/task7_f1.txt tests/data/res7.txt
+out: Done. Result is in 'tests/data/res7.txt'
 code: 0
-file: tests_data/res7.txt
+file: tests/data/res7.txt
 fout: A one B two C three D four E F
 
 name: первый пустой
-args: -r tests_data/task7_empty.txt tests_data/task7_f2.txt tests_data/res7.txt
-out: Done. Result is in 'tests_data/res7.txt'
+args: -r tests/data/task7_empty.txt tests/data/task7_f2.txt tests/data/res7.txt
+out: Done. Result is in 'tests/data/res7.txt'
 code: 0
-file: tests_data/res7.txt
+file: tests/data/res7.txt
 fout: A B C D E F
 
 name: второй пустой
-args: -r tests_data/task7_f1.txt tests_data/task7_empty.txt tests_data/res7.txt
-out: Done. Result is in 'tests_data/res7.txt'
+args: -r tests/data/task7_f1.txt tests/data/task7_empty.txt tests/data/res7.txt
+out: Done. Result is in 'tests/data/res7.txt'
 code: 0
-file: tests_data/res7.txt
+file: tests/data/res7.txt
 fout: one two three four
 
 name: оба пустые
-args: -r tests_data/task7_empty.txt tests_data/task7_empty.txt tests_data/res7.txt
-out: Done. Result is in 'tests_data/res7.txt'
+args: -r tests/data/task7_empty.txt tests/data/task7_empty.txt tests/data/res7.txt
+out: Done. Result is in 'tests/data/res7.txt'
 code: 0
-file: tests_data/res7.txt
+file: tests/data/res7.txt
 
 name: флаг через /
-args: /r tests_data/task7_f1.txt tests_data/task7_f2.txt tests_data/res7.txt
-out: Done. Result is in 'tests_data/res7.txt'
+args: /r tests/data/task7_f1.txt tests/data/task7_f2.txt tests/data/res7.txt
+out: Done. Result is in 'tests/data/res7.txt'
 code: 0
-file: tests_data/res7.txt
+file: tests/data/res7.txt
 fout: one A two B three C four D E F
 
 # ============================================================
@@ -68,17 +68,17 @@ fout: one A two B three C four D E F
 # ============================================================
 
 name: 25 лексем: 2-я, 5-я, 10-я, 15-я, 20-я, 25-я
-args: -a tests_data/task7_in.txt tests_data/res7.txt
-out: Done. Result is in 'tests_data/res7.txt'
+args: -a tests/data/task7_in.txt tests/data/res7.txt
+out: Done. Result is in 'tests/data/res7.txt'
 code: 0
-file: tests_data/res7.txt
+file: tests/data/res7.txt
 fout: T1 t2 T3 t4 12465 t6 T7 t8 T9 131012111232 AB cd Hello world 101142 cd EF gh IJ 12231230 w21 w22 w23 w24 1276265
 
 name: пустой файл
-args: -a tests_data/task7_empty.txt tests_data/res7.txt
-out: Done. Result is in 'tests_data/res7.txt'
+args: -a tests/data/task7_empty.txt tests/data/res7.txt
+out: Done. Result is in 'tests/data/res7.txt'
 code: 0
-file: tests_data/res7.txt
+file: tests/data/res7.txt
 
 # ============================================================
 # Ошибки
@@ -96,36 +96,36 @@ err: Error: wrong flag '-x'
 code: 1
 
 name: -r: не хватает файла
-args: -r tests_data/task7_f1.txt tests_data/task7_f2.txt
+args: -r tests/data/task7_f1.txt tests/data/task7_f2.txt
 err: Error: flag -r needs 3 file names
 code: 1
 
 name: -a: не хватает файла
-args: -a tests_data/task7_in.txt
+args: -a tests/data/task7_in.txt
 err: Error: flag -a needs 2 file names
 code: 1
 
 name: -a: выход = вход
-args: -a tests_data/task7_in.txt tests_data/task7_in.txt
+args: -a tests/data/task7_in.txt tests/data/task7_in.txt
 err: Error: output file must be different from input files
 code: 1
 
 name: -r: выход = второй вход
-args: -r tests_data/task7_f1.txt tests_data/task7_f2.txt tests_data/task7_f2.txt
+args: -r tests/data/task7_f1.txt tests/data/task7_f2.txt tests/data/task7_f2.txt
 err: Error: output file must be different from input files
 code: 1
 
 name: -r: нет первого файла
-args: -r tests_data/nofile.txt tests_data/task7_f2.txt tests_data/res7.txt
-err: Error: can not open file 'tests_data/nofile.txt'
+args: -r tests/data/nofile.txt tests/data/task7_f2.txt tests/data/res7.txt
+err: Error: can not open file 'tests/data/nofile.txt'
 code: 1
 
 name: -r: нет второго файла
-args: -r tests_data/task7_f1.txt tests_data/nofile.txt tests_data/res7.txt
-err: Error: can not open file 'tests_data/nofile.txt'
+args: -r tests/data/task7_f1.txt tests/data/nofile.txt tests/data/res7.txt
+err: Error: can not open file 'tests/data/nofile.txt'
 code: 1
 
 name: -a: нет файла
-args: -a tests_data/nofile.txt tests_data/res7.txt
-err: Error: can not open file 'tests_data/nofile.txt'
+args: -a tests/data/nofile.txt tests/data/res7.txt
+err: Error: can not open file 'tests/data/nofile.txt'
 code: 1

@@ -49,6 +49,8 @@ status_code parse_flag(const char *arg, char *deystvie, int *s_n) {
         return INVALID_FLAG;
     }
 
+    /* bukva - адрес символа после '-' или '/'. Если там 'n' - запоминаем это
+       и сдвигаем bukva на следующий символ (bukva++ - адрес следующего символа) */
     const char *bukva = &arg[1];
     *s_n = 0;
     if (bukva[0] == 'n') {
@@ -83,6 +85,9 @@ status_code make_out_name(const char *in_path, char **out_path) {
     }
 
     /* +4 на "out_", +1 на '\0' */
+    /* Пример: "dir/in.txt" - последний '/' под индексом 3, имя начинается с индекса 4.
+       Новое имя собираем из трех кусков: папка (первые nachalo_imeni символов),
+       "out_" и имя файла. memcpy копирует ровно n байт, strcpy - строку вместе с '\0' */
     char *rez = malloc(dlina + 4 + 1);
     if (rez == NULL) {
         return NO_MEMORY;
@@ -106,10 +111,14 @@ status_code remove_digits(FILE *in, FILE *out) {
         if (char_kind(ch, &kind) != OK) {
             return INVALID_ARGS;
         }
+        /* цифру просто не пишем, остальные символы копируем как есть.
+           fputc вызовется только для не-цифр: если левая часть && ложна, правая не выполняется */
         if (kind != KIND_DIGIT && fputc(ch, out) == EOF) {
             return WRITE_ERROR;
         }
     }
+    /* цикл кончается на EOF, а EOF бывает и в конце файла, и при ошибке чтения.
+       ferror(in) отличает одно от другого: не 0 - была ошибка */
     return ferror(in) ? READ_ERROR : OK;
 }
 
@@ -167,6 +176,8 @@ status_code replace_with_hex(FILE *in, FILE *out) {
         if (char_kind(ch, &kind) != OK) {
             return INVALID_ARGS;
         }
+        /* zapisano - что вернула функция записи; меньше 0 - ошибка.
+           fputc при ошибке вернет EOF (-1), fprintf - отрицательное число */
         int zapisano;
         if (kind == KIND_DIGIT || ch == '\n') {
             zapisano = fputc(ch, out);
@@ -189,6 +200,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    /* deystvie - буква действия (d, i, s, a), s_n - была ли 'n' во флаге */
     char deystvie = '\0';
     int s_n = 0;
     if (parse_flag(argv[1], &deystvie, &s_n) != OK) {
@@ -205,6 +217,10 @@ int main(int argc, char *argv[]) {
     /* имя выходного файла: из аргументов или "out_" + имя входного */
     char *out_path = NULL;   /* если выделим память - потом освободим */
     const char *out_name = NULL;
+    /* out_path - память от make_out_name, ее потом освобождаем.
+       out_name - имя, которым пользуемся дальше: argv[3] или out_path.
+       При флаге с 'n' out_path остается NULL, а free(NULL) ничего не делает,
+       поэтому free(out_path) ниже безопасен в обоих случаях */
     if (s_n) {
         out_name = argv[3];
     } else {
@@ -222,6 +238,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    /* "r" - открыть на чтение, "w" - на запись (файл создается, старое содержимое стирается).
+       fopen вернул NULL - файл открыть не удалось. Перед каждым выходом из main
+       закрываем уже открытые файлы и освобождаем память */
     FILE *in = fopen(argv[2], "r");
     if (in == NULL) {
         fprintf(stderr, "Error: can not open file '%s'\n", argv[2]);
@@ -237,6 +256,8 @@ int main(int argc, char *argv[]) {
     }
 
     status_code sc = OK;
+    /* по букве действия вызываем нужную функцию; -i и -s - одна и та же функция,
+       отличается только вид символов, которые считаем */
     switch (deystvie) {
         case 'd':
             sc = remove_digits(in, out);
@@ -261,6 +282,10 @@ int main(int argc, char *argv[]) {
         sc = WRITE_ERROR;
     }
 
+    /* по статусу печатаем итог; kod - код возврата программы (0 - успех, 1 - ошибка).
+       default ("internal error") - запасная ветка для статусов, которые здесь появиться
+       не могут: INVALID_ARGS и INVALID_FLAG (main передает открытые файлы, флаг уже проверен).
+       Пользователь это сообщение не увидит; если увидел - ошибка в самом коде программы */
     int kod = 0;
     switch (sc) {
         case OK:
@@ -275,7 +300,7 @@ int main(int argc, char *argv[]) {
             kod = 1;
             break;
         default:
-            fprintf(stderr, "Error: something went wrong\n");
+            fprintf(stderr, "Error: internal error\n");
             kod = 1;
             break;
     }

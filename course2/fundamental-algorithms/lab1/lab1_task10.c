@@ -22,10 +22,13 @@ status_code read_line(FILE *in, char *buf, const size_t razmer) {
     if (in == NULL || buf == NULL || razmer < 2 || razmer > INT_MAX) {
         return INVALID_ARGS;
     }
+    /* fgets читает строку вместе с '\n', но не больше razmer - 1 символов,
+       и ставит '\0' в конце. NULL - читать нечего (конец ввода) */
     if (fgets(buf, (int)razmer, in) == NULL) {
         return END_OF_INPUT;
     }
     size_t dlina = strlen(buf);
+    /* '\n' в конце - строка влезла целиком; убираем его, заменяя на '\0' */
     if (dlina > 0 && buf[dlina - 1] == '\n') {
         buf[dlina - 1] = '\0';
         /* в Windows-файлах перед '\n' бывает '\r' */
@@ -38,6 +41,9 @@ status_code read_line(FILE *in, char *buf, const size_t razmer) {
         return OK;   /* последняя строка без '\n' */
     }
     /* '\n' не влез в буфер - строка слишком длинная, выбрасываем остаток */
+    /* читаем и выбрасываем символы до конца строки, иначе остаток
+       попал бы в следующий вызов как новая строка. Тело цикла пустое -
+       вся работа в условии */
     int ch;
     while ((ch = fgetc(in)) != '\n' && ch != EOF) {
     }
@@ -67,6 +73,7 @@ status_code parse_in_base(const char *str, const int base, long long *chislo) {
     if (str == NULL || chislo == NULL || base < 2 || base > 36) {
         return INVALID_ARGS;
     }
+    /* i - откуда начинаются цифры, otric - был ли минус */
     size_t i = 0;
     int otric = 0;
     if (str[0] == '-') {
@@ -76,6 +83,8 @@ status_code parse_in_base(const char *str, const int base, long long *chislo) {
     if (str[i] == '\0') {
         return INVALID_NUMBER;
     }
+    /* число собираем слева направо: modul = modul * base + цифра.
+       Каждая цифра должна быть меньше основания: '8' в base 8 - ошибка */
     unsigned long long modul = 0;
     for (; str[i] != '\0'; i++) {
         int d = 0;
@@ -88,6 +97,7 @@ status_code parse_in_base(const char *str, const int base, long long *chislo) {
         }
         modul = modul * (unsigned long long)base + (unsigned long long)d;
     }
+    /* modul <= LLONG_MAX, поэтому и (long long)modul, и минус от него помещаются */
     *chislo = otric ? -(long long)modul : (long long)modul;
     return OK;
 }
@@ -101,6 +111,9 @@ status_code to_base(const long long chislo, const int base, char *buf, const siz
     /* модуль через unsigned: для LLONG_MIN обычный -x переполнился бы */
     unsigned long long val = (chislo < 0) ? 0ULL - (unsigned long long)chislo
                                           : (unsigned long long)chislo;
+    /* Перевод: остаток от деления на base - очередная цифра с конца, cifry[ostatok] - ее символ.
+       Пример 10 в base 2: 10 % 2 = 0, 5 % 2 = 1, 2 % 2 = 0, 1 % 2 = 1 -> в tmp "0101", наоборот "1010".
+       do-while, а не while: у нуля тоже должна быть цифра "0" */
     char tmp[70];   /* 64 цифры в base 2 + запас */
     size_t cnt = 0;
     do {
@@ -113,6 +126,8 @@ status_code to_base(const long long chislo, const int base, char *buf, const siz
     if (nuzhno > razmer) {
         return INVALID_ARGS;
     }
+    /* buf[pos++] = ... - записать в позицию pos, потом увеличить pos.
+       tmp[--cnt] - сначала уменьшить cnt, потом взять элемент: идем от последней цифры к первой */
     size_t pos = 0;
     if (chislo < 0) {
         buf[pos++] = '-';
@@ -138,6 +153,10 @@ status_code add_checked(long long *summa, const long long x) {
     if (summa == NULL) {
         return INVALID_ARGS;
     }
+    /* Проверка ДО сложения, иначе переполнение уже случится:
+       summa + x > LLONG_MAX  <=>  summa > LLONG_MAX - x  (для x > 0),
+       summa + x < LLONG_MIN  <=>  summa < LLONG_MIN - x  (для x < 0).
+       Сами LLONG_MAX - x и LLONG_MIN - x не переполняются при таком знаке x */
     if ((x > 0 && *summa > LLONG_MAX - x) || (x < 0 && *summa < LLONG_MIN - x)) {
         return OVERFLOW_ERROR;
     }
@@ -150,6 +169,8 @@ status_code print_in_bases(const char *name, const long long chislo, const int b
     if (name == NULL || base < 2 || base > 36) {
         return INVALID_ARGS;
     }
+    /* bases[0] = 0 - заглушка: на первом шаге берем основание, введенное пользователем,
+       дальше 9, 18, 27, 36 из массива */
     char buf[80];
     const int bases[5] = {0, 9, 18, 27, 36};
     printf("%s:\n", name);
@@ -171,6 +192,9 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: lab1_task10 (no arguments, input from console)\n");
         return 1;
     }
+    /* "internal error" ниже - запасная ветка для статусов, которые появиться
+       не могут: INVALID_ARGS (main передает правильные адреса и буфер нужного размера).
+       Пользователь это сообщение не увидит; если увидел - ошибка в самом коде программы */
     char line[LINE_SIZE];
     int base = 0;
 
@@ -182,6 +206,8 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "\nError: no input\n");
             return 1;
         }
+        /* основание вводится в десятичной системе. Условия проверяются слева направо:
+           строка прочиталась, это число, и оно от 2 до 36. Иначе спрашиваем снова */
         long long b = 0;
         if (sc == OK && parse_in_base(line, 10, &b) == OK && b >= 2 && b <= 36) {
             base = (int)b;
@@ -192,6 +218,7 @@ int main(int argc, char *argv[]) {
 
     /* 2) числа до строки "Stop" */
     printf("Enter numbers in base %d (letters A-Z, capital), \"Stop\" to finish:\n", base);
+    /* summa - сумма всех чисел, max_chislo - число с самым большим модулем, kolvo - сколько ввели */
     long long summa = 0;
     long long max_chislo = 0;
     int kolvo = 0;
@@ -209,6 +236,7 @@ int main(int argc, char *argv[]) {
             break;
         }
 
+        /* неправильная строка - не ошибка программы: сообщаем и ждем следующую */
         long long x = 0;
         sc = parse_in_base(line, base, &x);
         if (sc == INVALID_NUMBER) {
@@ -224,9 +252,10 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         /* первое число или модуль больше текущего максимума */
+        /* модули сравниваем как unsigned: |LLONG_MIN| в long long не помещается */
         unsigned long long modul_x = 0, modul_max = 0;
         if (abs_ull(x, &modul_x) != OK || abs_ull(max_chislo, &modul_max) != OK) {
-            fprintf(stderr, "Error: something went wrong\n");
+            fprintf(stderr, "Error: internal error\n");
             return 1;
         }
         if (kolvo == 0 || modul_x > modul_max) {
@@ -241,7 +270,7 @@ int main(int argc, char *argv[]) {
     }
     if (print_in_bases("Max by absolute value", max_chislo, base) != OK ||
         print_in_bases("Sum", summa, base) != OK) {
-        fprintf(stderr, "Error: something went wrong\n");
+        fprintf(stderr, "Error: internal error\n");
         return 1;
     }
     return 0;

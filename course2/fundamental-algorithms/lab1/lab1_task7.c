@@ -12,6 +12,10 @@ typedef enum {
     WRITE_ERROR
 } status_code;
 
+/* Лексема - кусок текста без пробелов, табуляций и переводов строк ("слово").
+   Все функции читают файл по одному символу через fgetc.
+   ch везде int, а не char: fgetc возвращает байт 0..255 или EOF (-1), в char их не различить */
+
 /* Разделители лексем: пробел, табуляция, перевод строки (и '\r' из Windows-файлов).
    ch - то, что вернул fgetc: байт от 0 до 255 или EOF. rez = 1 - разделитель */
 status_code is_razdelitel(const int ch, int *rez) {
@@ -27,6 +31,7 @@ status_code parse_flag(const char *arg, char *flag) {
     if (arg == NULL || flag == NULL) {
         return INVALID_ARGS;
     }
+    /* ровно 2 символа: arg[1] == конец строки - один символ, arg[2] не конец - больше двух */
     if ((arg[0] != '-' && arg[0] != '/') || arg[1] == '\0' || arg[2] != '\0') {
         return INVALID_FLAG;
     }
@@ -42,6 +47,8 @@ status_code skip_razdeliteli(FILE *in, int *ch) {
     if (in == NULL || ch == NULL) {
         return INVALID_ARGS;
     }
+    /* читаем символы, пока они разделители; первый не-разделитель остается в *ch.
+       razd = 1 в начале - чтобы цикл выполнился хотя бы раз */
     int razd = 1;
     while (razd) {   /* EOF - не разделитель, на нем цикл тоже кончится */
         *ch = fgetc(in);
@@ -58,6 +65,10 @@ status_code write_code(FILE *out, const unsigned int kod, const unsigned int bas
     if (out == NULL || base < 2 || base > 16) {
         return INVALID_ARGS;
     }
+    /* Перевод в систему base: остаток от деления на base - очередная цифра с конца.
+       Пример: 65 ('A') в base 8: 65 % 8 = 1, 65 / 8 = 8; 8 % 8 = 0, 8 / 8 = 1; 1 % 8 = 1 -> "101".
+       "0123456789ABCDEF"[ostatok] - символ цифры (строку можно индексировать, как массив).
+       do-while, а не while: у кода 0 тоже должна быть одна цифра "0" */
     char cifry[16];   /* код <= 255, в base 2 это максимум 8 цифр */
     int cnt = 0;
     unsigned int val = kod;
@@ -92,6 +103,9 @@ status_code copy_token(FILE *in, FILE *out, int *pervaya, int *est) {
         return OK;
     }
     *est = 1;
+    /* pervaya - общий флаг для всего выходного файла (передается адресом и
+       меняется здесь), так пробелы стоят только МЕЖДУ лексемами. Пробел
+       пишется, только если лексема не первая: при ложной левой части && правая не выполняется */
     if (!*pervaya && fputc(' ', out) == EOF) {
         return WRITE_ERROR;
     }
@@ -125,6 +139,9 @@ status_code merge_tokens(FILE *f1, FILE *f2, FILE *out) {
     int est1 = 1, est2 = 1;   /* остались ли лексемы в файлах */
     status_code sc;
 
+    /* Пока хоть в одном файле есть лексемы: берем по одной из каждого по очереди.
+       Когда copy_token дошел до конца файла, он ставит est = 0, и этот файл
+       дальше пропускается - так остаток другого файла дописывается подряд */
     while (est1 || est2) {
         if (est1) {
             sc = copy_token(f1, out, &pervaya, &est1);
@@ -151,6 +168,8 @@ status_code transform_tokens(FILE *in, FILE *out) {
     if (in == NULL || out == NULL) {
         return INVALID_ARGS;
     }
+    /* nomer - номер текущей лексемы. ch - первый символ текущей лексемы:
+       перед циклом пропускаем разделители в начале файла */
     long nomer = 0;
     int ch = EOF;
     status_code sc = skip_razdeliteli(in, &ch);
@@ -163,6 +182,9 @@ status_code transform_tokens(FILE *in, FILE *out) {
         if (nomer > 1 && fputc(' ', out) == EOF) {
             return WRITE_ERROR;
         }
+        /* по номеру решаем, что делать с лексемой: strochnye - переводить ли
+           заглавные в строчные, base - в какой системе писать коды символов.
+           10-я делится и на 2, и на 5: ее проверяем первой */
         int strochnye = (nomer % 2 == 0);                    /* и для 10-й тоже */
         unsigned int base = 0;                               /* 0 - писать сам символ */
         if (nomer % 10 == 0) {
@@ -181,6 +203,7 @@ status_code transform_tokens(FILE *in, FILE *out) {
             if (razd) {
                 break;
             }
+            /* заглавная латинская -> строчная: сдвиг на одинаковое расстояние в таблице кодов */
             if (strochnye && ch >= 'A' && ch <= 'Z') {
                 ch = ch - 'A' + 'a';
             }
@@ -197,6 +220,7 @@ status_code transform_tokens(FILE *in, FILE *out) {
         if (ferror(in)) {
             return READ_ERROR;
         }
+        /* лексема кончилась - пропускаем разделители до начала следующей (или до EOF) */
         sc = skip_razdeliteli(in, &ch);
         if (sc != OK) {
             return sc;
@@ -232,6 +256,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    /* Открываем файлы. f2 нужен только для -r, при -a он остается NULL.
+       Если очередной файл не открылся - закрываем уже открытые и выходим */
     FILE *f1 = fopen(argv[2], "r");
     if (f1 == NULL) {
         fprintf(stderr, "Error: can not open file '%s'\n", argv[2]);
@@ -256,6 +282,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    /* -r - слияние двух файлов, -a - преобразование одного */
     status_code sc = (flag == 'r') ? merge_tokens(f1, f2, out) : transform_tokens(f1, out);
 
     /* закрываем все файлы в любом случае */
@@ -267,6 +294,9 @@ int main(int argc, char *argv[]) {
         sc = WRITE_ERROR;
     }
 
+    /* по статусу печатаем итог. default ("internal error") - запасная ветка для статусов,
+       которые здесь появиться не могут: INVALID_ARGS (main передает открытые файлы).
+       Пользователь это сообщение не увидит; если увидел - ошибка в самом коде программы */
     switch (sc) {
         case OK:
             printf("Done. Result is in '%s'\n", out_name);
@@ -278,7 +308,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Error: can not write file '%s'\n", out_name);
             return 1;
         default:
-            fprintf(stderr, "Error: something went wrong\n");
+            fprintf(stderr, "Error: internal error\n");
             return 1;
     }
 }

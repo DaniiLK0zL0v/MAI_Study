@@ -23,50 +23,50 @@ program: lab1_task4
 # ============================================================
 
 name: -d: убрать цифры
-args: -d tests_data/task4_in.txt
-out: Done. Result is in 'tests_data/out_task4_in.txt'
+args: -d tests/data/task4_in.txt
+out: Done. Result is in 'tests/data/out_task4_in.txt'
 code: 0
-file: tests_data/out_task4_in.txt
+file: tests/data/out_task4_in.txt
 fout: Hello, World !
 fout: abc  def	#$%
 fout:
 fout: last line
 
 name: -i: латинские буквы в каждой строке
-args: -i tests_data/task4_in.txt
-out: Done. Result is in 'tests_data/out_task4_in.txt'
+args: -i tests/data/task4_in.txt
+out: Done. Result is in 'tests/data/out_task4_in.txt'
 code: 0
-file: tests_data/out_task4_in.txt
+file: tests/data/out_task4_in.txt
 fout: 10
 fout: 6
 fout: 0
 fout: 8
 
 name: -s: прочие символы в каждой строке
-args: -s tests_data/task4_in.txt
-out: Done. Result is in 'tests_data/out_task4_in.txt'
+args: -s tests/data/task4_in.txt
+out: Done. Result is in 'tests/data/out_task4_in.txt'
 code: 0
-file: tests_data/out_task4_in.txt
+file: tests/data/out_task4_in.txt
 fout: 2
 fout: 4
 fout: 0
 fout: 0
 
 name: -a: замена на hex-коды
-args: -a tests_data/task4_in.txt
-out: Done. Result is in 'tests_data/out_task4_in.txt'
+args: -a tests/data/task4_in.txt
+out: Done. Result is in 'tests/data/out_task4_in.txt'
 code: 0
-file: tests_data/out_task4_in.txt
+file: tests/data/out_task4_in.txt
 fout: 48656C6C6F2C20576F726C642012321
 fout: 61626320452064656609232425
 fout:
 fout: 6C617374206C696E65207
 
 name: флаг через /
-args: /i tests_data/task4_in.txt
-out: Done. Result is in 'tests_data/out_task4_in.txt'
+args: /i tests/data/task4_in.txt
+out: Done. Result is in 'tests/data/out_task4_in.txt'
 code: 0
-file: tests_data/out_task4_in.txt
+file: tests/data/out_task4_in.txt
 fout: 10
 fout: 6
 fout: 0
@@ -77,40 +77,40 @@ fout: 8
 # ============================================================
 
 name: -ni
-args: -ni tests_data/task4_in.txt tests_data/res4.txt
-out: Done. Result is in 'tests_data/res4.txt'
+args: -ni tests/data/task4_in.txt tests/data/res4.txt
+out: Done. Result is in 'tests/data/res4.txt'
 code: 0
-file: tests_data/res4.txt
+file: tests/data/res4.txt
 fout: 10
 fout: 6
 fout: 0
 fout: 8
 
 name: -nd
-args: -nd tests_data/task4_in.txt tests_data/res4.txt
-out: Done. Result is in 'tests_data/res4.txt'
+args: -nd tests/data/task4_in.txt tests/data/res4.txt
+out: Done. Result is in 'tests/data/res4.txt'
 code: 0
-file: tests_data/res4.txt
+file: tests/data/res4.txt
 fout: Hello, World !
 fout: abc  def	#$%
 fout:
 fout: last line
 
 name: /ns
-args: /ns tests_data/task4_in.txt tests_data/res4.txt
-out: Done. Result is in 'tests_data/res4.txt'
+args: /ns tests/data/task4_in.txt tests/data/res4.txt
+out: Done. Result is in 'tests/data/res4.txt'
 code: 0
-file: tests_data/res4.txt
+file: tests/data/res4.txt
 fout: 2
 fout: 4
 fout: 0
 fout: 0
 
 name: -na
-args: -na tests_data/task4_in.txt tests_data/res4.txt
-out: Done. Result is in 'tests_data/res4.txt'
+args: -na tests/data/task4_in.txt tests/data/res4.txt
+out: Done. Result is in 'tests/data/res4.txt'
 code: 0
-file: tests_data/res4.txt
+file: tests/data/res4.txt
 fout: 48656C6C6F2C20576F726C642012321
 fout: 61626320452064656609232425
 fout:
@@ -121,18 +121,18 @@ fout: 6C617374206C696E65207
 # ============================================================
 
 name: последняя строка без перевода строки
-args: -i tests_data/task4_noeol.txt
-out: Done. Result is in 'tests_data/out_task4_noeol.txt'
+args: -i tests/data/task4_noeol.txt
+out: Done. Result is in 'tests/data/out_task4_noeol.txt'
 code: 0
-file: tests_data/out_task4_noeol.txt
+file: tests/data/out_task4_noeol.txt
 fout: 3
 fout: 3
 
 name: пустой файл -> пустой результат
-args: -i tests_data/task4_empty.txt
-out: Done. Result is in 'tests_data/out_task4_empty.txt'
+args: -i tests/data/task4_empty.txt
+out: Done. Result is in 'tests/data/out_task4_empty.txt'
 code: 0
-file: tests_data/out_task4_empty.txt
+file: tests/data/out_task4_empty.txt
 
 # ============================================================
 # Ошибки
@@ -145,41 +145,41 @@ err: Flags: -d -i -s -a, with output file: -nd -ni -ns -na
 code: 1
 
 name: нет файла
-args: -d tests_data/nofile.txt
-err: Error: can not open file 'tests_data/nofile.txt'
+args: -d tests/data/nofile.txt
+err: Error: can not open file 'tests/data/nofile.txt'
 code: 1
 
 name: вход и выход совпадают
-args: -nd tests_data/task4_in.txt tests_data/task4_in.txt
+args: -nd tests/data/task4_in.txt tests/data/task4_in.txt
 err: Error: input and output must be different files
 code: 1
 
 name: с n, но без выходного файла
-args: -nd tests_data/task4_in.txt
+args: -nd tests/data/task4_in.txt
 err: Error: wrong number of arguments for flag '-nd'
 code: 1
 
 name: без n, но с лишним файлом
-args: -d tests_data/task4_in.txt tests_data/res4.txt
+args: -d tests/data/task4_in.txt tests/data/res4.txt
 err: Error: wrong number of arguments for flag '-d'
 code: 1
 
 name: неверная буква
-args: -x tests_data/task4_in.txt
+args: -x tests/data/task4_in.txt
 err: Error: wrong flag '-x'
 code: 1
 
 name: n после буквы
-args: -dn tests_data/task4_in.txt
+args: -dn tests/data/task4_in.txt
 err: Error: wrong flag '-dn'
 code: 1
 
 name: только n
-args: -n tests_data/task4_in.txt
+args: -n tests/data/task4_in.txt
 err: Error: wrong flag '-n'
 code: 1
 
 name: две буквы
-args: -di tests_data/task4_in.txt
+args: -di tests/data/task4_in.txt
 err: Error: wrong flag '-di'
 code: 1

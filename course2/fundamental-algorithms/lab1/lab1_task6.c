@@ -40,6 +40,7 @@ status_code check_turn(const point a, const point b, const point c, const double
     if (znak == NULL || summa_uglov == NULL || ok == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
+    /* ребра как векторы: из координат конца вычитаем координаты начала */
     double ux = b.x - a.x, uy = b.y - a.y;   /* ребро a->b */
     double vx = c.x - b.x, vy = c.y - b.y;   /* ребро b->c */
 
@@ -57,6 +58,7 @@ status_code check_turn(const point a, const point b, const point c, const double
     } else if (tek_znak != *znak) {
         return OK;
     }
+    /* atan2(vect, scal) - угол между ребрами от -pi до pi; знак показывает сторону поворота */
     *summa_uglov += atan2(vect, scal);   /* угол поворота со знаком */
     *ok = 1;
     return OK;
@@ -67,6 +69,12 @@ status_code is_convex(int *rez, const double eps, const int n, ...) {
         return INVALID_ARGS;
     }
 
+    /* Функция с "..." - переменное число аргументов. Читаем их так:
+       va_list - "курсор" по аргументам, va_start ставит его после n,
+       каждый va_arg(args, double) берет следующий аргумент как double,
+       va_end в конце обязателен. Сколько аргументов передали, функция сама не знает,
+       поэтому n передается явно. И тип не проверяется: если передать 1 вместо 1.0,
+       va_arg прочитает мусор */
     va_list args;
     va_start(args, n);
 
@@ -85,6 +93,9 @@ status_code is_convex(int *rez, const double eps, const int n, ...) {
     int vypukly = 1;
     status_code sc = OK;
 
+    /* Читаем вершины с третьей по последнюю. Для каждой новой вершины tek
+       проверяем поворот в предыдущей: путь pred2 -> pred1 -> tek.
+       Потом сдвигаем окно: pred2 = pred1, pred1 = tek */
     for (int i = 2; i < n; i++) {
         point tek;
         tek.x = va_arg(args, double);
@@ -111,6 +122,7 @@ status_code is_convex(int *rez, const double eps, const int n, ...) {
 
     /* у выпуклого многоугольника сумма поворотов ровно +-2*pi,
        у "звезды" - 4*pi и больше. Сравниваем с точностью eps */
+    /* *rez = 1, если и все повороты в одну сторону, и сумма поворотов 2*pi; иначе 0 */
     const double pi = 3.14159265358979323846;
     *rez = vypukly && fabs(fabs(summa_uglov) - 2 * pi) < eps;
     return OK;
@@ -125,6 +137,9 @@ status_code polynomial(double *rez, const double x, const int n, ...) {
     }
     va_list args;
     va_start(args, n);
+    /* Пример: 2x^2 + 3x + 1 при x = 2: s = 0 -> 0*2 + 2 = 2 -> 2*2 + 3 = 7 -> 7*2 + 1 = 15.
+       Каждый шаг: умножаем то, что есть, на x и прибавляем следующий коэффициент.
+       Степени x отдельно не считаем */
     double s = 0.0;
     for (int i = 0; i <= n; i++) {     /* коэффициентов n + 1 */
         s = s * x + va_arg(args, double);
@@ -153,6 +168,8 @@ status_code digit_value(const char ch, int *val) {
         *val = ch - '0';
         return OK;
     }
+    /* буквы: переводим в заглавную, чтобы 'a' и 'A' обработать одинаково;
+       'A' - 'A' + 10 = 10, 'B' -> 11, ... 'Z' -> 35 */
     char up = (char)toupper((unsigned char)ch);
     if (up >= 'A' && up <= 'Z') {
         *val = up - 'A' + 10;
@@ -172,6 +189,8 @@ status_code parse_in_base(const char *str, const int base, unsigned long long *c
     if (str[0] == '\0') {
         return INVALID_NUMBER;
     }
+    /* limit = 2^32 - 1. Число собираем, как в десятичной: val * base + цифра.
+       Каждая цифра должна быть меньше основания: '9' в двоичной - ошибка */
     const unsigned long long limit = 4294967295ULL;
     unsigned long long val = 0;
     for (int i = 0; str[i] != '\0'; i++) {
@@ -200,6 +219,8 @@ status_code check_kaprekar(const unsigned long long n, const int base, int *rez)
     unsigned long long kvadrat = n * n;   /* n <= 2^32 - 1, переполнения нет */
     unsigned long long delitel = (unsigned long long)base;   /* base^p - где режем */
 
+    /* Разрезать число в системе base после p цифр справа - это деление на base^p:
+       частное - левая часть, остаток - правая. Пример (base 10): 2025 / 100 = 20, 2025 % 100 = 25 */
     /* режем после 1, 2, 3 ... цифр справа, пока левая часть не 0 */
     while (delitel <= kvadrat) {
         unsigned long long levaya = kvadrat / delitel;
@@ -232,6 +253,8 @@ status_code find_kaprekar(const char **found, const int max_found, int *found_co
         return INVALID_BASE;
     }
 
+    /* count строк после "..." читаем по одной (как в is_convex, только тип const char *).
+       В found кладем не копию строки, а сам указатель на нее - строки живут в вызывающем коде */
     va_list args;
     va_start(args, count);
     *found_count = 0;
@@ -274,6 +297,7 @@ status_code geom_mean(double *rez, const double eps, const int n, ...) {
     }
     va_list args;
     va_start(args, n);
+    /* sum_log - сумма логарифмов, est_nol - встретился ли 0 (тогда ответ 0) */
     double sum_log = 0.0;
     int est_nol = 0;
     status_code sc = OK;
@@ -317,6 +341,8 @@ status_code fast_pow(const double a, const long long n, const double eps, double
         return DIVISION_BY_ZERO;   /* a = 0 с точностью eps, а делить на 0 нельзя */
     }
 
+    /* Пример: 2^10 = (2^5)^2, 2^5 = (2^2)^2 * 2, 2^2 = (2^1)^2, 2^1 = (2^0)^2 * 2, 2^0 = 1.
+       Функция вызывает сама себя с n / 2, пока не дойдет до n = 0 */
     double polovina = 0.0;
     status_code sc = fast_pow(a, n / 2, eps, &polovina);   /* рекурсивный вызов */
     if (sc != OK) {
@@ -346,6 +372,7 @@ status_code dichotomy(double a, double b, const double eps,
     if (f == NULL || root == NULL || eps <= 0 || b - a < eps) {
         return INVALID_ARGS;
     }
+    /* значения функции на концах отрезка */
     double fa = 0.0, fb = 0.0;
     status_code sc = f(a, &fa);
     if (sc != OK) {
@@ -368,6 +395,7 @@ status_code dichotomy(double a, double b, const double eps,
             *root = a + (b - a) / 2;
             return PRECISION_LIMIT;
         }
+        /* берем середину; a + (b - a) / 2 вместо (a + b) / 2 - сумма могла бы переполниться */
         double mid = a + (b - a) / 2;
         double fm = 0.0;
         sc = f(mid, &fm);
@@ -378,6 +406,7 @@ status_code dichotomy(double a, double b, const double eps,
         if ((fm > 0 && fa > 0) || (fm < 0 && fa < 0)) {
             a = mid;
             fa = fm;
+        /* иначе знак другой (или f(mid) = 0) - корень в левой половине: сдвигаем b */
         } else {
             b = mid;
         }
@@ -422,10 +451,17 @@ status_code eq4(const double x, double *rez) {   /* ~0.619 и ~1.512 */
     return OK;
 }
 
+/* Функции eq1 ... eq4 имеют одинаковые параметры, поэтому их можно передать
+   в dichotomy через указатель на функцию */
+
 /* ================= Демонстрация =================
    Каждая demo_ проверяет, что функции вернули ожидаемый статус.
    Если нет - возвращает DEMO_FAILED (ошибку печатает main) */
 
+/* Во всех demo_ одна схема: вызвать функцию на примере, проверить, что статус
+   тот, что мы ожидаем, и напечатать результат. Для неправильных входных данных
+   ожидаем статус ошибки - так показываем, что функция ее ловит.
+   Числа передаем как 0.0, 2.0 (не 0, 2): va_arg читает double, а int прочитался бы неверно */
 status_code demo_convex(void) {
     printf("1. Convex polygon\n");
     int rez = 0;
@@ -486,6 +522,7 @@ status_code demo_kaprekar(void) {
                       "1", "9", "10", "45", "55", "99", "100", "297", "703") != OK) {
         return DEMO_FAILED;
     }
+    /* в found лежат указатели на найденные строки - печатаем их через %s */
     printf("   base 10, from 1 9 10 45 55 99 100 297 703:\n   ");
     for (int i = 0; i < kolvo; i++) {
         printf("%s ", found[i]);
@@ -536,6 +573,8 @@ status_code demo_geom_mean(void) {
 
 status_code demo_pow(void) {
     printf("\n5. Fast power (eps 1e-9)\n");
+    /* пары (основание, показатель) из двух массивов: osn[i] ^ pok[i].
+       0^-1 - деление на ноль, 10^400 - не влезает в double */
     const double osn[6] = {2.0, 2.0, 1.5, 0.0, -3.0, 10.0};
     const long long pok[6] = {10, -3, 0, -1, 3, 400};
     for (int i = 0; i < 6; i++) {
@@ -559,6 +598,8 @@ status_code demo_pow(void) {
 status_code demo_dichotomy(void) {
     printf("\n6. Dichotomy\n");
     double root = 0.0;
+    /* tests - массив безымянных структур: текст уравнения, функция, отрезок [a, b], eps.
+       Последний тест с a > b - проверка, что ошибка ловится */
     struct {
         const char *text;
         status_code (*f)(const double, double *);
@@ -582,6 +623,7 @@ status_code demo_dichotomy(void) {
             printf("   %s: no sign change, no root here\n", tests[i].text);
         } else if (sc == INVALID_ARGS) {
             printf("   %s: error, need a < b\n", tests[i].text);
+        /* другие статусы здесь не ожидаются - значит, демонстрация не удалась */
         } else {
             return DEMO_FAILED;
         }
@@ -596,6 +638,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     /* все демонстрации по очереди; первая же ошибка - выходим */
+    /* demos - массив указателей на функции без параметров; вызов demos[i]() запускает i-ю.
+       "demo failed" - если функция вернула не тот статус, что мы ожидали;
+       пользователь это не увидит, это значит ошибку в самом коде программы */
     status_code (*demos[6])(void) = {
         demo_convex, demo_polynomial, demo_kaprekar, demo_geom_mean, demo_pow, demo_dichotomy
     };

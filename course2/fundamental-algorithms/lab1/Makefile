@@ -1,20 +1,25 @@
-# Сборка на Linux (gcc):
+# Сборка на Linux (gcc). Программы собираются в папку build/:
 #   make           - собрать все программы
 #   make test      - собрать и запустить все тесты
 #   make memcheck  - собрать и запустить все тесты под valgrind (утечки и ошибки памяти)
-#   make clean     - удалить собранные программы
+#   make clean     - удалить папку build/
 
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wextra -Wpedantic -g
 LDLIBS = -lm
 
-PROGS = lab1_task1 lab1_task2 lab1_task3 lab1_task4 lab1_task5 \
-        lab1_task6 lab1_task7 lab1_task8 lab1_task9 lab1_task10
+# все файлы заданий (labN_task1.c, labN_task2.c, ...) -> build/labN_task1, build/labN_task2, ...
+SRCS = $(wildcard *_task*.c)
+PROGS = $(SRCS:%.c=build/%)
 
 all: $(PROGS)
 
-lab1_task%: lab1_task%.c
+# "| build" - сначала создать папку build (если ее еще нет)
+build/%: %.c | build
 	$(CC) $(CFLAGS) -o $@ $< $(LDLIBS)
+
+build:
+	mkdir -p build
 
 test: all
 	bash ./run_tests.sh
@@ -23,6 +28,6 @@ memcheck: all
 	bash ./run_tests.sh --memcheck
 
 clean:
-	rm -f $(PROGS)
+	rm -rf build
 
 .PHONY: all test memcheck clean

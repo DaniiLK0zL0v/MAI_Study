@@ -16,6 +16,10 @@ typedef enum {
     END_OF_FILE        /* лексем больше нет */
 } status_code;
 
+/* Задача: для каждой лексемы ("слова") файла найти минимальное основание системы
+   счисления, в которой она может быть числом, и ее значение в десятичной системе.
+   Пример: "1F" - самая большая цифра F = 15, основание 16, значение 31 */
+
 /* Разделители: пробел, табуляция, перевод строки (и '\r' из Windows-файлов).
    ch - то, что вернул fgetc: байт от 0 до 255 или EOF. rez = 1 - разделитель */
 status_code is_razdelitel(const int ch, int *rez) {
@@ -37,6 +41,7 @@ status_code digit_value(const char ch, int *val) {
         *val = ch - '0';
         return OK;
     }
+    /* буквы переводим в заглавные: 'A' - 'A' + 10 = 10, 'B' -> 11, ... 'Z' -> 35 */
     char up = (char)toupper((unsigned char)ch);
     if (up >= 'A' && up <= 'Z') {
         *val = up - 'A' + 10;
@@ -65,6 +70,8 @@ status_code read_token(FILE *in, char **buf, size_t *razmer) {
         return ferror(in) ? READ_ERROR : END_OF_FILE;
     }
 
+    /* *buf и *razmer меняем через указатели: если буфер увеличится,
+       новый адрес и размер должны попасть обратно в вызывающий код */
     /* копируем символы до разделителя или конца файла */
     size_t dlina = 0;
     while (ch != EOF) {
@@ -75,6 +82,10 @@ status_code read_token(FILE *in, char **buf, size_t *razmer) {
             break;
         }
         /* +1 - место под '\0' */
+        /* места не хватает - увеличиваем буфер вдвое (в первый раз - 16 байт).
+           realloc выделяет новый кусок, копирует туда старое содержимое и
+           возвращает новый адрес. Пишем результат во временный tmp: если realloc
+           вернет NULL, в *buf останется старый адрес и память не потеряется */
         if (dlina + 1 >= *razmer) {
             size_t new_razmer = (*razmer == 0) ? 16 : *razmer * 2;
             char *tmp = realloc(*buf, new_razmer);
@@ -84,6 +95,8 @@ status_code read_token(FILE *in, char **buf, size_t *razmer) {
             *buf = tmp;
             *razmer = new_razmer;
         }
+        /* (*buf)[dlina] - символ номер dlina в буфере; скобки нужны,
+           потому что buf - адрес указателя, а не сам буфер */
         (*buf)[dlina] = (char)ch;
         dlina++;
         ch = fgetc(in);
@@ -99,6 +112,7 @@ status_code analyze_number(const char *str, int *otric, size_t *nachalo, int *ba
     if (str == NULL || otric == NULL || nachalo == NULL || base == NULL || znachenie == NULL) {
         return INVALID_ARGS;
     }
+    /* i - откуда начинаются цифры: после знака, если он есть */
     size_t i = 0;
     *otric = 0;
     if (str[0] == '-' || str[0] == '+') {
@@ -133,6 +147,9 @@ status_code analyze_number(const char *str, int *otric, size_t *nachalo, int *ba
     }
 
     /* 3) значение по схеме Горнера с проверкой переполнения */
+    /* Число собираем слева направо: val = val * base + цифра.
+       Пример "1F" в base 16: 0 * 16 + 1 = 1, 1 * 16 + 15 = 31.
+       Проверка переполнения ДО умножения, иначе его уже не заметить */
     long long val = 0;
     for (size_t j = i; str[j] != '\0'; j++) {
         int d = 0;
@@ -145,6 +162,7 @@ status_code analyze_number(const char *str, int *otric, size_t *nachalo, int *ba
         }
         val = val * *base + d;
     }
+    /* -val не переполнится: val <= LLONG_MAX, а -LLONG_MAX в long long помещается */
     *znachenie = *otric ? -val : val;
     return OK;
 }
@@ -154,17 +172,24 @@ status_code process_file(FILE *in, FILE *out, long *propuscheno) {
     if (in == NULL || out == NULL || propuscheno == NULL) {
         return INVALID_ARGS;
     }
+    /* buf - буфер под лексему, один на весь файл: read_token сам увеличивает его
+       при необходимости. Начинаем с пустого (NULL, размер 0) */
     char *buf = NULL;
     size_t razmer = 0;
     status_code sc;
     *propuscheno = 0;
 
+    /* читаем лексемы, пока read_token возвращает OK. Цикл кончится на END_OF_FILE
+       (лексем больше нет - это нормально) или на ошибке */
     while ((sc = read_token(in, &buf, &razmer)) == OK) {
         int otric = 0, base = 0;
         size_t nachalo = 0;
         long long val = 0;
         status_code res = analyze_number(buf, &otric, &nachalo, &base, &val);
 
+        /* Печатаем: знак, число без ведущих нулей (buf + nachalo - адрес символа
+           с номером nachalo, то есть строка с этого места), основание, значение.
+           Слишком большое - вместо значения too_big. zapisano < 0 - ошибка записи */
         int zapisano = 0;
         if (res == OK) {
             zapisano = fprintf(out, "%s%s %d %lld\n", otric ? "-" : "", buf + nachalo, base, val);
@@ -180,6 +205,7 @@ status_code process_file(FILE *in, FILE *out, long *propuscheno) {
         }
     }
     free(buf);   /* free(NULL) ничего не делает - это безопасно */
+    /* END_OF_FILE - нормальный конец файла, для main это OK */
     return (sc == END_OF_FILE) ? OK : sc;
 }
 
@@ -193,6 +219,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    /* "r" - чтение, "w" - запись (файл создается, старое содержимое стирается).
+       Если второй файл не открылся - закрываем первый и выходим */
     FILE *in = fopen(argv[1], "r");
     if (in == NULL) {
         fprintf(stderr, "Error: can not open file '%s'\n", argv[1]);
@@ -212,6 +240,9 @@ int main(int argc, char *argv[]) {
         sc = WRITE_ERROR;
     }
 
+    /* по статусу печатаем итог. default ("internal error") - запасная ветка для статусов,
+       которые здесь появиться не могут: INVALID_ARGS (main передает открытые файлы).
+       Пользователь это сообщение не увидит; если увидел - ошибка в самом коде программы */
     switch (sc) {
         case OK:
             printf("Done. Result is in '%s'\n", argv[2]);
@@ -229,7 +260,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Error: can not write file '%s'\n", argv[2]);
             return 1;
         default:
-            fprintf(stderr, "Error: something went wrong\n");
+            fprintf(stderr, "Error: internal error\n");
             return 1;
     }
 }

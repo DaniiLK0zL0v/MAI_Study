@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
-# Запуск тестов из файлов tests_taskN.txt (Linux / WSL / Git Bash; нужен bash 4.3+).
-#   ./run_tests.sh                - все файлы tests_task*.txt
-#   ./run_tests.sh 1              - только tests_task1.txt
+# Запуск тестов из файлов tests/tests_taskN.txt (Linux / WSL / Git Bash; нужен bash 4.3+).
+#   ./run_tests.sh                - все файлы tests/tests_task*.txt
+#   ./run_tests.sh 1              - только tests/tests_task1.txt
 #   ./run_tests.sh --memcheck     - то же, но каждая программа запускается под valgrind;
 #   ./run_tests.sh --memcheck 1     тест не пройден, если valgrind нашёл ошибку памяти или утечку
-# Перед запуском собрать программы: make
+# Перед запуском собрать программы: make (они появятся в папке build/)
 
 cd "$(dirname "$0")" || exit 1
 TIMEOUT=60   # секунд на один тест
+MAX_LINES=8  # сколько строк ответа программы показывать под PASS
 # только для Git Bash на Windows: не превращать аргумент "/s" в путь "C:/Program Files/Git/s"
 export MSYS_NO_PATHCONV=1
 
 if [ -t 1 ]; then
-    GREEN=$'\e[32m'; RED=$'\e[31m'; YELLOW=$'\e[33m'; CYAN=$'\e[36m'; NC=$'\e[0m'
+    GREEN=$'\e[32m'; RED=$'\e[31m'; YELLOW=$'\e[33m'; CYAN=$'\e[36m'; GRAY=$'\e[90m'; NC=$'\e[0m'
 else
-    GREEN=""; RED=""; YELLOW=""; CYAN=""; NC=""
+    GREEN=""; RED=""; YELLOW=""; CYAN=""; GRAY=""; NC=""
 fi
 
 MEMCHECK=0
@@ -33,9 +34,9 @@ if [ "$1" = "--memcheck" ]; then
 fi
 
 if [ -n "$1" ]; then
-    files=("tests_task$1.txt")
+    files=("tests/tests_task$1.txt")
 else
-    files=($(ls tests_task*.txt 2>/dev/null | sort -V))
+    files=($(ls tests/tests_task*.txt 2>/dev/null | sort -V))
 fi
 if [ ${#files[@]} -eq 0 ] || [ ! -f "${files[0]}" ]; then
     echo "${RED}No test files found${NC}"
@@ -95,6 +96,30 @@ vsego=0
 proshlo=0
 ITOGI=()   # итог проверки памяти по каждому заданию
 
+# ответ программы под PASS: строки из файлов-аргументов (stderr, stdout, выходной файл),
+# первые MAX_LINES строк серым, остальное - одной строкой "..."
+show_answer() {
+    local f s i lines=()
+    for f in "$@"; do
+        [ -f "$f" ] || continue
+        [ "$f" = "$FILE" ] && lines+=("file $FILE:")
+        while IFS= read -r s || [ -n "$s" ]; do lines+=("${s%$'\r'}"); done <"$f"
+    done
+    # пустые строки в конце не показываем
+    while [ ${#lines[@]} -gt 0 ] && [ -z "${lines[-1]// /}" ]; do unset 'lines[-1]'; done
+    if [ ${#lines[@]} -eq 0 ]; then
+        echo "     ${GRAY}| (no output)${NC}"
+        return 0
+    fi
+    for ((i = 0; i < ${#lines[@]} && i < MAX_LINES; i++)); do
+        echo "     ${GRAY}| ${lines[$i]}${NC}"
+    done
+    if [ ${#lines[@]} -gt $MAX_LINES ]; then
+        echo "     ${GRAY}| ... ($(( ${#lines[@]} - MAX_LINES )) more lines)${NC}"
+    fi
+    return 0
+}
+
 run_test() {
     vsego=$((vsego + 1))
     [ -n "$FILE" ] && rm -f "$FILE"
@@ -132,7 +157,11 @@ run_test() {
     [ ${#INPUT[@]} -gt 0 ] && komanda="$komanda  < ${#INPUT[@]} input lines"
     if [ $ok -eq 1 ]; then
         proshlo=$((proshlo + 1))
-        echo "${GREEN}PASS${NC} $NAME  [$komanda]"
+        # тест на ошибку (программа завершилась с кодом не 0, как и ждали) или обычный запуск
+        local vid="${CYAN}[normal run]${NC}"
+        [ "$kod" -ne 0 ] && vid="${YELLOW}[error expected]${NC}"
+        echo "${GREEN}PASS${NC} $vid $NAME  [$komanda]"
+        show_answer "$TMP/err" "$TMP/out" ${FILE:+"$FILE"}
         [ -n "$FILE" ] && rm -f "$FILE"
     else
         echo "${RED}FAIL${NC} $NAME  [$komanda]"
@@ -181,9 +210,10 @@ for f in "${files[@]}"; do
         fi
         if [[ $line =~ ^program:[[:space:]]*(.*)$ ]]; then
             PROGRAM="${BASH_REMATCH[1]}"
-            EXE="./$PROGRAM"
-            # на Windows (Git Bash) программа с .exe
-            [ -f "$EXE" ] || EXE="./$PROGRAM.exe"
+            # программа лежит в build/ (ее туда кладет make);
+            # в Git Bash на Windows - exe, собранный zig в ../windows/build/
+            EXE="./build/$PROGRAM"
+            [ -f "$EXE" ] || EXE="../windows/build/$PROGRAM.exe"
             echo "${CYAN}===== $f  ($PROGRAM) =====${NC}"
             if [ ! -x "$EXE" ]; then
                 echo "${RED}Error: program '$PROGRAM' not found. Run make first.${NC}"
