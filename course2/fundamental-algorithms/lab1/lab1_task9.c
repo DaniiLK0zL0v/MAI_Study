@@ -285,22 +285,35 @@ int main(int argc, char *argv[]) {
 
     /* ===== Часть 1 ===== */
     printf("Part 1\n");
-    /* массив фиксированного размера: заполняем случайными числами из [a, b], печатаем,
-       меняем местами минимум и максимум, печатаем снова.
+    /* Массив фиксированного размера: размер задан заранее константой FIXED_SIZE
+       и во время работы не меняется. Память под него берем из кучи через malloc
+       (как и в части 2), поэтому в конце части 1 ее нужно освободить - и при
+       успехе, и на каждом выходе с ошибкой.
+       Заполняем случайными числами из [a, b], печатаем, меняем местами минимум
+       и максимум, печатаем снова.
        Если первая функция в условии вернула не OK, вторая уже не вызывается (так работает ||) */
-    int arr[FIXED_SIZE];
+    int *arr = malloc(FIXED_SIZE * sizeof(int));
+    if (arr == NULL) {
+        fprintf(stderr, "Error: not enough memory\n");
+        return 1;
+    }
     if (fill_random(&gen, arr, FIXED_SIZE, a, b) != OK ||
         print_array("before", arr, FIXED_SIZE) != OK) {
         fprintf(stderr, "Error: internal error\n");
+        free(arr);
         return 1;
     }
     size_t i_min = 0, i_max = 0;
     if (swap_min_max(arr, FIXED_SIZE, &i_min, &i_max) != OK ||
         print_array("after ", arr, FIXED_SIZE) != OK) {
         fprintf(stderr, "Error: internal error\n");
+        free(arr);
         return 1;
     }
     printf("min was at index %zu, max was at index %zu\n", i_min, i_max);
+    /* часть 1 закончена - массив больше не нужен */
+    free(arr);
+    arr = NULL;
 
     /* ===== Часть 2 ===== */
     printf("\nPart 2\n");
