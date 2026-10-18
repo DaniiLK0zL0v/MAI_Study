@@ -1,0 +1,280 @@
+# Тесты для задания 1 (программа lab2_task1)
+#
+# Как запустить:  Linux:   bash run_tests.sh 1              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 1   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: "a b"
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   outre: то же, но шаблоном (регулярное выражение) - для случайного порядка в -c
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab2_task1
+
+# ============================================================
+# -l: длина строки
+# ============================================================
+
+name: -l: обычная строка
+args: -l hello
+out: Length: 5
+code: 0
+
+name: -l: строка с пробелами (в кавычках - один аргумент)
+args: -l "a b c"
+out: Length: 5
+code: 0
+
+name: -l: флаг через /
+args: /l abcdef
+out: Length: 6
+code: 0
+
+name: -l: один символ
+args: -l x
+out: Length: 1
+code: 0
+
+# ============================================================
+# -r: строка задом наперед
+# ============================================================
+
+name: -r: обычная строка
+args: -r hello
+out: Result: olleh
+code: 0
+
+name: -r: четная длина
+args: -r abcd
+out: Result: dcba
+code: 0
+
+name: -r: один символ
+args: -r x
+out: Result: x
+code: 0
+
+name: -r: палиндром не меняется
+args: -r level
+out: Result: level
+code: 0
+
+name: -r: цифры и знаки тоже переворачиваются
+args: -r "12 ab!"
+out: Result: !ba 21
+code: 0
+
+# ============================================================
+# -u: нечетные позиции (1, 3, 5, ...) в верхний регистр
+# ============================================================
+
+name: -u: позиция 0 не меняется, 1, 3, 5 - большие
+args: -u abcdef
+out: Result: aBcDeF
+code: 0
+
+name: -u: нечетная длина
+args: -u hello
+out: Result: hElLo
+code: 0
+
+name: -u: большие буквы на четных местах так и остаются большими
+args: -u ABCDEF
+out: Result: ABCDEF
+code: 0
+
+name: -u: цифры и знаки на нечетных местах не меняются, буква на месте 5 - большая
+args: -u "a1b2-c"
+out: Result: a1b2-C
+code: 0
+
+name: -u: один символ (позиция 0)
+args: -u q
+out: Result: q
+code: 0
+
+# ============================================================
+# -n: сначала цифры, потом буквы, потом остальное
+# ============================================================
+
+name: -n: смешанная строка
+args: -n "a1-b2"
+out: Result: 12ab-
+code: 0
+
+name: -n: порядок внутри групп сохраняется
+args: -n "z9!y8?x7"
+out: Result: 987zyx!?
+code: 0
+
+name: -n: только буквы
+args: -n abc
+out: Result: abc
+code: 0
+
+name: -n: только знаки
+args: -n "!?."
+out: Result: !?.
+code: 0
+
+name: -n: пробелы - это "остальное"
+args: -n "a 1 b"
+out: Result: 1ab
+code: 0
+
+# ============================================================
+# -c: склейка строк в случайном порядке (seed для srand)
+# Порядок зависит от rand(): на Windows и Linux он разный,
+# поэтому проверяем шаблоном - "любая из перестановок"
+# ============================================================
+
+name: -c: только одна строка (после seed ничего нет)
+args: -c abc 5
+out: Result: abc
+code: 0
+
+name: -c: две строки
+args: -c ab 7 cd
+outre: Result: (abcd|cdab)
+code: 0
+
+name: -c: три строки - одна из 6 перестановок
+args: -c a 42 b c
+outre: Result: (abc|acb|bac|bca|cab|cba)
+code: 0
+
+name: -c: seed 0 - тоже правильное число
+args: -c x 0 y
+outre: Result: (xy|yx)
+code: 0
+
+name: -c: самый большой seed (UINT_MAX)
+args: -c x 4294967295 y
+outre: Result: (xy|yx)
+code: 0
+
+name: -c: seed с ведущими нулями
+args: -c x 007 y
+outre: Result: (xy|yx)
+code: 0
+
+name: -c: строки с пробелами
+args: -c "a b" 1 "c d"
+outre: Result: (a bc d|c da b)
+code: 0
+
+# ============================================================
+# Ошибки в seed
+# ============================================================
+
+name: -c: seed - буквы
+args: -c abc xyz def
+err: Error: seed 'xyz' must be a whole number 0 or more
+code: 1
+
+name: -c: seed отрицательный
+args: -c abc -5 def
+err: Error: seed '-5' must be a whole number 0 or more
+code: 1
+
+name: -c: seed со знаком +
+args: -c abc +5 def
+err: Error: seed '+5' must be a whole number 0 or more
+code: 1
+
+name: -c: seed - дробное число
+args: -c abc 1.5 def
+err: Error: seed '1.5' must be a whole number 0 or more
+code: 1
+
+name: -c: seed с буквой в конце
+args: -c abc 12a def
+err: Error: seed '12a' must be a whole number 0 or more
+code: 1
+
+name: -c: seed - пустая строка
+args: -c abc "" def
+err: Error: seed '' must be a whole number 0 or more
+code: 1
+
+name: -c: seed на 1 больше UINT_MAX
+args: -c abc 4294967296 def
+err: Error: seed '4294967296' is too big (max 4294967295)
+code: 1
+
+name: -c: seed очень большой
+args: -c abc 99999999999999999999 def
+err: Error: seed '99999999999999999999' is too big (max 4294967295)
+code: 1
+
+# ============================================================
+# Ошибки в количестве аргументов
+# ============================================================
+
+name: нет аргументов
+args:
+err: Usage: lab2_task1 <flag> <string>
+err:        lab2_task1 -c <string> <seed> [string ...]
+err: Flags: -l, -r, -u, -n, -c (or /l, /r, ...)
+code: 1
+
+name: только флаг, без строки
+args: -l
+err: Usage: lab2_task1 <flag> <string>
+err:        lab2_task1 -c <string> <seed> [string ...]
+err: Flags: -l, -r, -u, -n, -c (or /l, /r, ...)
+code: 1
+
+name: -l: лишняя строка
+args: -l abc def
+err: Error: flag -l needs exactly one string
+code: 1
+
+name: -r: лишняя строка
+args: -r abc def
+err: Error: flag -r needs exactly one string
+code: 1
+
+name: -c: нет seed
+args: -c abc
+err: Error: flag -c needs a string and a seed
+code: 1
+
+# ============================================================
+# Ошибки во флаге
+# ============================================================
+
+name: незнакомая буква
+args: -x abc
+err: Error: wrong flag '-x'
+code: 1
+
+name: две буквы
+args: -ll abc
+err: Error: wrong flag '-ll'
+code: 1
+
+name: большая буква
+args: -L abc
+err: Error: wrong flag '-L'
+code: 1
+
+name: без - и /
+args: l abc
+err: Error: wrong flag 'l'
+code: 1
+
+name: только минус
+args: - abc
+err: Error: wrong flag '-'
+code: 1
+
+name: строка на месте флага (флаг должен быть первым)
+args: abc -l
+err: Error: wrong flag 'abc'
+code: 1
