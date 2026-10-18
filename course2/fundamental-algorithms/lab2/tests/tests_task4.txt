@@ -1,0 +1,572 @@
+# Тесты для задания 4 (программа lab2_task4)
+#
+# Как запустить:  Linux:   bash run_tests.sh 4              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 4   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   input: строка стандартного ввода (несколько input подряд - несколько строк)
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Ввод: первая строка "n capacity", потом n строк "имя размер важность".
+# Суммарная важность в каждом ответе проверена на Python точным перебором (динамика по важности
+# на словаре - без ограничений на размер чисел). Если лучших наборов несколько, программа
+# может выбрать любой; в тестах ниже записан набор, который выбирает эта программа.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab2_task4
+
+# ============================================================
+# Обычные случаи
+# ============================================================
+
+name: пример: лучше два средних, чем один большой
+input: 3 10
+input: a 5 10
+input: b 4 40
+input: c 6 30
+out: TOTAL_SIZE 10
+out: TOTAL_IMPORTANCE 70
+out: FILES 2
+out: b
+out: c
+code: 0
+
+name: классический пример - жадный по важности/размеру ошибся бы
+input: 3 50
+input: a 10 60
+input: b 20 100
+input: c 30 120
+out: TOTAL_SIZE 50
+out: TOTAL_IMPORTANCE 220
+out: FILES 2
+out: b
+out: c
+code: 0
+
+name: помещаются все файлы
+input: 3 100
+input: a 10 1
+input: b 20 2
+input: c 30 3
+out: TOTAL_SIZE 60
+out: TOTAL_IMPORTANCE 6
+out: FILES 3
+out: a
+out: b
+out: c
+code: 0
+
+name: ровно по вместимости
+input: 2 10
+input: a 4 1
+input: b 6 1
+out: TOTAL_SIZE 10
+out: TOTAL_IMPORTANCE 2
+out: FILES 2
+out: a
+out: b
+code: 0
+
+name: один файл, помещается
+input: 1 5
+input: only.txt 5 7
+out: TOTAL_SIZE 5
+out: TOTAL_IMPORTANCE 7
+out: FILES 1
+out: only.txt
+code: 0
+
+name: один файл, не помещается - пустой набор
+input: 1 4
+input: big.iso 5 7
+out: TOTAL_SIZE 0
+out: TOTAL_IMPORTANCE 0
+out: FILES 0
+code: 0
+
+name: ни один файл не помещается - пустой набор
+input: 2 5
+input: a 6 1
+input: b 7 1
+out: TOTAL_SIZE 0
+out: TOTAL_IMPORTANCE 0
+out: FILES 0
+code: 0
+
+name: вместимость 0 - пустой набор
+input: 2 0
+input: a 1 5
+input: b 2 5
+out: TOTAL_SIZE 0
+out: TOTAL_IMPORTANCE 0
+out: FILES 0
+code: 0
+
+name: все важности 0 - файлы не берем (место занимают, важности не дают)
+input: 2 10
+input: a 1 0
+input: b 2 0
+out: TOTAL_SIZE 0
+out: TOTAL_IMPORTANCE 0
+out: FILES 0
+code: 0
+
+name: файл с важностью 0 не берется, даже если есть место
+input: 3 100
+input: a 10 5
+input: zero 1 0
+input: b 20 6
+out: TOTAL_SIZE 30
+out: TOTAL_IMPORTANCE 11
+out: FILES 2
+out: a
+out: b
+code: 0
+
+name: порядок вывода - как во входе, а не по важности
+input: 4 10
+input: d 3 1
+input: c 3 9
+input: b 3 9
+input: a 3 9
+out: TOTAL_SIZE 9
+out: TOTAL_IMPORTANCE 27
+out: FILES 3
+out: c
+out: b
+out: a
+code: 0
+
+name: имена с точками, цифрами и подчеркиваниями
+input: 3 7
+input: report_2025.pdf 3 5
+input: photo.01.jpg 4 6
+input: x 5 4
+out: TOTAL_SIZE 7
+out: TOTAL_IMPORTANCE 11
+out: FILES 2
+out: report_2025.pdf
+out: photo.01.jpg
+code: 0
+
+name: много файлов (12), одинаковые размеры
+input: 12 25
+input: f00 5 1
+input: f01 5 8
+input: f02 5 2
+input: f03 5 9
+input: f04 5 3
+input: f05 5 10
+input: f06 5 4
+input: f07 5 11
+input: f08 5 5
+input: f09 5 12
+input: f10 5 6
+input: f11 5 13
+out: TOTAL_SIZE 25
+out: TOTAL_IMPORTANCE 55
+out: FILES 5
+out: f03
+out: f05
+out: f07
+out: f09
+out: f11
+code: 0
+
+# ============================================================
+# Формат ввода: пробелы, пустые строки, длинные имена
+# ============================================================
+
+name: лишние пробелы и табуляции между словами
+input: 2   10
+input: a 	 3   4
+input:   b 4 5
+out: TOTAL_SIZE 7
+out: TOTAL_IMPORTANCE 9
+out: FILES 2
+out: a
+out: b
+code: 0
+
+name: пустые строки пропускаются
+input:
+input: 2 10
+input:
+input: a 3 4
+input:
+input: b 4 5
+input:
+out: TOTAL_SIZE 7
+out: TOTAL_IMPORTANCE 9
+out: FILES 2
+out: a
+out: b
+code: 0
+
+name: ведущие нули в числах
+input: 2 010
+input: a 03 4
+input: b 0004 05
+out: TOTAL_SIZE 7
+out: TOTAL_IMPORTANCE 9
+out: FILES 2
+out: a
+out: b
+code: 0
+
+name: имя длиной 1000 символов
+input: 1 5
+input: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn 3 7
+out: TOTAL_SIZE 3
+out: TOTAL_IMPORTANCE 7
+out: FILES 1
+out: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+code: 0
+
+# ============================================================
+# Большие числа: огромная вместимость, огромные размеры
+# ============================================================
+
+name: вместимость 10^18, маленькие файлы - берем все без таблицы
+input: 3 1000000000000000000
+input: a 5 1
+input: b 6 2
+input: c 7 3
+out: TOTAL_SIZE 18
+out: TOTAL_IMPORTANCE 6
+out: FILES 3
+out: a
+out: b
+out: c
+code: 0
+
+name: максимальная вместимость LLONG_MAX
+input: 2 9223372036854775807
+input: a 9223372036854775807 1
+input: b 1 1
+out: TOTAL_SIZE 9223372036854775807
+out: TOTAL_IMPORTANCE 1
+out: FILES 1
+out: a
+code: 0
+
+name: файл больше вместимости отбрасывается
+input: 3 1000000000000000000
+input: x 5 1
+input: y 6 2
+input: w 2000000000000000000 9
+out: TOTAL_SIZE 11
+out: TOTAL_IMPORTANCE 3
+out: FILES 2
+out: x
+out: y
+code: 0
+
+name: размеры около 10^12, маленькие важности - таблица по важности
+input: 3 1000000000000
+input: a 600000000000 5
+input: b 500000000000 4
+input: c 500000000000 3
+out: TOTAL_SIZE 1000000000000
+out: TOTAL_IMPORTANCE 7
+out: FILES 2
+out: b
+out: c
+code: 0
+
+name: 30 файлов размером ~10^15, важности до 17 - таблица по важности
+input: 30 100000000000000000
+input: f00 300000000000000 1
+input: f01 6500000000000000 15
+input: f02 3000000000000000 12
+input: f03 9200000000000000 9
+input: f04 5700000000000000 6
+input: f05 2200000000000000 3
+input: f06 8400000000000000 17
+input: f07 4900000000000000 14
+input: f08 1400000000000000 11
+input: f09 7600000000000000 8
+input: f10 4100000000000000 5
+input: f11 600000000000000 2
+input: f12 6800000000000000 16
+input: f13 3300000000000000 13
+input: f14 9500000000000000 10
+input: f15 6000000000000000 7
+input: f16 2500000000000000 4
+input: f17 8700000000000000 1
+input: f18 5200000000000000 15
+input: f19 1700000000000000 12
+input: f20 7900000000000000 9
+input: f21 4400000000000000 6
+input: f22 900000000000000 3
+input: f23 7100000000000000 17
+input: f24 3600000000000000 14
+input: f25 9800000000000000 11
+input: f26 6300000000000000 8
+input: f27 2800000000000000 5
+input: f28 9000000000000000 2
+input: f29 5500000000000000 16
+out: TOTAL_SIZE 99200000000000000
+out: TOTAL_IMPORTANCE 229
+out: FILES 23
+out: f00
+out: f01
+out: f02
+out: f05
+out: f06
+out: f07
+out: f08
+out: f10
+out: f11
+out: f12
+out: f13
+out: f16
+out: f18
+out: f19
+out: f20
+out: f21
+out: f22
+out: f23
+out: f24
+out: f25
+out: f26
+out: f27
+out: f29
+code: 0
+
+name: огромные размеры и важности, мало файлов - полный перебор
+input: 4 1000000000000000000
+input: a 600000000000000000 500000000000000000
+input: b 500000000000000000 400000000000000000
+input: c 500000000000000000 300000000000000000
+input: d 400000000000000000 350000000000000000
+out: TOTAL_SIZE 1000000000000000000
+out: TOTAL_IMPORTANCE 850000000000000000
+out: FILES 2
+out: a
+out: d
+code: 0
+
+name: важность 9*10^18 - близко к LLONG_MAX, но ответ помещается
+input: 3 10
+input: a 6 9000000000000000000
+input: b 5 9000000000000000000
+input: c 5 1
+out: TOTAL_SIZE 10
+out: TOTAL_IMPORTANCE 9000000000000000001
+out: FILES 2
+out: b
+out: c
+code: 0
+
+name: сумма важностей всех файлов больше LLONG_MAX, но вместе они не помещаются
+input: 2 10
+input: a 6 9000000000000000000
+input: b 6 9000000000000000000
+out: TOTAL_SIZE 6
+out: TOTAL_IMPORTANCE 9000000000000000000
+out: FILES 1
+out: a
+code: 0
+
+# ============================================================
+# Ошибки ввода
+# ============================================================
+
+name: пустой ввод
+err: Error: no input, the first line must be: n capacity
+code: 1
+
+name: только пустые строки
+input:
+input:
+err: Error: no input, the first line must be: n capacity
+code: 1
+
+name: в первой строке одно число
+input: 5
+err: Error: line 1: the first line must be: n capacity
+code: 1
+
+name: в первой строке три числа
+input: 1 10 5
+input: a 1 1
+err: Error: line 1: the first line must be: n capacity
+code: 1
+
+name: n = 0
+input: 0 10
+err: Error: line 1: n must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: n отрицательное
+input: -1 10
+err: Error: line 1: n must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: n - не число
+input: abc 10
+err: Error: line 1: n must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: n больше LLONG_MAX
+input: 99999999999999999999 10
+err: Error: line 1: n must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: capacity отрицательная
+input: 2 -5
+err: Error: line 1: capacity must be a whole number from 0 to 9223372036854775807
+code: 1
+
+name: capacity дробная
+input: 2 1.5
+err: Error: line 1: capacity must be a whole number from 0 to 9223372036854775807
+code: 1
+
+name: capacity больше LLONG_MAX
+input: 1 9223372036854775808
+input: a 1 1
+err: Error: line 1: capacity must be a whole number from 0 to 9223372036854775807
+code: 1
+
+name: строк с файлами меньше n
+input: 3 10
+input: a 1 1
+input: b 2 2
+err: Error: expected 3 files, but found only 2
+code: 1
+
+name: огромное n, а файлов два
+input: 1000000000000000000 10
+input: a 1 1
+input: b 2 2
+err: Error: expected 1000000000000000000 files, but found only 2
+code: 1
+
+name: строк с файлами больше n
+input: 1 10
+input: a 1 1
+input: b 2 2
+err: Error: line 3: there are more than 1 files
+code: 1
+
+name: в строке файла нет важности
+input: 1 10
+input: a 1
+err: Error: line 2: a file line must be: name size importance
+code: 1
+
+name: имя с пробелом - получается четыре слова
+input: 1 10
+input: my file 1 1
+err: Error: line 2: a file line must be: name size importance
+code: 1
+
+name: размер 0
+input: 1 10
+input: a 0 1
+err: Error: line 2: size must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: размер отрицательный
+input: 1 10
+input: a -3 1
+err: Error: line 2: size must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: размер со знаком +
+input: 1 10
+input: a +3 1
+err: Error: line 2: size must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: размер больше LLONG_MAX
+input: 1 10
+input: a 9223372036854775808 1
+err: Error: line 2: size must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: важность отрицательная
+input: 1 10
+input: a 1 -1
+err: Error: line 2: importance must be a whole number from 0 to 9223372036854775807
+code: 1
+
+name: важность - не число
+input: 1 10
+input: a 1 high
+err: Error: line 2: importance must be a whole number from 0 to 9223372036854775807
+code: 1
+
+name: ошибка во второй строке файла - номер строки 3
+input: 2 10
+input: a 1 1
+input: b x 1
+err: Error: line 3: size must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: одинаковые имена
+input: 3 10
+input: a 1 1
+input: b 1 1
+input: a 2 2
+err: Error: file name 'a' is used more than once
+code: 1
+
+name: имена отличаются только регистром - это разные файлы (не ошибка)
+input: 2 10
+input: a 1 1
+input: A 1 1
+out: TOTAL_SIZE 2
+out: TOTAL_IMPORTANCE 2
+out: FILES 2
+out: a
+out: A
+code: 0
+
+name: сумма важностей выбранных файлов больше LLONG_MAX
+input: 2 10
+input: a 1 9000000000000000000
+input: b 1 9000000000000000000
+err: Error: the sum of importances is too big
+code: 1
+
+name: 30 файлов, огромные размеры и важности - задача слишком большая
+input: 30 100000000000000000
+input: f00 3000000000000000 100000000000000
+input: f01 65000000000000000 1500000000000000
+input: f02 30000000000000000 1200000000000000
+input: f03 92000000000000000 900000000000000
+input: f04 57000000000000000 600000000000000
+input: f05 22000000000000000 300000000000000
+input: f06 84000000000000000 1700000000000000
+input: f07 49000000000000000 1400000000000000
+input: f08 14000000000000000 1100000000000000
+input: f09 76000000000000000 800000000000000
+input: f10 41000000000000000 500000000000000
+input: f11 6000000000000000 200000000000000
+input: f12 68000000000000000 1600000000000000
+input: f13 33000000000000000 1300000000000000
+input: f14 95000000000000000 1000000000000000
+input: f15 60000000000000000 700000000000000
+input: f16 25000000000000000 400000000000000
+input: f17 87000000000000000 100000000000000
+input: f18 52000000000000000 1500000000000000
+input: f19 17000000000000000 1200000000000000
+input: f20 79000000000000000 900000000000000
+input: f21 44000000000000000 600000000000000
+input: f22 9000000000000000 300000000000000
+input: f23 71000000000000000 1700000000000000
+input: f24 36000000000000000 1400000000000000
+input: f25 98000000000000000 1100000000000000
+input: f26 63000000000000000 800000000000000
+input: f27 28000000000000000 500000000000000
+input: f28 90000000000000000 200000000000000
+input: f29 55000000000000000 1600000000000000
+err: Error: the task is too big: too many files with too big capacity and importances
+code: 1
