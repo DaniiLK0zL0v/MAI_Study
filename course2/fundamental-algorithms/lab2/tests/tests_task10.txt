@@ -1,0 +1,294 @@
+# Тесты для задания 10 (программа lab2_task10)
+#
+# Как запустить:  Linux:   bash run_tests.sh 10              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 10   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: "a b"
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Аргументы программы: <eps> <a> <f0> [f1 ... fn]  ->  f(x) = f0 + f1*x + ... + fn*x^n.
+# Правильные коэффициенты g проверены на Python точными дробями (fractions.Fraction):
+#   g_k = сумма по j >= k:  f_j * C(j, k) * a^(j - k)   (бином Ньютона для ((x - a) + a)^j).
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab2_task10
+
+# ============================================================
+# Демонстрация (без аргументов): готовые вызовы polynomial_reexpand
+# ============================================================
+
+name: демонстрация - все примеры
+args:
+out: Re-expansion f(x) = f0 + f1*x + ... + fn*x^n
+out: into f(x) = g0 + g1*(x - a) + ... + gn*(x - a)^n, eps = 1e-09
+out:
+out: f(x) = 1 + 2*x + 3*x^2, a = 1
+out: g = 6, 8, 3
+out: f(x) = 6 + 8*(x - 1) + 3*(x - 1)^2
+out: check at x = -2..2: ok
+out:
+out: f(x) = 1*x^3, a = 2
+out: g = 8, 12, 6, 1
+out: f(x) = 8 + 12*(x - 2) + 6*(x - 2)^2 + 1*(x - 2)^3
+out: check at x = -2..2: ok
+out:
+out: f(x) = 5, a = 3
+out: g = 5
+out: f(x) = 5
+out: check at x = -2..2: ok
+out:
+out: f(x) = 1 + 1*x + 1*x^2 + 1*x^3 + 1*x^4, a = 1
+out: g = 5, 10, 10, 5, 1
+out: f(x) = 5 + 10*(x - 1) + 10*(x - 1)^2 + 5*(x - 1)^3 + 1*(x - 1)^4
+out: check at x = -2..2: ok
+out:
+out: f(x) = 1*x^2, a = -2
+out: g = 4, -4, 1
+out: f(x) = 4 - 4*(x + 2) + 1*(x + 2)^2
+out: check at x = -2..2: ok
+out:
+out: f(x) = 2 - 1*x + 4*x^2, a = 0
+out: g = 2, -1, 4
+out: f(x) = 2 - 1*x + 4*x^2
+out: check at x = -2..2: ok
+out:
+out: f(x) = 0.01 - 0.2*x + 1*x^2, a = 0.1
+out: g = 0, 0, 1
+out: f(x) = 1*(x - 0.1)^2
+out: check at x = -2..2: ok
+out:
+out: f(x) = 1 - 3.5*x + 2*x^3, a = 0.5
+out: g = -0.5, -2, 3, 2
+out: f(x) = -0.5 - 2*(x - 0.5) + 3*(x - 0.5)^2 + 2*(x - 0.5)^3
+out: check at x = -2..2: ok
+out:
+out: Errors:
+out:
+out: eps = 0: f(x) = 1 + 2*x + 3*x^2, a = 1
+out: -> error: eps must be greater than 0
+out:
+out: eps = -1e-9: f(x) = 1 + 2*x + 3*x^2, a = 1
+out: -> error: eps must be greater than 0
+out:
+out: degree -1: -> error: degree must be 0 or more
+out:
+out: f(x) = 1 + inf*x, a = 1
+out: -> error: a and coefficients must be usual numbers (not inf or nan)
+out:
+out: f(x) = 1*x^2, a = 1e+200
+out: -> error: the result is too big
+code: 0
+
+# ============================================================
+# Свой многочлен: обычные случаи
+# ============================================================
+
+name: 1 + 2x + 3x^2 по степеням (x - 1)
+args: 1e-9 1 1 2 3
+out: f(x) = 1 + 2*x + 3*x^2, a = 1
+out: g = 6, 8, 3
+out: f(x) = 6 + 8*(x - 1) + 3*(x - 1)^2
+out: check at x = -2..2: ok
+code: 0
+
+name: x^3 по степеням (x - 2)
+args: 1e-9 2 0 0 0 1
+out: f(x) = 1*x^3, a = 2
+out: g = 8, 12, 6, 1
+out: f(x) = 8 + 12*(x - 2) + 6*(x - 2)^2 + 1*(x - 2)^3
+out: check at x = -2..2: ok
+code: 0
+
+name: степень 0 - константа не меняется
+args: 1e-9 3 5
+out: f(x) = 5, a = 3
+out: g = 5
+out: f(x) = 5
+out: check at x = -2..2: ok
+code: 0
+
+name: x^10 по степеням (x - 1) - биномиальные коэффициенты
+args: 1e-9 1 0 0 0 0 0 0 0 0 0 0 1
+out: f(x) = 1*x^10, a = 1
+out: g = 1, 10, 45, 120, 210, 252, 210, 120, 45, 10, 1
+out: f(x) = 1 + 10*(x - 1) + 45*(x - 1)^2 + 120*(x - 1)^3 + 210*(x - 1)^4 + 252*(x - 1)^5 + 210*(x - 1)^6 + 120*(x - 1)^7 + 45*(x - 1)^8 + 10*(x - 1)^9 + 1*(x - 1)^10
+out: check at x = -2..2: ok
+code: 0
+
+name: отрицательное a - печатается (x + 2)
+args: 1e-9 -2 0 0 1
+out: f(x) = 1*x^2, a = -2
+out: g = 4, -4, 1
+out: f(x) = 4 - 4*(x + 2) + 1*(x + 2)^2
+out: check at x = -2..2: ok
+code: 0
+
+name: a = 0 - коэффициенты не меняются
+args: 1e-9 0 2 -1 4
+out: f(x) = 2 - 1*x + 4*x^2, a = 0
+out: g = 2, -1, 4
+out: f(x) = 2 - 1*x + 4*x^2
+out: check at x = -2..2: ok
+code: 0
+
+name: a = -0 - тоже просто x
+args: 1e-9 -0 2 -1 4
+out: f(x) = 2 - 1*x + 4*x^2, a = -0
+out: g = 2, -1, 4
+out: f(x) = 2 - 1*x + 4*x^2
+out: check at x = -2..2: ok
+code: 0
+
+name: дробное отрицательное a, x^5
+args: 1e-9 -1.5 0 0 0 0 0 1
+out: f(x) = 1*x^5, a = -1.5
+out: g = -7.59375, 25.3125, -33.75, 22.5, -7.5, 1
+out: f(x) = -7.59375 + 25.3125*(x + 1.5) - 33.75*(x + 1.5)^2 + 22.5*(x + 1.5)^3 - 7.5*(x + 1.5)^4 + 1*(x + 1.5)^5
+out: check at x = -2..2: ok
+code: 0
+
+name: дробное a, отрицательные коэффициенты
+args: 1e-9 0.5 1 -3.5 0 2
+out: f(x) = 1 - 3.5*x + 2*x^3, a = 0.5
+out: g = -0.5, -2, 3, 2
+out: f(x) = -0.5 - 2*(x - 0.5) + 3*(x - 0.5)^2 + 2*(x - 0.5)^3
+out: check at x = -2..2: ok
+code: 0
+
+name: старший коэффициент 0 - g2 тоже 0
+args: 1e-9 1 1 2 0
+out: f(x) = 1 + 2*x, a = 1
+out: g = 3, 2, 0
+out: f(x) = 3 + 2*(x - 1)
+out: check at x = -2..2: ok
+code: 0
+
+name: все коэффициенты нули -> многочлен 0
+args: 1e-9 5 0 0 0
+out: f(x) = 0, a = 5
+out: g = 0, 0, 0
+out: f(x) = 0
+out: check at x = -2..2: ok
+code: 0
+
+name: запись чисел .5 и 1e1
+args: 1e-9 .5 1e1 2
+out: f(x) = 10 + 2*x, a = 0.5
+out: g = 11, 2
+out: f(x) = 11 + 2*(x - 0.5)
+out: check at x = -2..2: ok
+code: 0
+
+# ============================================================
+# Роль eps
+# ============================================================
+
+name: (x - 0.1)^2 - шум округления 1.7e-18 превращается в 0
+args: 1e-9 0.1 0.01 -0.2 1
+out: f(x) = 0.01 - 0.2*x + 1*x^2, a = 0.1
+out: g = 0, 0, 1
+out: f(x) = 1*(x - 0.1)^2
+out: check at x = -2..2: ok
+code: 0
+
+# eps меньше точности double: шум остается, и проверка тоже слишком строгая
+name: (x - 0.1)^2 с eps = 1e-30 - шум виден
+args: 1e-30 0.1 0.01 -0.2 1
+out: f(x) = 0.01 - 0.2*x + 1*x^2, a = 0.1
+outre: ^g = -1\.73[0-9]*e-18, 0, 1$
+outre: ^f\(x\) = -1\.73[0-9]*e-18 \+ 1\*\(x - 0\.1\)\^2$
+out: check at x = -2..2: values differ by more than eps
+code: 0
+
+# большой eps: 0.3 меньше eps по модулю, поэтому считается нулем (и не печатается)
+name: большой eps = 0.5 - коэффициент 0.3 считается нулем
+args: 0.5 0 0.3 1
+out: f(x) = 1*x, a = 0
+out: g = 0, 1
+out: f(x) = 1*x
+out: check at x = -2..2: ok
+code: 0
+
+name: проверка пропущена - значения в точке x = 2 больше максимального double
+args: 1e-9 0 1e308 1e308
+out: f(x) = 1e+308 + 1e+308*x, a = 0
+out: g = 1e+308, 1e+308
+out: f(x) = 1e+308 + 1e+308*x
+out: check at x = -2..2: skipped, the values are too big
+code: 0
+
+# ============================================================
+# Ошибки
+# ============================================================
+
+name: без коэффициентов - подсказка
+args: 1e-9 1
+err: Usage: lab2_task10                            (demo)
+err:        lab2_task10 <eps> <a> <f0> [f1 ... fn]
+code: 1
+
+name: только eps - подсказка
+args: 1e-9
+err: Usage: lab2_task10                            (demo)
+err:        lab2_task10 <eps> <a> <f0> [f1 ... fn]
+code: 1
+
+name: eps = 0
+args: 0 1 1 2 3
+err: Error: eps must be greater than 0
+code: 1
+
+name: отрицательный eps
+args: -1e-9 1 1 2 3
+err: Error: eps must be greater than 0
+code: 1
+
+name: eps не число
+args: abc 1 1 2 3
+err: Error: eps 'abc' is not a usual number
+code: 1
+
+name: eps = nan
+args: nan 1 1 2 3
+err: Error: eps 'nan' is not a usual number
+code: 1
+
+name: a с мусором после числа
+args: 1e-9 1x 1 2
+err: Error: a '1x' is not a usual number
+code: 1
+
+name: a = inf
+args: 1e-9 inf 1 2
+err: Error: a 'inf' is not a usual number
+code: 1
+
+name: коэффициент с запятой вместо точки
+args: 1e-9 1 2,5 1
+err: Error: coefficient '2,5' is not a usual number
+code: 1
+
+name: коэффициент с пробелом впереди
+args: 1e-9 1 1 " 5"
+err: Error: coefficient ' 5' is not a usual number
+code: 1
+
+name: коэффициент больше максимального double
+args: 1e-9 1 1 1e999
+err: Error: coefficient '1e999' is not a usual number
+code: 1
+
+name: переполнение при вычислении - a^2 = 1e600
+args: 1e-9 1e300 0 0 1
+err: Error: the result is too big
+code: 1
+
+name: переполнение от больших коэффициентов
+args: 1e-9 1e200 1e200 1e200
+err: Error: the result is too big
+code: 1
