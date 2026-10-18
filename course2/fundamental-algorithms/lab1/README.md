@@ -41,7 +41,7 @@ make clean                        # удалить build/
 Поля блока: `args` (аргументы; аргумент с пробелами - в кавычках), `input` (строка стандартного ввода),
 `out` / `outre` (строка stdout; `outre` - регулярное выражение POSIX ERE), `err` (строка stderr), `code` (код возврата),
 `file` / `fout` (файл, который должна создать программа, и его строки). Строки сравниваются целиком, без учета пробелов в конце.
-Пути в тестах (`tests/data/...`) указаны относительно корня репозитория: `run_tests.sh` запускает программы из него.
+Пути в тестах (`tests/data/...`) указаны относительно папки лабораторной (где лежат `Makefile` и `run_tests.sh`): `run_tests.sh` запускает программы из нее.
 
 ## Проверка утечек и ошибок памяти
 
@@ -59,7 +59,7 @@ valgrind -q --leak-check=full --show-leak-kinds=definite,indirect,possible \
 
 Результат проверки (Ubuntu в WSL 2, gcc 15.2.0, valgrind 3.26.0): сборка с `-Werror` без предупреждений,
 224 из 224 тестов, valgrind - 0 ошибок и 0 утечек во всех 10 заданиях. Та же проверка выполняется
-GitHub Actions при каждом push (`.github/workflows/check.yml`); результат - во вкладке Actions.
+GitHub Actions при каждом push (`.github/workflows/check.yml` в корне репозитория); результат - во вкладке Actions.
 
 **Windows.** Dr. Memory 2.6.0 (`drmemory -batch -- <программа> <аргументы>`) и heob 4.2 (`heob64 -a1 -f1`).
 Задания 2, 4, 8, 9: 0 ошибок, 0 утечек. Dr. Memory сообщает одно срабатывание `UNADDRESSABLE ACCESS`
