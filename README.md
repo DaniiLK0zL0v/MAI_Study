@@ -1,0 +1,32 @@
+# MAI_Study
+
+Учебные работы, МАИ, институт 8 «Компьютерные науки и прикладная математика».
+
+Козлов Даниил Ильич, группа М8О-213БВ-25.
+
+## Состав
+
+| Курс | Предмет | Папка | Что внутри |
+|---|---|---|---|
+| 2 | Фундаментальные алгоритмы | [`course2/fundamental-algorithms`](course2/fundamental-algorithms) | лабораторная 1 (задания 1-10), лабораторная 2 (готовы 1, 4, 8, 10; черновики остальных - в `lab2/drafts/`) |
+| 2 | Объектно-ориентированное программирование | [`course2/oop`](course2/oop) | проект IntelliJ IDEA (Java) |
+
+Программы на C собираются и проверяются на Linux (gcc, valgrind). В папке каждой лабораторной -
+исходники заданий (`labN_taskK.c`), `Makefile`, тесты (`tests/`) и `README.md` с описанием сборки,
+формата тестов и замечаниями по заданиям.
+
+```sh
+cd course2/fundamental-algorithms/lab2
+make                  # программы -> build/
+make test             # все тесты
+make memcheck         # все тесты под valgrind
+```
+
+GitHub Actions (`.github/workflows/check.yml`) при каждом push собирает каждую лабораторную с `Makefile`
+(gcc с `-Werror`), запускает тесты и valgrind.
+
+## История
+
+Сюда перенесены с сохранением истории коммитов репозитории
+[Labs_FA](https://github.com/DaniiLK0zL0v/Labs_FA) (фундаментальные алгоритмы) и
+[Labs_OOP](https://github.com/DaniiLK0zL0v/Labs_OOP) (ООП).

@@ -1,0 +1,30 @@
+name: linux-check
+
+# gcc + тесты + valgrind на Ubuntu при каждом push.
+# Проверяется каждая лабораторная, в папке которой есть Makefile:
+# course*/<предмет>/labN/Makefile -> make (с -Werror), make test, make memcheck.
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install valgrind
+        run: sudo apt-get update && sudo apt-get install -y valgrind
+      - name: Build, tests, valgrind (every lab with a Makefile)
+        run: |
+          status=0
+          for mk in $(find course* -path '*/lab*/Makefile' | sort); do
+            lab=$(dirname "$mk")
+            echo "::group::$lab"
+            if ! (cd "$lab" \
+                  && make CFLAGS="-std=c99 -Wall -Wextra -Wpedantic -g -Werror" \
+                  && make test \
+                  && make memcheck); then
+              echo "::error::$lab: check failed"
+              status=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $status
