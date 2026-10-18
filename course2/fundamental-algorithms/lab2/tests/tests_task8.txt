@@ -1,0 +1,246 @@
+# Тесты для задания 8 (программа lab2_task8)
+#
+# Как запустить:  Linux:   bash run_tests.sh 8              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 8   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: "a b"
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Правильные ответы для больших чисел проверены на Python (там целые числа любой длины).
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab2_task8
+
+# ============================================================
+# Демонстрация (без аргументов): готовые вызовы sum_in_base
+# ============================================================
+
+name: демонстрация - все примеры
+args:
+out: Normal sums:
+out: base 10: 123 + 456 + 789 = 1368
+out: base 2: 1010 + 1011 = 10101
+out: base 16: ff + 1 = 100
+out: base 16: FF + ff = 1FE
+out: base 36: zz + 1 + A = 10A
+out: base 8: one number 0777 = 777
+out: base 10: no numbers = 0
+out:
+out: Leading zeros:
+out: base 10: 007 + 0003 = 10
+out: base 10: 000 + 0 + 00 = 0
+out:
+out: Numbers bigger than unsigned long long:
+out: base 10: 18446744073709551615 + 1 = 18446744073709551616
+out: base 10: 99999999999999999999999999999999999999 + 1 = 100000000000000000000000000000000000000
+out: base 2: (64 ones) + 1 = 10000000000000000000000000000000000000000000000000000000000000000
+out:
+out: Errors:
+out: base 2: 101 + 102 -> error: not a number in this base
+out: base 10: 12a + 5 -> error: not a number in this base
+out: base 10: -5 + 5 -> error: not a number in this base
+out: base 10: (empty) + 5 -> error: not a number in this base
+out: base 1: 0 + 0 -> error: base must be from 2 to 36
+out: base 37: 1 + 1 -> error: base must be from 2 to 36
+code: 0
+
+# ============================================================
+# Свои числа: обычные суммы
+# ============================================================
+
+name: десятичная, три числа
+args: 10 123 456 789
+out: Sum: 1368
+code: 0
+
+name: одно число - ответ оно само
+args: 10 42
+out: Sum: 42
+code: 0
+
+name: двоичная, перенос через все разряды
+args: 2 1111 1
+out: Sum: 10000
+code: 0
+
+name: 16-ричная, маленькие и большие буквы вперемешку
+args: 16 FF 1 a
+out: Sum: 10A
+code: 0
+
+name: 16-ричная, длинные числа
+args: 16 123456789abcdef fedcba987654321
+out: Sum: 1111111111111110
+code: 0
+
+name: основание 36, самая большая цифра Z
+args: 36 ZZZZ 1
+out: Sum: 10000
+code: 0
+
+name: основание 3
+args: 3 222 1
+out: Sum: 1000
+code: 0
+
+name: много чисел
+args: 10 1 2 3 4 5 6 7 8 9 10
+out: Sum: 55
+code: 0
+
+name: сложение с нулем
+args: 10 0 12345
+out: Sum: 12345
+code: 0
+
+# ============================================================
+# Ведущие нули
+# ============================================================
+
+name: ведущие нули на входе убираются
+args: 10 0007 03
+out: Sum: 10
+code: 0
+
+name: одно число из нулей -> 0
+args: 10 0000
+out: Sum: 0
+code: 0
+
+name: одно число с ведущими нулями
+args: 8 000777
+out: Sum: 777
+code: 0
+
+name: все нули
+args: 2 0 00 000
+out: Sum: 0
+code: 0
+
+name: основание с ведущим нулем (010 = 10)
+args: 010 5 5
+out: Sum: 10
+code: 0
+
+# ============================================================
+# Числа больше unsigned long long
+# ============================================================
+
+name: ULLONG_MAX + 1
+args: 10 18446744073709551615 1
+out: Sum: 18446744073709551616
+code: 0
+
+name: 100 единиц + 100 единиц в двоичной
+args: 2 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+out: Sum: 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110
+code: 0
+
+name: 50 девяток + 1
+args: 10 99999999999999999999999999999999999999999999999999 1
+out: Sum: 100000000000000000000000000000000000000000000000000
+code: 0
+
+# ============================================================
+# Ошибки в числах
+# ============================================================
+
+name: цифра 2 в двоичной системе
+args: 2 101 102
+err: Error: '102' is not a number in base 2
+code: 1
+
+name: буква в десятичной
+args: 10 1 2x 3
+err: Error: '2x' is not a number in base 10
+code: 1
+
+name: ошибка в первом числе
+args: 10 abc 5
+err: Error: 'abc' is not a number in base 10
+code: 1
+
+name: ошибка в последнем числе
+args: 10 1 2 3 4z
+err: Error: '4z' is not a number in base 10
+code: 1
+
+name: G в 16-ричной (цифры только до F)
+args: 16 FF G
+err: Error: 'G' is not a number in base 16
+code: 1
+
+name: отрицательное число
+args: 10 5 -3
+err: Error: '-3' is not a number in base 10
+code: 1
+
+name: знак +
+args: 10 +5 3
+err: Error: '+5' is not a number in base 10
+code: 1
+
+name: дробное число
+args: 10 1.5 3
+err: Error: '1.5' is not a number in base 10
+code: 1
+
+name: пустая строка
+args: 10 5 ""
+err: Error: '' is not a number in base 10
+code: 1
+
+name: пробел внутри числа
+args: 10 "1 2" 3
+err: Error: '1 2' is not a number in base 10
+code: 1
+
+# ============================================================
+# Ошибки в основании и количестве аргументов
+# ============================================================
+
+name: основание 1
+args: 1 0 0
+err: Error: base '1' must be a number from 2 to 36
+code: 1
+
+name: основание 0
+args: 0 1
+err: Error: base '0' must be a number from 2 to 36
+code: 1
+
+name: основание 37
+args: 37 1 1
+err: Error: base '37' must be a number from 2 to 36
+code: 1
+
+name: огромное основание
+args: 99999999999999999999 1
+err: Error: base '99999999999999999999' must be a number from 2 to 36
+code: 1
+
+name: основание - не число
+args: ten 1 1
+err: Error: base 'ten' must be a number from 2 to 36
+code: 1
+
+name: основание отрицательное
+args: -10 1 1
+err: Error: base '-10' must be a number from 2 to 36
+code: 1
+
+name: основание - пустая строка
+args: "" 1 1
+err: Error: base '' must be a number from 2 to 36
+code: 1
+
+name: только основание, без чисел
+args: 10
+err: Usage: lab2_task8                        (demo)
+err:        lab2_task8 <base> <number> [number ...]
+code: 1
