@@ -1,8 +1,17 @@
+/* _POSIX_C_SOURCE нужно написать ДО всех #include. В режиме -std=c99 заголовки
+   показывают только функции стандарта C, а stat (узнать номер файла на диске) -
+   функция стандарта POSIX (Linux). Эта строка просит заголовки показать и ее */
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
+/* stat и struct stat - сведения о файле (Linux). На Windows вместо них _fullpath из stdlib.h */
+#ifndef _WIN32
+#include <sys/stat.h>
+#endif
 
 /* Статус-коды */
 typedef enum {
@@ -209,12 +218,59 @@ status_code process_file(FILE *in, FILE *out, long *propuscheno) {
     return (sc == END_OF_FILE) ? OK : sc;
 }
 
+/* Ведут ли два пути к одному и тому же файлу на диске: *odinakovye = 1 - да, 0 - нет.
+   Сравнивать строки (strcmp) мало: "in.txt", "./in.txt", "../lab1/in.txt" и полный путь -
+   разные строки, но один файл. Если выходной файл совпадет с входным, fopen(..., "w")
+   сотрет его раньше, чем мы успеем прочитать.
+   В стандартном C способа узнать "это один файл" нет, поэтому спрашиваем операционную систему:
+   - Linux: stat заполняет struct stat сведениями о файле. st_dev - номер диска (устройства),
+     st_ino - номер файла на этом диске (inode). Пара (st_dev, st_ino) у каждого файла своя,
+     и неважно, каким путем к нему пришли (в том числе через ссылки ln и ln -s).
+   - Windows (сборка для себя): _fullpath превращает путь в полный ("C:\lab\in.txt"),
+     сравниваем без учета больших и маленьких букв (в Windows IN.TXT и in.txt - один файл).
+   Если какой-то путь не существует (stat не смог), это не один файл: например, выходного
+   файла еще нет - его создаст fopen. Если не существует входной, fopen потом сообщит об ошибке */
+status_code same_file(const char *put1, const char *put2, int *odinakovye) {
+    if (put1 == NULL || put2 == NULL || odinakovye == NULL) {
+        return INVALID_ARGS;
+    }
+    *odinakovye = 0;
+#ifdef _WIN32
+    /* _fullpath(NULL, ...) сам выделяет память под полный путь через malloc - потом free.
+       NULL в ответе - путь неправильный или нет памяти: тогда считаем, что файлы разные
+       (fopen дальше сам сообщит об ошибке, если путь плохой) */
+    char *polny1 = _fullpath(NULL, put1, 0);
+    char *polny2 = _fullpath(NULL, put2, 0);
+    if (polny1 != NULL && polny2 != NULL && _stricmp(polny1, polny2) == 0) {
+        *odinakovye = 1;
+    }
+    free(polny1);   /* free(NULL) ничего не делает - можно не проверять */
+    free(polny2);
+#else
+    /* stat возвращает 0, если сведения о файле получены; иначе (файла нет) - не 0 */
+    struct stat sved1;
+    struct stat sved2;
+    if (stat(put1, &sved1) == 0 && stat(put2, &sved2) == 0 &&
+        sved1.st_dev == sved2.st_dev && sved1.st_ino == sved2.st_ino) {
+        *odinakovye = 1;
+    }
+#endif
+    return OK;
+}
+
 int main(int argc, char *argv[]) {
     if (argc != 3) {
         fprintf(stderr, "Usage: lab1_task8 <input file> <output file>\n");
         return 1;
     }
-    if (strcmp(argv[1], argv[2]) == 0) {
+    /* Входной и выходной файл должны быть разными: fopen с "w" стер бы входной
+       до чтения. same_file ловит и разные записи одного пути: "in.txt" и "./in.txt" */
+    int odinakovye = 0;
+    if (same_file(argv[1], argv[2], &odinakovye) != OK) {
+        fprintf(stderr, "Error: internal error\n");
+        return 1;
+    }
+    if (odinakovye) {
         fprintf(stderr, "Error: input and output must be different files\n");
         return 1;
     }

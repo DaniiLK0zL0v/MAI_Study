@@ -154,6 +154,21 @@ args: -nd tests/data/task4_in.txt tests/data/task4_in.txt
 err: Error: input and output must be different files
 code: 1
 
+name: тот же файл, но записан через ./ (строки разные, файл один)
+args: -nd tests/data/task4_in.txt ./tests/data/task4_in.txt
+err: Error: input and output must be different files
+code: 1
+
+name: тот же файл, но записан через ../ (строки разные, файл один)
+args: -ni tests/data/task4_in.txt tests/data/../data/task4_in.txt
+err: Error: input and output must be different files
+code: 1
+
+name: тот же файл: ./ у входного, а у выходного нет
+args: -ns ./tests/data/task4_in.txt tests/data/task4_in.txt
+err: Error: input and output must be different files
+code: 1
+
 name: с n, но без выходного файла
 args: -nd tests/data/task4_in.txt
 err: Error: wrong number of arguments for flag '-nd'

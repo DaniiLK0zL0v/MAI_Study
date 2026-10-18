@@ -110,8 +110,28 @@ args: -a tests/data/task7_in.txt tests/data/task7_in.txt
 err: Error: output file must be different from input files
 code: 1
 
+name: -a: выход = вход, но записан через ./
+args: -a tests/data/task7_in.txt ./tests/data/task7_in.txt
+err: Error: output file must be different from input files
+code: 1
+
+name: -a: выход = вход, но записан через ../
+args: -a tests/data/task7_in.txt tests/data/../data/task7_in.txt
+err: Error: output file must be different from input files
+code: 1
+
 name: -r: выход = второй вход
 args: -r tests/data/task7_f1.txt tests/data/task7_f2.txt tests/data/task7_f2.txt
+err: Error: output file must be different from input files
+code: 1
+
+name: -r: выход = первый вход, но записан через ./
+args: -r tests/data/task7_f1.txt tests/data/task7_f2.txt ./tests/data/task7_f1.txt
+err: Error: output file must be different from input files
+code: 1
+
+name: -r: выход = второй вход, но записан через ../
+args: -r tests/data/task7_f1.txt tests/data/task7_f2.txt tests/data/../data/task7_f2.txt
 err: Error: output file must be different from input files
 code: 1
 

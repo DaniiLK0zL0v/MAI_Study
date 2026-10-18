@@ -91,6 +91,16 @@ args: tests/data/task8_in.txt tests/data/task8_in.txt
 err: Error: input and output must be different files
 code: 1
 
+name: тот же файл, но записан через ./ (строки разные, файл один)
+args: tests/data/task8_in.txt ./tests/data/task8_in.txt
+err: Error: input and output must be different files
+code: 1
+
+name: тот же файл, но записан через ../ (строки разные, файл один)
+args: ./tests/data/task8_in.txt tests/data/../data/task8_in.txt
+err: Error: input and output must be different files
+code: 1
+
 name: нет файла
 args: tests/data/nofile.txt tests/data/res8.txt
 err: Error: can not open file 'tests/data/nofile.txt'
