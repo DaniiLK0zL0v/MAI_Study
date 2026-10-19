@@ -6,3 +6,5 @@ Makefile text eol=lf
 *.txt   text eol=lf
 *.md    text eol=lf
 *.yml   text eol=lf
+# тестовый файл с концами строк Windows (CR LF) хранится как есть: тест проверяет именно их
+tests/data/*crlf* -text

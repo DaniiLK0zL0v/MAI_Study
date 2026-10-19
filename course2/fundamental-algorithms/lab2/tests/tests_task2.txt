@@ -1,0 +1,347 @@
+# Тесты для задания 2 (программа lab2_task2)
+#
+# Как запустить:  Linux:   bash run_tests.sh 2              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 2   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; пустой аргумент - ""
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+#   file:  какой файл программа должна создать; fout: строки этого файла
+#          (file без fout - файл должен быть пустым)
+# Строки, начинающиеся с #, - комментарии.
+# Входные файлы лежат в tests/data/task2_*.txt. Выходной файл tests/data/res2.txt
+# создается программой и удаляется run_tests.sh после проверки.
+# Ожидаемый порядок в обычных случаях посчитан на Python: ключ сортировки
+# (зарплата в единицах 1e-6 через Decimal, фамилия без учета регистра, фамилия, имя без учета
+# регистра, имя, id, текст зарплаты).
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab2_task2
+
+# ============================================================
+# Обычные случаи (порядок проверен эталоном на Python)
+# ============================================================
+
+name: пример: -a, все правила сортировки сразу
+args: tests/data/task2_in.txt -a tests/data/res2.txt
+out: Done: 11 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 8 Ann Smith 0
+fout: 9 Anna Smith 0.0
+fout: 6 adam Adams 999.99
+fout: 4 Zed Adams 999.99
+fout: 3 Oleg Ivanov 1000
+fout: 10 Boris Petrov 1000.0000001
+fout: 1 Ivan Petrov 1000
+fout: 5 Ivan Petrov 1000
+fout: 11 Ivan Petrov 1000
+fout: 7 ivan petrov 1000.0
+fout: 2 Anna Ivanova 2000.50
+
+name: тот же файл, -d: весь порядок обратный
+args: tests/data/task2_in.txt -d tests/data/res2.txt
+out: Done: 11 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 2 Anna Ivanova 2000.50
+fout: 7 ivan petrov 1000.0
+fout: 11 Ivan Petrov 1000
+fout: 5 Ivan Petrov 1000
+fout: 1 Ivan Petrov 1000
+fout: 10 Boris Petrov 1000.0000001
+fout: 3 Oleg Ivanov 1000
+fout: 4 Zed Adams 999.99
+fout: 6 adam Adams 999.99
+fout: 9 Anna Smith 0.0
+fout: 8 Ann Smith 0
+
+name: флаг /a - то же, что -a
+args: tests/data/task2_in.txt /a tests/data/res2.txt
+out: Done: 11 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 8 Ann Smith 0
+fout: 9 Anna Smith 0.0
+fout: 6 adam Adams 999.99
+fout: 4 Zed Adams 999.99
+fout: 3 Oleg Ivanov 1000
+fout: 10 Boris Petrov 1000.0000001
+fout: 1 Ivan Petrov 1000
+fout: 5 Ivan Petrov 1000
+fout: 11 Ivan Petrov 1000
+fout: 7 ivan petrov 1000.0
+fout: 2 Anna Ivanova 2000.50
+
+name: флаг /d - то же, что -d
+args: tests/data/task2_in.txt /d tests/data/res2.txt
+out: Done: 11 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 2 Anna Ivanova 2000.50
+fout: 7 ivan petrov 1000.0
+fout: 11 Ivan Petrov 1000
+fout: 5 Ivan Petrov 1000
+fout: 1 Ivan Petrov 1000
+fout: 10 Boris Petrov 1000.0000001
+fout: 3 Oleg Ivanov 1000
+fout: 4 Zed Adams 999.99
+fout: 6 adam Adams 999.99
+fout: 9 Anna Smith 0.0
+fout: 8 Ann Smith 0
+
+name: равные зарплаты -> по фамилии (Kim раньше Lee), файл с концами строк Windows (CR LF)
+args: tests/data/task2_crlf.txt -a tests/data/res2.txt
+out: Done: 3 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 1 Al Kim 5.5
+fout: 2 Cy Kim 5.5
+fout: 3 Bob Lee 10
+
+name: последняя строка без перевода строки
+args: tests/data/task2_noeol.txt -d tests/data/res2.txt
+out: Done: 2 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 2 Bob Lee 20
+fout: 1 Al Kim 10
+
+name: один сотрудник
+args: tests/data/task2_one.txt -a tests/data/res2.txt
+out: Done: 1 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 0 Solo Person 123.456
+
+name: пустой файл - не ошибка, выходной файл пустой
+args: tests/data/task2_empty.txt -a tests/data/res2.txt
+out: Done: 0 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+
+name: только пустые строки - сотрудников 0
+args: tests/data/task2_blank.txt -d tests/data/res2.txt
+out: Done: 0 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+
+name: имя из 5000 букв (строки любой длины)
+args: tests/data/task2_long.txt -a tests/data/res2.txt
+out: Done: 2 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 2 Abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb Long 100
+fout: 1 Short Long 100
+
+name: границы: id = LLONG_MAX, зарплата чуть меньше предела, 0.0000004 округляется до 0 единиц eps
+args: tests/data/task2_limits.txt -a tests/data/res2.txt
+out: Done: 3 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 1 Tiny Id 0.0000004
+fout: 0 Min Id 0.000001
+fout: 9223372036854775807 Max Id 9223372036853.5
+
+name: точность eps = 1e-6: 0, 0.0000003, 0.0000004 округляются до 0 единиц - равны, решают имя и id; 0.0000006 -> 1 единица, больше
+args: tests/data/task2_eps.txt -a tests/data/res2.txt
+out: Done: 4 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 1 Al Ray 0
+fout: 3 Al Ray 0.0000003
+fout: 2 Bob Ray 0.0000004
+fout: 4 Al Ray 0.0000006
+
+name: записи равны по всем признакам условия (зарплаты равны с точностью eps) -> по тексту зарплаты, порядок всегда один
+args: tests/data/task2_same.txt -a tests/data/res2.txt
+out: Done: 2 employees are written to tests/data/res2.txt
+code: 0
+file: tests/data/res2.txt
+fout: 7 Ivan Kim 1000
+fout: 7 Ivan Kim 1000.0000001
+
+# ============================================================
+# Ошибки в аргументах
+# ============================================================
+
+name: нет аргументов
+args: 
+err: Usage: lab2_task2 <input file> <flag> <output file>
+err: Flags: -a or /a - ascending order, -d or /d - descending order
+code: 1
+
+name: два аргумента
+args: tests/data/task2_in.txt -a
+err: Usage: lab2_task2 <input file> <flag> <output file>
+err: Flags: -a or /a - ascending order, -d or /d - descending order
+code: 1
+
+name: четыре аргумента
+args: tests/data/task2_in.txt -a tests/data/res2.txt lishniy
+err: Usage: lab2_task2 <input file> <flag> <output file>
+err: Flags: -a or /a - ascending order, -d or /d - descending order
+code: 1
+
+name: неправильный флаг '-x'
+args: tests/data/task2_in.txt -x tests/data/res2.txt
+err: Error: wrong flag '-x', use -a, /a, -d or /d
+code: 1
+
+name: неправильный флаг 'a'
+args: tests/data/task2_in.txt a tests/data/res2.txt
+err: Error: wrong flag 'a', use -a, /a, -d or /d
+code: 1
+
+name: неправильный флаг '-ad'
+args: tests/data/task2_in.txt -ad tests/data/res2.txt
+err: Error: wrong flag '-ad', use -a, /a, -d or /d
+code: 1
+
+name: неправильный флаг '-A'
+args: tests/data/task2_in.txt -A tests/data/res2.txt
+err: Error: wrong flag '-A', use -a, /a, -d or /d
+code: 1
+
+name: неправильный флаг '/'
+args: tests/data/task2_in.txt / tests/data/res2.txt
+err: Error: wrong flag '/', use -a, /a, -d or /d
+code: 1
+
+name: неправильный флаг '--a'
+args: tests/data/task2_in.txt --a tests/data/res2.txt
+err: Error: wrong flag '--a', use -a, /a, -d or /d
+code: 1
+
+name: неправильный флаг ''
+args: tests/data/task2_in.txt "" tests/data/res2.txt
+err: Error: wrong flag '', use -a, /a, -d or /d
+code: 1
+
+name: входного файла нет
+args: tests/data/net_takogo.txt -a tests/data/res2.txt
+err: Error: can not open file 'tests/data/net_takogo.txt'
+code: 1
+
+name: выходной файл в несуществующей папке
+args: tests/data/task2_in.txt -a tests/net_papki/res.txt
+err: Error: can not create file 'tests/net_papki/res.txt'
+code: 1
+
+name: вход и выход - один файл (одинаковая запись)
+args: tests/data/task2_in.txt -a tests/data/task2_in.txt
+err: Error: input and output must be different files
+code: 1
+
+name: вход и выход - один файл, записанный по-разному (./)
+args: tests/data/task2_in.txt -d ./tests/data/task2_in.txt
+err: Error: input and output must be different files
+code: 1
+
+name: вход и выход - один файл, записанный по-разному (папка/../)
+args: tests/data/task2_in.txt -a tests/../tests/data/task2_in.txt
+err: Error: input and output must be different files
+code: 1
+
+# ============================================================
+# Ошибки во входном файле (выходной файл при этом не создается)
+# ============================================================
+
+name: в строке 3 слова (нет зарплаты) - ошибка во 2-й строке, первая правильная
+args: tests/data/task2_bad_words3.txt -a tests/data/res2.txt
+err: Error: line 2: a line must be: id name surname salary
+code: 1
+
+name: в строке 5 слов
+args: tests/data/task2_bad_words5.txt -a tests/data/res2.txt
+err: Error: line 1: a line must be: id name surname salary
+code: 1
+
+name: номер строки считается вместе с пустыми строками
+args: tests/data/task2_bad_line5.txt -a tests/data/res2.txt
+err: Error: line 5: a line must be: id name surname salary
+code: 1
+
+name: id = -1
+args: tests/data/task2_bad_id_neg.txt -a tests/data/res2.txt
+err: Error: line 1: id must be a whole number from 0 to 9223372036854775807
+code: 1
+
+name: id = 1.5
+args: tests/data/task2_bad_id_frac.txt -a tests/data/res2.txt
+err: Error: line 1: id must be a whole number from 0 to 9223372036854775807
+code: 1
+
+name: id больше LLONG_MAX
+args: tests/data/task2_bad_id_big.txt -a tests/data/res2.txt
+err: Error: line 1: id must be a whole number from 0 to 9223372036854775807
+code: 1
+
+name: id - не число
+args: tests/data/task2_bad_id_text.txt -a tests/data/res2.txt
+err: Error: line 1: id must be a whole number from 0 to 9223372036854775807
+code: 1
+
+name: в имени цифра
+args: tests/data/task2_bad_name.txt -a tests/data/res2.txt
+err: Error: line 1: name must have only latin letters
+code: 1
+
+name: в имени дефис
+args: tests/data/task2_bad_name_dash.txt -a tests/data/res2.txt
+err: Error: line 1: name must have only latin letters
+code: 1
+
+name: в фамилии подчеркивание
+args: tests/data/task2_bad_surname.txt -a tests/data/res2.txt
+err: Error: line 1: surname must have only latin letters
+code: 1
+
+name: зарплата -100
+args: tests/data/task2_bad_salary_neg.txt -a tests/data/res2.txt
+err: Error: line 1: salary must be a number like 1500 or 1500.75 (not negative)
+code: 1
+
+name: зарплата с запятой 100,5
+args: tests/data/task2_bad_salary_comma.txt -a tests/data/res2.txt
+err: Error: line 1: salary must be a number like 1500 or 1500.75 (not negative)
+code: 1
+
+name: зарплата 1e3
+args: tests/data/task2_bad_salary_exp.txt -a tests/data/res2.txt
+err: Error: line 1: salary must be a number like 1500 or 1500.75 (not negative)
+code: 1
+
+name: зарплата .5
+args: tests/data/task2_bad_salary_dot1.txt -a tests/data/res2.txt
+err: Error: line 1: salary must be a number like 1500 or 1500.75 (not negative)
+code: 1
+
+name: зарплата 5.
+args: tests/data/task2_bad_salary_dot2.txt -a tests/data/res2.txt
+err: Error: line 1: salary must be a number like 1500 or 1500.75 (not negative)
+code: 1
+
+name: зарплата inf
+args: tests/data/task2_bad_salary_inf.txt -a tests/data/res2.txt
+err: Error: line 1: salary must be a number like 1500 or 1500.75 (not negative)
+code: 1
+
+name: зарплата +5
+args: tests/data/task2_bad_salary_plus.txt -a tests/data/res2.txt
+err: Error: line 1: salary must be a number like 1500 or 1500.75 (not negative)
+code: 1
+
+name: зарплата из 400 цифр (больше самого большого double)
+args: tests/data/task2_bad_salary_huge.txt -a tests/data/res2.txt
+err: Error: line 1: salary must be a number like 1500 or 1500.75 (not negative)
+code: 1
+
+name: зарплата 10^13: salary / eps не помещается в long long
+args: tests/data/task2_bad_salary_big.txt -a tests/data/res2.txt
+err: Error: line 1: salary is too big, it must be less than 9.22e+12
+code: 1

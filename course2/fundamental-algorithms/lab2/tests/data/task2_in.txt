@@ -1,0 +1,12 @@
+5 Ivan Petrov 1000
+2 Anna Ivanova 2000.50
+3 Oleg Ivanov 1000
+
+7 ivan petrov 1000.0
+1 Ivan Petrov 1000
+4 Zed Adams 999.99
+   6   adam	Adams   999.99
+10 Boris Petrov 1000.0000001
+8 Ann Smith 0
+9 Anna Smith 0.0
+11 Ivan Petrov 1000
