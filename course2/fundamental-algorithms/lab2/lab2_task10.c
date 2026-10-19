@@ -52,8 +52,8 @@ typedef enum {
    eps > 0, указатель для ответа не NULL, степень >= 0, a - обычное конечное число,
    и массив из n + 1 чисел double помещается в size_t (иначе malloc попросит
    неправильный размер) */
-status_code check_params(const double eps, const double a, double **rez, const int n) {
-    if (rez == NULL) {
+status_code check_params(const double eps, const double a, double **result, const int n) {
+    if (result == NULL) {
         return INVALID_ARGS;
     }
     /* isfinite(x) - макрос из math.h (C99): "x - обычное число, не бесконечность
@@ -143,7 +143,7 @@ status_code horner_shift(double *c, const int n, const double a, const double ep
        -> g = {6, 8, 3}:  1 + 2x + 3x^2 = 6 + 8(x - 1) + 3(x - 1)^2
    eps - точность (числа меньше eps по модулю считаются нулем), eps > 0;
    a   - число a из (x - a);
-   rez - сюда кладем адрес массива g0..gn в динамической памяти (освобождает вызывающий);
+   result - сюда кладем адрес массива g0..gn в динамической памяти (освобождает вызывающий);
    n   - степень многочлена, n >= 0;
    ... - коэффициенты f0, f1, ..., fn, ровно n + 1 штук, тип double.
    Порядок параметров - как в условии. n стоит последним перед ...: va_start
@@ -153,8 +153,8 @@ status_code horner_shift(double *c, const int n, const double a, const double ep
    функция узнать не может - va_arg(args, double) просто читает 8 байт как double.
    Если передать int 1, прочитается мусор (неопределенное поведение).
    (float передавать можно: в ... он сам превращается в double.) */
-status_code polynomial_reexpand(const double eps, const double a, double **rez, const int n, ...) {
-    status_code sc = check_params(eps, a, rez, n);
+status_code polynomial_reexpand(const double eps, const double a, double **result, const int n, ...) {
+    status_code sc = check_params(eps, a, result, n);
     if (sc != OK) {
         return sc;
     }
@@ -187,12 +187,12 @@ status_code polynomial_reexpand(const double eps, const double a, double **rez, 
 
     sc = horner_shift(c, n, a, eps);
     if (sc != OK) {
-        /* выходим с ошибкой - память за собой освобождаем, *rez не трогаем */
+        /* выходим с ошибкой - память за собой освобождаем, *result не трогаем */
         free(c);
         return sc;
     }
 
-    *rez = c;
+    *result = c;
     return OK;
 }
 
@@ -202,12 +202,12 @@ status_code polynomial_reexpand(const double eps, const double a, double **rez, 
    работы (сколько чисел ввел пользователь). Список аргументов ... пишется в коде
    заранее. Сам алгоритм у обеих функций общий - horner_shift.
    Массив f не меняется (const): ответ - новый массив в динамической памяти */
-status_code reexpand_array(const double eps, const double a, double **rez, const int n,
+status_code reexpand_array(const double eps, const double a, double **result, const int n,
                            const double *f) {
     if (f == NULL) {
         return INVALID_ARGS;
     }
-    status_code sc = check_params(eps, a, rez, n);
+    status_code sc = check_params(eps, a, result, n);
     if (sc != OK) {
         return sc;
     }
@@ -231,7 +231,7 @@ status_code reexpand_array(const double eps, const double a, double **rez, const
         return sc;
     }
 
-    *rez = c;
+    *result = c;
     return OK;
 }
 
@@ -239,29 +239,29 @@ status_code reexpand_array(const double eps, const double a, double **rez, const
 
 /* Значение многочлена c0 + c1*t + ... + cn*t^n в точке t (схема Горнера):
      c0 + t*(c1 + t*(c2 + ... + t*cn))
-   считаем изнутри наружу: rez = cn, потом rez = rez*t + c[i] для i = n-1, ..., 0 */
-status_code eval_poly(const double *c, const int n, const double t, double *rez) {
-    if (c == NULL || rez == NULL) {
+   считаем изнутри наружу: result = cn, потом result = result*t + c[i] для i = n-1, ..., 0 */
+status_code eval_poly(const double *c, const int n, const double t, double *result) {
+    if (c == NULL || result == NULL) {
         return INVALID_ARGS;
     }
     if (n < 0) {
         return INVALID_DEGREE;
     }
-    double znach = c[n];
+    double value = c[n];
     for (int i = n - 1; i >= 0; i--) {
-        znach = znach * t + c[i];
+        value = value * t + c[i];
     }
     /* огромные коэффициенты в степени могут дать бесконечность */
-    if (!isfinite(znach)) {
+    if (!isfinite(value)) {
         return OVERFLOW_ERROR;
     }
-    *rez = znach;
+    *result = value;
     return OK;
 }
 
 /* Проверка ответа: в точках x = -2, -1, 0, 1, 2 считаем f(x) и g(x - a);
    если переразложение верное, они должны совпасть.
-   *sovpalo = 1 - во всех точках совпало, 0 - где-то не совпало.
+   *matched = 1 - во всех точках совпало, 0 - где-то не совпало.
    Сравнение с относительной точностью: |f - g| <= eps * (1 + |f|).
    Почему не просто |f - g| < eps: при f около 1e6 погрешность округления
    сама около 1e-10, и "абсолютный" eps = 1e-9 был бы слишком строгим.
@@ -269,28 +269,28 @@ status_code eval_poly(const double *c, const int n, const double t, double *rez)
    Если значения слишком большие (бесконечность), вернем OVERFLOW_ERROR -
    тогда проверку просто не печатаем как "ок" */
 status_code check_reexpand(const double *f, const double *g, const int n, const double a,
-                           const double eps, int *sovpalo) {
-    if (f == NULL || g == NULL || sovpalo == NULL) {
+                           const double eps, int *matched) {
+    if (f == NULL || g == NULL || matched == NULL) {
         return INVALID_ARGS;
     }
     if (!isfinite(eps) || eps <= 0) {
         return INVALID_EPS;
     }
-    *sovpalo = 1;
+    *matched = 1;
     for (int x = -2; x <= 2; x++) {
-        double znach_f = 0.0;
-        double znach_g = 0.0;
-        status_code sc = eval_poly(f, n, (double)x, &znach_f);
+        double value_f = 0.0;
+        double value_g = 0.0;
+        status_code sc = eval_poly(f, n, (double)x, &value_f);
         if (sc != OK) {
             return sc;
         }
         /* g - многочлен от (x - a), поэтому подставляем t = x - a */
-        sc = eval_poly(g, n, (double)x - a, &znach_g);
+        sc = eval_poly(g, n, (double)x - a, &value_g);
         if (sc != OK) {
             return sc;
         }
-        if (fabs(znach_f - znach_g) > eps * (1.0 + fabs(znach_f))) {
-            *sovpalo = 0;
+        if (fabs(value_f - value_g) > eps * (1.0 + fabs(value_f))) {
+            *matched = 0;
         }
     }
     return OK;
@@ -304,8 +304,8 @@ status_code check_reexpand(const double *f, const double *g, const int n, const 
    strtod сам пропускает пробелы в начале, а мы их не разрешаем: " 5" - ошибка.
    "inf", "nan" и слишком большие числа (1e999 -> strtod дает бесконечность)
    strtod читает, но считать с ними нельзя -> OVERFLOW_ERROR */
-status_code parse_double(const char *str, double *chislo) {
-    if (str == NULL || chislo == NULL) {
+status_code parse_double(const char *str, double *number) {
+    if (str == NULL || number == NULL) {
         return INVALID_ARGS;
     }
     /* isspace принимает unsigned char: русская буква в char отрицательна,
@@ -314,15 +314,15 @@ status_code parse_double(const char *str, double *chislo) {
         return INVALID_NUMBER;
     }
     char *end = NULL;
-    double znach = strtod(str, &end);
+    double value = strtod(str, &end);
     /* end == str - ни одной цифры не прочитано ("abc"), *end != '\0' - мусор после числа */
     if (end == str || *end != '\0') {
         return INVALID_NUMBER;
     }
-    if (!isfinite(znach)) {
+    if (!isfinite(value)) {
         return OVERFLOW_ERROR;
     }
-    *chislo = znach;
+    *number = value;
     return OK;
 }
 
@@ -350,17 +350,17 @@ status_code print_poly(const double *c, const int n, const double a, const doubl
     if (c == NULL) {
         return INVALID_ARGS;
     }
-    /* pervoe = 1, пока не напечатали ни одного слагаемого: у первого слагаемого
+    /* first = 1, пока не напечатали ни одного слагаемого: у первого слагаемого
        знак пишется прямо с числом ("-3*x"), у следующих - через " + " / " - " */
-    int pervoe = 1;
+    int first = 1;
     for (int i = 0; i <= n; i++) {
         /* нулевой коэффициент - слагаемого нет */
         if (fabs(c[i]) < eps) {
             continue;
         }
-        if (pervoe) {
+        if (first) {
             printf("%.10g", c[i]);
-            pervoe = 0;
+            first = 0;
         } else if (c[i] < 0) {
             printf(" - %.10g", -c[i]);
         } else {
@@ -375,7 +375,7 @@ status_code print_poly(const double *c, const int n, const double a, const doubl
             printf("^%d", i);
         }
     }
-    if (pervoe) {
+    if (first) {
         printf("0");
     }
     return OK;
@@ -418,13 +418,13 @@ status_code print_answer(const double *f, const double *g, const int n, const do
     printf("\n");
 
     /* и проверка подстановкой: f(x) и g(x - a) в нескольких точках */
-    int sovpalo = 0;
-    status_code sc = check_reexpand(f, g, n, a, eps, &sovpalo);
+    int matched = 0;
+    status_code sc = check_reexpand(f, g, n, a, eps, &matched);
     if (sc == OVERFLOW_ERROR) {
         printf("check at x = -2..2: skipped, the values are too big\n");
     } else if (sc != OK) {
         return sc;
-    } else if (sovpalo) {
+    } else if (matched) {
         printf("check at x = -2..2: ok\n");
     } else {
         printf("check at x = -2..2: values differ by more than eps\n");
@@ -433,26 +433,26 @@ status_code print_answer(const double *f, const double *g, const int n, const do
 }
 
 /* Текст ошибки для статуса, который вернула функция переразложения.
-   Строка сообщения кладется в *soobshenie (строковые литералы живут всю программу,
+   Строка сообщения кладется в *message (строковые литералы живут всю программу,
    поэтому возвращать их адрес можно) */
-status_code error_text(const status_code sc, const char **soobshenie) {
-    if (soobshenie == NULL) {
+status_code error_text(const status_code sc, const char **message) {
+    if (message == NULL) {
         return INVALID_ARGS;
     }
     if (sc == INVALID_EPS) {
-        *soobshenie = "eps must be greater than 0";
+        *message = "eps must be greater than 0";
     } else if (sc == INVALID_DEGREE) {
-        *soobshenie = "degree must be 0 or more";
+        *message = "degree must be 0 or more";
     } else if (sc == INVALID_NUMBER) {
-        *soobshenie = "a and coefficients must be usual numbers (not inf or nan)";
+        *message = "a and coefficients must be usual numbers (not inf or nan)";
     } else if (sc == OVERFLOW_ERROR) {
-        *soobshenie = "the result is too big";
+        *message = "the result is too big";
     } else if (sc == ALLOC_ERROR) {
-        *soobshenie = "not enough memory";
+        *message = "not enough memory";
     } else {
         /* INVALID_ARGS (NULL) из main и демонстрации прийти не может.
            Если сообщение появилось - ошибка в самой программе */
-        *soobshenie = "internal error";
+        *message = "internal error";
     }
     return OK;
 }
@@ -472,9 +472,9 @@ status_code print_demo(const double *f, const int n, const double a, const statu
         }
         print_answer(f, g, n, a, EPS_DEMO);
     } else {
-        const char *soobshenie = NULL;
-        error_text(sc, &soobshenie);
-        printf("-> error: %s\n", soobshenie);
+        const char *message = NULL;
+        error_text(sc, &message);
+        printf("-> error: %s\n", message);
     }
     printf("\n");
     return OK;
@@ -573,9 +573,9 @@ status_code run_demo(void) {
     if (sc == OK) {
         printf("degree -1: g = %.10g\n\n", g[0]);
     } else {
-        const char *soobshenie = NULL;
-        error_text(sc, &soobshenie);
-        printf("degree -1: -> error: %s\n\n", soobshenie);
+        const char *message = NULL;
+        error_text(sc, &message);
+        printf("degree -1: -> error: %s\n\n", message);
     }
     free(g);
     g = NULL;
@@ -656,9 +656,9 @@ int main(int argc, char *argv[]) {
     if (sc != OK) {
         /* INVALID_EPS (eps <= 0), OVERFLOW_ERROR (огромные числа), ALLOC_ERROR.
            g при ошибке не выделен - освобождаем только f */
-        const char *soobshenie = NULL;
-        error_text(sc, &soobshenie);
-        fprintf(stderr, "Error: %s\n", soobshenie);
+        const char *message = NULL;
+        error_text(sc, &message);
+        fprintf(stderr, "Error: %s\n", message);
         free(f);
         return 1;
     }

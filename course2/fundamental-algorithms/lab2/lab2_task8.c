@@ -10,7 +10,7 @@
  * "в столбик" - цифра за цифрой, как на бумаге (функция add_in_base).
  *
  * Главная функция задания - sum_in_base с переменным числом аргументов (...):
- *   sum_in_base(&rez, основание, количество, "число1", "число2", ...)
+ *   sum_in_base(&result, основание, количество, "число1", "число2", ...)
  * Она складывает числа по очереди с помощью add_in_base.
  *
  * Цифры: 0-9, потом буквы A-Z (A = 10, ..., Z = 35). На входе буквы можно писать
@@ -36,19 +36,19 @@ typedef enum {
 
 /* Символ -> значение цифры: '0'..'9' -> 0..9, 'A'..'Z' и 'a'..'z' -> 10..35.
    Подходит ли цифра к основанию, проверяет вызывающий (здесь основание неизвестно) */
-status_code digit_value(const char c, int *znach) {
-    if (znach == NULL) {
+status_code digit_value(const char c, int *value) {
+    if (value == NULL) {
         return INVALID_ARGS;
     }
     /* Коды символов '0'..'9' идут подряд, 'A'..'Z' подряд и 'a'..'z' подряд.
        Поэтому значение = код символа минус код первого символа своей группы:
        '7' - '0' = 7,  'C' - 'A' + 10 = 12,  'c' - 'a' + 10 = 12 */
     if (c >= '0' && c <= '9') {
-        *znach = c - '0';
+        *value = c - '0';
     } else if (c >= 'A' && c <= 'Z') {
-        *znach = c - 'A' + 10;
+        *value = c - 'A' + 10;
     } else if (c >= 'a' && c <= 'z') {
-        *znach = c - 'a' + 10;
+        *value = c - 'a' + 10;
     } else {
         /* пробел, знак, точка, русская буква - не цифра ни в какой системе */
         return INVALID_NUMBER;
@@ -57,13 +57,13 @@ status_code digit_value(const char c, int *znach) {
 }
 
 /* Значение цифры 0..35 -> символ: 0..9 -> '0'..'9', 10..35 -> 'A'..'Z' */
-status_code digit_char(const int znach, char *c) {
-    if (c == NULL || znach < 0 || znach > 35) {
+status_code digit_char(const int value, char *c) {
+    if (c == NULL || value < 0 || value > 35) {
         return INVALID_ARGS;
     }
-    /* таблица "значение -> символ": cifry[12] = 'C' */
-    const char cifry[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    *c = cifry[znach];
+    /* таблица "значение -> символ": digits[12] = 'C' */
+    const char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    *c = digits[value];
     return OK;
 }
 
@@ -84,12 +84,12 @@ status_code check_number(const char *str, const int base) {
     /* Знак не разрешаем: числа по условию неотрицательные, а "+" и "-" -
        не цифры, поэтому digit_value сам вернет для них INVALID_NUMBER */
     for (size_t i = 0; str[i] != '\0'; i++) {
-        int znach = 0;
-        status_code sc = digit_value(str[i], &znach);
+        int value = 0;
+        status_code sc = digit_value(str[i], &value);
         if (sc != OK) {
             return sc;
         }
-        if (znach >= base) {
+        if (value >= base) {
             return INVALID_NUMBER;
         }
     }
@@ -137,8 +137,8 @@ status_code strip_leading_zeros(char *str) {
        5 + 6 + 1 = 12 -> пишем 2, перенос 1
        9 + 0 + 1 = 10 -> пишем 0, перенос 1
        0 + 0 + 1 = 1  -> пишем 1, перенос 0      ответ 1025 */
-status_code add_in_base(const char *a, const char *b, const int base, char **rez) {
-    if (a == NULL || b == NULL || rez == NULL) {
+status_code add_in_base(const char *a, const char *b, const int base, char **result) {
+    if (a == NULL || b == NULL || result == NULL) {
         return INVALID_ARGS;
     }
     /* обе строки должны быть числами в этой системе (заодно проверится и base) */
@@ -154,127 +154,127 @@ status_code add_in_base(const char *a, const char *b, const int base, char **rez
     /* Сколько разрядов нужно ответу: разрядов у длинного числа + 1 на перенос.
        Сумма двух чисел длиной n и m имеет не больше max(n, m) + 1 цифр
        (99 + 99 = 198: из двух цифр - три). Лишний ноль впереди потом уберем */
-    size_t dlina_a = strlen(a);
-    size_t dlina_b = strlen(b);
-    size_t dlina = (dlina_a > dlina_b) ? dlina_a : dlina_b;
-    /* dlina + 1 разряд и еще + 1 байт на '\0': проверяем, что не "перескочим" SIZE_MAX */
-    if (dlina > SIZE_MAX - 2) {
+    size_t length_a = strlen(a);
+    size_t length_b = strlen(b);
+    size_t length = (length_a > length_b) ? length_a : length_b;
+    /* length + 1 разряд и еще + 1 байт на '\0': проверяем, что не "перескочим" SIZE_MAX */
+    if (length > SIZE_MAX - 2) {
         return OVERFLOW_ERROR;
     }
-    dlina = dlina + 1;
+    length = length + 1;
 
-    char *novaya = (char *)malloc((dlina + 1) * sizeof(char));
-    if (novaya == NULL) {
+    char *new_str = (char *)malloc((length + 1) * sizeof(char));
+    if (new_str == NULL) {
         return ALLOC_ERROR;
     }
-    novaya[dlina] = '\0';
+    new_str[length] = '\0';
 
     /* k - номер разряда с конца: k = 0 - последняя цифра (единицы), k = 1 - предпоследняя...
-       У числа a разряд k стоит в строке на месте dlina_a - 1 - k.
+       У числа a разряд k стоит в строке на месте length_a - 1 - k.
        Если у числа столько разрядов нет (короткое число), считаем цифру нулем -
        как будто дописали нули слева: 67 = 067 */
-    int perenos = 0;
-    for (size_t k = 0; k < dlina; k++) {
-        int cifra_a = 0;
-        int cifra_b = 0;
-        if (k < dlina_a) {
-            sc = digit_value(a[dlina_a - 1 - k], &cifra_a);
+    int carry = 0;
+    for (size_t k = 0; k < length; k++) {
+        int digit_a = 0;
+        int digit_b = 0;
+        if (k < length_a) {
+            sc = digit_value(a[length_a - 1 - k], &digit_a);
             if (sc != OK) {
-                free(novaya);   /* выходим с ошибкой - память за собой освобождаем */
+                free(new_str);   /* выходим с ошибкой - память за собой освобождаем */
                 return sc;
             }
         }
-        if (k < dlina_b) {
-            sc = digit_value(b[dlina_b - 1 - k], &cifra_b);
+        if (k < length_b) {
+            sc = digit_value(b[length_b - 1 - k], &digit_b);
             if (sc != OK) {
-                free(novaya);
+                free(new_str);
                 return sc;
             }
         }
         /* Сумма в разряде не больше (base-1) + (base-1) + 1 = 2*base - 1 <= 71 -
            в int помещается с запасом, переполнения тут не бывает */
-        int summa = cifra_a + cifra_b + perenos;
+        int sum = digit_a + digit_b + carry;
         /* в разряд - остаток, в следующий разряд - перенос (0 или 1) */
-        sc = digit_char(summa % base, &novaya[dlina - 1 - k]);
+        sc = digit_char(sum % base, &new_str[length - 1 - k]);
         if (sc != OK) {
-            free(novaya);
+            free(new_str);
             return sc;
         }
-        perenos = summa / base;
+        carry = sum / base;
     }
     /* После самого старшего разряда перенос всегда 0: под него мы и оставили
        лишний разряд. Если там вышел 0 ("01025") - это ведущий ноль, убираем.
        Ведущие нули могли прийти и из входа: "007" + "0003" = "0010" -> "10" */
-    sc = strip_leading_zeros(novaya);
+    sc = strip_leading_zeros(new_str);
     if (sc != OK) {
-        free(novaya);
+        free(new_str);
         return sc;
     }
 
-    *rez = novaya;
+    *result = new_str;
     return OK;
 }
 
 /* ===================== сумма с переменным числом аргументов ===================== */
 
-/* Сумма kolvo чисел в системе с основанием base:
-     sum_in_base(&rez, 10, 3, "123", "456", "789")  ->  rez = "1368"
-   rez   - сюда кладем адрес строки-ответа (освобождает вызывающий);
+/* Сумма count чисел в системе с основанием base:
+     sum_in_base(&result, 10, 3, "123", "456", "789")  ->  result = "1368"
+   result   - сюда кладем адрес строки-ответа (освобождает вызывающий);
    base  - основание 2..36;
-   kolvo - сколько чисел передано после него;
+   count - сколько чисел передано после него;
    ...   - сами числа, строки (char *).
-   rez стоит первым, а kolvo - последним перед ...: va_start отсчитывает
-   список с последнего именованного параметра, и это должно быть kolvo.
-   kolvo = 0 - сумма пустого набора, ответ "0" (как в математике). */
-status_code sum_in_base(char **rez, const int base, const int kolvo, ...) {
-    if (rez == NULL || kolvo < 0) {
+   result стоит первым, а count - последним перед ...: va_start отсчитывает
+   список с последнего именованного параметра, и это должно быть count.
+   count = 0 - сумма пустого набора, ответ "0" (как в математике). */
+status_code sum_in_base(char **result, const int base, const int count, ...) {
+    if (result == NULL || count < 0) {
         return INVALID_ARGS;
     }
     if (base < 2 || base > 36) {
         return INVALID_BASE;
     }
 
-    /* Начинаем с суммы "0" и прибавляем числа по одному: summa = summa + chislo.
-       summa всегда - строка в динамической памяти (ее выделяет add_in_base) */
-    char *summa = (char *)malloc(2 * sizeof(char));
-    if (summa == NULL) {
+    /* Начинаем с суммы "0" и прибавляем числа по одному: sum = sum + number.
+       sum всегда - строка в динамической памяти (ее выделяет add_in_base) */
+    char *sum = (char *)malloc(2 * sizeof(char));
+    if (sum == NULL) {
         return ALLOC_ERROR;
     }
-    summa[0] = '0';
-    summa[1] = '\0';
+    sum[0] = '0';
+    sum[1] = '\0';
 
     /* va_list - "указатель" на следующий безымянный аргумент.
-       va_start(args, kolvo) ставит его сразу после параметра kolvo */
+       va_start(args, count) ставит его сразу после параметра count */
     va_list args;
-    va_start(args, kolvo);
-    for (int i = 0; i < kolvo; i++) {
+    va_start(args, count);
+    for (int i = 0; i < count; i++) {
         /* va_arg достает следующий аргумент как значение указанного типа.
            Тип пишем char *, а не const char *: строковые литералы и argv имеют
            тип char *, а va_arg должен получить ровно тот тип, который передали.
            Тип в va_arg функция узнать не может - это обещание вызывающего:
            если передать не строку (например, число), будет неопределенное поведение */
-        const char *chislo = va_arg(args, char *);
-        if (chislo == NULL) {
-            free(summa);
+        const char *number = va_arg(args, char *);
+        if (number == NULL) {
+            free(sum);
             va_end(args);   /* va_end обязателен на любом выходе после va_start */
             return INVALID_ARGS;
         }
 
         /* новая сумма = старая сумма + число; add_in_base проверит и само число */
-        char *novaya = NULL;
-        status_code sc = add_in_base(summa, chislo, base, &novaya);
+        char *new_str = NULL;
+        status_code sc = add_in_base(sum, number, base, &new_str);
         if (sc != OK) {
-            free(summa);
+            free(sum);
             va_end(args);
             return sc;
         }
         /* старая строка-сумма больше не нужна - освобождаем, иначе утечка на каждом шаге */
-        free(summa);
-        summa = novaya;
+        free(sum);
+        sum = new_str;
     }
     va_end(args);
 
-    *rez = summa;
+    *result = sum;
     return OK;
 }
 
@@ -288,155 +288,155 @@ status_code parse_base(const char *str, int *base) {
     if (str[0] == '\0') {
         return INVALID_BASE;
     }
-    /* Собираем число слева направо (znach * 10 + цифра). Как только стало больше 36,
+    /* Собираем число слева направо (value * 10 + цифра). Как только стало больше 36,
        дальше можно не читать - это уже ошибка; так и переполнения int не бывает */
-    int znach = 0;
+    int value = 0;
     for (size_t i = 0; str[i] != '\0'; i++) {
         if (str[i] < '0' || str[i] > '9') {
             return INVALID_BASE;
         }
-        znach = znach * 10 + (str[i] - '0');
-        if (znach > 36) {
+        value = value * 10 + (str[i] - '0');
+        if (value > 36) {
             return INVALID_BASE;
         }
     }
-    if (znach < 2) {
+    if (value < 2) {
         return INVALID_BASE;
     }
-    *base = znach;
+    *base = value;
     return OK;
 }
 
-/* Одна строка демонстрации: что складывали (opisanie) и итог.
-   sc и rez - то, что вернула sum_in_base; при ошибке вместо ответа - текст ошибки */
-status_code print_demo(const char *opisanie, const status_code sc, const char *rez) {
-    if (opisanie == NULL) {
+/* Одна строка демонстрации: что складывали (description) и итог.
+   sc и result - то, что вернула sum_in_base; при ошибке вместо ответа - текст ошибки */
+status_code print_demo(const char *description, const status_code sc, const char *result) {
+    if (description == NULL) {
         return INVALID_ARGS;
     }
     if (sc == OK) {
-        if (rez == NULL) {
+        if (result == NULL) {
             return INVALID_ARGS;
         }
-        printf("%s = %s\n", opisanie, rez);
+        printf("%s = %s\n", description, result);
     } else if (sc == INVALID_BASE) {
-        printf("%s -> error: base must be from 2 to 36\n", opisanie);
+        printf("%s -> error: base must be from 2 to 36\n", description);
     } else if (sc == INVALID_NUMBER) {
-        printf("%s -> error: not a number in this base\n", opisanie);
+        printf("%s -> error: not a number in this base\n", description);
     } else if (sc == ALLOC_ERROR) {
-        printf("%s -> error: not enough memory\n", opisanie);
+        printf("%s -> error: not enough memory\n", description);
     } else {
-        printf("%s -> error: internal error\n", opisanie);
+        printf("%s -> error: internal error\n", description);
     }
     return OK;
 }
 
 /* Демонстрация: набор готовых вызовов sum_in_base с разным количеством аргументов.
    Каждый пример: 1) вызвали sum_in_base; 2) напечатали итог; 3) освободили ответ.
-   free(NULL) ничего не делает, поэтому после ошибки (rez остался NULL) free тоже безопасен */
+   free(NULL) ничего не делает, поэтому после ошибки (result остался NULL) free тоже безопасен */
 status_code run_demo(void) {
-    char *rez = NULL;
+    char *result = NULL;
     status_code sc = OK;
 
     printf("Normal sums:\n");
 
-    sc = sum_in_base(&rez, 10, 3, "123", "456", "789");
-    print_demo("base 10: 123 + 456 + 789", sc, rez);
-    free(rez);
-    rez = NULL;   /* чтобы в следующем примере при ошибке не напечатать и не освободить старое */
+    sc = sum_in_base(&result, 10, 3, "123", "456", "789");
+    print_demo("base 10: 123 + 456 + 789", sc, result);
+    free(result);
+    result = NULL;   /* чтобы в следующем примере при ошибке не напечатать и не освободить старое */
 
-    sc = sum_in_base(&rez, 2, 2, "1010", "1011");
-    print_demo("base 2: 1010 + 1011", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 2, 2, "1010", "1011");
+    print_demo("base 2: 1010 + 1011", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 16, 2, "ff", "1");
-    print_demo("base 16: ff + 1", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 16, 2, "ff", "1");
+    print_demo("base 16: ff + 1", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 16, 2, "FF", "ff");
-    print_demo("base 16: FF + ff", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 16, 2, "FF", "ff");
+    print_demo("base 16: FF + ff", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 36, 3, "zz", "1", "A");
-    print_demo("base 36: zz + 1 + A", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 36, 3, "zz", "1", "A");
+    print_demo("base 36: zz + 1 + A", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 8, 1, "0777");
-    print_demo("base 8: one number 0777", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 8, 1, "0777");
+    print_demo("base 8: one number 0777", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 10, 0);
-    print_demo("base 10: no numbers", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 10, 0);
+    print_demo("base 10: no numbers", sc, result);
+    free(result);
+    result = NULL;
 
     printf("\nLeading zeros:\n");
 
-    sc = sum_in_base(&rez, 10, 2, "007", "0003");
-    print_demo("base 10: 007 + 0003", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 10, 2, "007", "0003");
+    print_demo("base 10: 007 + 0003", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 10, 3, "000", "0", "00");
-    print_demo("base 10: 000 + 0 + 00", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 10, 3, "000", "0", "00");
+    print_demo("base 10: 000 + 0 + 00", sc, result);
+    free(result);
+    result = NULL;
 
     printf("\nNumbers bigger than unsigned long long:\n");
 
     /* 18446744073709551615 - это ULLONG_MAX, самое большое unsigned long long */
-    sc = sum_in_base(&rez, 10, 2, "18446744073709551615", "1");
-    print_demo("base 10: 18446744073709551615 + 1", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 10, 2, "18446744073709551615", "1");
+    print_demo("base 10: 18446744073709551615 + 1", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 10, 2, "99999999999999999999999999999999999999", "1");
-    print_demo("base 10: 99999999999999999999999999999999999999 + 1", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 10, 2, "99999999999999999999999999999999999999", "1");
+    print_demo("base 10: 99999999999999999999999999999999999999 + 1", sc, result);
+    free(result);
+    result = NULL;
 
     /* 64 единицы в двоичной = ULLONG_MAX; + 1 = 1 и 64 нуля */
-    sc = sum_in_base(&rez, 2, 2,
+    sc = sum_in_base(&result, 2, 2,
                      "1111111111111111111111111111111111111111111111111111111111111111", "1");
-    print_demo("base 2: (64 ones) + 1", sc, rez);
-    free(rez);
-    rez = NULL;
+    print_demo("base 2: (64 ones) + 1", sc, result);
+    free(result);
+    result = NULL;
 
     printf("\nErrors:\n");
 
-    sc = sum_in_base(&rez, 2, 2, "101", "102");
-    print_demo("base 2: 101 + 102", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 2, 2, "101", "102");
+    print_demo("base 2: 101 + 102", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 10, 2, "12a", "5");
-    print_demo("base 10: 12a + 5", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 10, 2, "12a", "5");
+    print_demo("base 10: 12a + 5", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 10, 2, "-5", "5");
-    print_demo("base 10: -5 + 5", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 10, 2, "-5", "5");
+    print_demo("base 10: -5 + 5", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 10, 2, "", "5");
-    print_demo("base 10: (empty) + 5", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 10, 2, "", "5");
+    print_demo("base 10: (empty) + 5", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 1, 2, "0", "0");
-    print_demo("base 1: 0 + 0", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 1, 2, "0", "0");
+    print_demo("base 1: 0 + 0", sc, result);
+    free(result);
+    result = NULL;
 
-    sc = sum_in_base(&rez, 37, 2, "1", "1");
-    print_demo("base 37: 1 + 1", sc, rez);
-    free(rez);
-    rez = NULL;
+    sc = sum_in_base(&result, 37, 2, "1", "1");
+    print_demo("base 37: 1 + 1", sc, result);
+    free(result);
+    result = NULL;
 
     return OK;
 }
@@ -469,31 +469,31 @@ int main(int argc, char *argv[]) {
     /* Сумма чисел пользователя. Функцию с ... нельзя вызвать с количеством
        аргументов, которое известно только во время работы программы: список
        аргументов пишется в коде заранее. Поэтому:
-         1) summa = sum_in_base(1 число: argv[2]) - первое число (заодно проверка
+         1) sum = sum_in_base(1 число: argv[2]) - первое число (заодно проверка
             и удаление ведущих нулей);
-         2) дальше прибавляем по одному: summa = sum_in_base(2 числа: summa, argv[nomer]).
-       nomer - индекс в argv числа, которое обрабатываем сейчас (для сообщения об ошибке) */
-    int nomer = 2;
-    char *summa = NULL;
-    status_code sc = sum_in_base(&summa, base, 1, argv[nomer]);
-    while (sc == OK && nomer + 1 < argc) {
-        nomer++;
-        char *novaya = NULL;
-        sc = sum_in_base(&novaya, base, 2, summa, argv[nomer]);
+         2) дальше прибавляем по одному: sum = sum_in_base(2 числа: sum, argv[index]).
+       index - индекс в argv числа, которое обрабатываем сейчас (для сообщения об ошибке) */
+    int index = 2;
+    char *sum = NULL;
+    status_code sc = sum_in_base(&sum, base, 1, argv[index]);
+    while (sc == OK && index + 1 < argc) {
+        index++;
+        char *new_str = NULL;
+        sc = sum_in_base(&new_str, base, 2, sum, argv[index]);
         if (sc == OK) {
             /* старая сумма больше не нужна - освобождаем и берем новую */
-            free(summa);
-            summa = novaya;
+            free(sum);
+            sum = new_str;
         }
     }
 
-    /* Ошибка - сообщение и выход. summa освобождаем в любом случае:
+    /* Ошибка - сообщение и выход. sum освобождаем в любом случае:
        это сумма, накопленная до ошибки (или NULL, если ошибка в первом числе -
        free(NULL) ничего не делает) */
     if (sc != OK) {
-        free(summa);
+        free(sum);
         if (sc == INVALID_NUMBER) {
-            fprintf(stderr, "Error: '%s' is not a number in base %d\n", argv[nomer], base);
+            fprintf(stderr, "Error: '%s' is not a number in base %d\n", argv[index], base);
         } else if (sc == ALLOC_ERROR) {
             fprintf(stderr, "Error: not enough memory\n");
         } else {
@@ -505,7 +505,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("Sum: %s\n", summa);
-    free(summa);
+    printf("Sum: %s\n", sum);
+    free(sum);
     return 0;
 }

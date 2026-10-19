@@ -182,7 +182,7 @@ err: Flags: -a or /a - ascending order, -d or /d - descending order
 code: 1
 
 name: четыре аргумента
-args: tests/data/task2_in.txt -a tests/data/res2.txt lishniy
+args: tests/data/task2_in.txt -a tests/data/res2.txt extra
 err: Usage: lab2_task2 <input file> <flag> <output file>
 err: Flags: -a or /a - ascending order, -d or /d - descending order
 code: 1
@@ -223,13 +223,13 @@ err: Error: wrong flag '', use -a, /a, -d or /d
 code: 1
 
 name: входного файла нет
-args: tests/data/net_takogo.txt -a tests/data/res2.txt
-err: Error: can not open file 'tests/data/net_takogo.txt'
+args: tests/data/no_such_file.txt -a tests/data/res2.txt
+err: Error: can not open file 'tests/data/no_such_file.txt'
 code: 1
 
 name: выходной файл в несуществующей папке
-args: tests/data/task2_in.txt -a tests/net_papki/res.txt
-err: Error: can not create file 'tests/net_papki/res.txt'
+args: tests/data/task2_in.txt -a tests/no_such_dir/res.txt
+err: Error: can not create file 'tests/no_such_dir/res.txt'
 code: 1
 
 name: вход и выход - один файл (одинаковая запись)

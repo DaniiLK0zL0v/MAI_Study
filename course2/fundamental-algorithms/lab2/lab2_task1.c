@@ -64,8 +64,8 @@ status_code parse_flag(const char *arg, char *flag) {
 
 /* Строка -> unsigned int (это seed для -c). Только цифры: без знака, без пробелов.
    Минус запрещаем: unsigned int не бывает отрицательным */
-status_code parse_uint(const char *str, unsigned int *chislo) {
-    if (str == NULL || chislo == NULL) {
+status_code parse_uint(const char *str, unsigned int *number) {
+    if (str == NULL || number == NULL) {
         return INVALID_ARGS;
     }
     /* пустая строка "" - не число */
@@ -74,48 +74,48 @@ status_code parse_uint(const char *str, unsigned int *chislo) {
     }
 
     /* Собираем число слева направо (схема Горнера): "123" -> 1 -> 12 -> 123,
-       каждый раз znach = znach * 10 + цифра.
-       Копим в локальной переменной, а в *chislo пишем только в самом конце,
+       каждый раз value = value * 10 + цифра.
+       Копим в локальной переменной, а в *number пишем только в самом конце,
        когда точно знаем, что ошибок нет */
-    unsigned int znach = 0;
+    unsigned int value = 0;
     for (size_t i = 0; str[i] != '\0'; i++) {
         /* любой символ кроме цифры - ошибка ("12a", "-5", "+5", "1.5", " 7") */
         if (str[i] < '0' || str[i] > '9') {
             return INVALID_NUMBER;
         }
         /* значение цифры: коды символов '0'..'9' идут подряд, '7' - '0' = 7 */
-        unsigned int cifra = (unsigned int)(str[i] - '0');
+        unsigned int digit = (unsigned int)(str[i] - '0');
         /* Проверка переполнения ДО умножения:
-           znach * 10 + cifra > UINT_MAX  <=>  znach > (UINT_MAX - cifra) / 10.
+           value * 10 + digit > UINT_MAX  <=>  value > (UINT_MAX - digit) / 10.
            Если сначала умножить, то unsigned "перескочит" через ноль
            (4294967296 станет 0) и ошибку уже не заметить */
-        if (znach > (UINT_MAX - cifra) / 10) {
+        if (value > (UINT_MAX - digit) / 10) {
             return OVERFLOW_ERROR;
         }
-        znach = znach * 10 + cifra;
+        value = value * 10 + digit;
     }
 
-    *chislo = znach;
+    *number = value;
     return OK;
 }
 
-/* Выделить память под строку из dlina символов + 1 байт на '\0' в конце.
+/* Выделить память под строку из length символов + 1 байт на '\0' в конце.
    Отдельная функция, потому что это нужно в -r, -u, -n и -c */
-status_code alloc_string(const size_t dlina, char **novaya) {
-    if (novaya == NULL) {
+status_code alloc_string(const size_t length, char **new_str) {
+    if (new_str == NULL) {
         return INVALID_ARGS;
     }
-    /* dlina + 1 при dlina == SIZE_MAX "перескочит" в 0, и malloc(0) выделил бы
+    /* length + 1 при length == SIZE_MAX "перескочит" в 0, и malloc(0) выделил бы
        пустой блок. На практике строки такой длины не бывает, но проверка дешевая */
-    if (dlina > SIZE_MAX - 1) {
+    if (length > SIZE_MAX - 1) {
         return OVERFLOW_ERROR;
     }
     /* sizeof(char) всегда 1, пишем его, чтобы было видно, что выделяем массив char */
-    char *blok = (char *)malloc((dlina + 1) * sizeof(char));
-    if (blok == NULL) {
+    char *block = (char *)malloc((length + 1) * sizeof(char));
+    if (block == NULL) {
         return ALLOC_ERROR;
     }
-    *novaya = blok;
+    *new_str = block;
     return OK;
 }
 
@@ -123,8 +123,8 @@ status_code alloc_string(const size_t dlina, char **novaya) {
 
 /* -l: длина строки (сколько символов до '\0'). Замена strlen из string.h.
    size_t - беззнаковый тип для размеров и длин, его возвращает и sizeof */
-status_code string_length(const char *str, size_t *dlina) {
-    if (str == NULL || dlina == NULL) {
+status_code string_length(const char *str, size_t *length) {
+    if (str == NULL || length == NULL) {
         return INVALID_ARGS;
     }
     /* идем по строке, пока не встретим '\0' - признак конца строки в C */
@@ -132,80 +132,80 @@ status_code string_length(const char *str, size_t *dlina) {
     while (str[n] != '\0') {
         n++;
     }
-    *dlina = n;
+    *length = n;
     return OK;
 }
 
 /* -r: новая строка - str задом наперед. "abc" -> "cba".
    Результат в динамической памяти, освобождает его вызывающий (main) */
-status_code string_reverse(const char *str, char **rez) {
-    if (str == NULL || rez == NULL) {
+status_code string_reverse(const char *str, char **result) {
+    if (str == NULL || result == NULL) {
         return INVALID_ARGS;
     }
 
     /* сначала узнаем длину, чтобы выделить ровно столько памяти, сколько нужно */
-    size_t dlina = 0;
-    status_code sc = string_length(str, &dlina);
+    size_t length = 0;
+    status_code sc = string_length(str, &length);
     if (sc != OK) {
         return sc;
     }
-    char *novaya = NULL;
-    sc = alloc_string(dlina, &novaya);
+    char *new_str = NULL;
+    sc = alloc_string(length, &new_str);
     if (sc != OK) {
         return sc;
     }
 
     /* i-й символ новой строки = i-й символ с конца старой.
-       Последний символ стоит на месте dlina - 1 (нумерация с нуля), поэтому
-       str[dlina - 1 - i]. Пример "abc": novaya[0] = str[2] = 'c', novaya[2] = str[0] = 'a'.
-       Для пустой строки (dlina = 0) цикл не выполнится ни разу, и dlina - 1
+       Последний символ стоит на месте length - 1 (нумерация с нуля), поэтому
+       str[length - 1 - i]. Пример "abc": new_str[0] = str[2] = 'c', new_str[2] = str[0] = 'a'.
+       Для пустой строки (length = 0) цикл не выполнится ни разу, и length - 1
        (которое для size_t было бы огромным числом) не вычисляется */
-    for (size_t i = 0; i < dlina; i++) {
-        novaya[i] = str[dlina - 1 - i];
+    for (size_t i = 0; i < length; i++) {
+        new_str[i] = str[length - 1 - i];
     }
     /* без '\0' в конце это не строка: printf("%s") читал бы дальше чужую память */
-    novaya[dlina] = '\0';
+    new_str[length] = '\0';
 
-    /* результат отдаем только при успехе - при ошибке *rez не меняется */
-    *rez = novaya;
+    /* результат отдаем только при успехе - при ошибке *result не меняется */
+    *result = new_str;
     return OK;
 }
 
 /* -u: копия строки, где символы на нечетных позициях (1, 3, 5, ...) - в верхнем регистре.
    Первый символ стоит на позиции 0 (это четная позиция), его не меняем.
    "abcdef" -> "aBcDeF" */
-status_code string_upper_odd(const char *str, char **rez) {
-    if (str == NULL || rez == NULL) {
+status_code string_upper_odd(const char *str, char **result) {
+    if (str == NULL || result == NULL) {
         return INVALID_ARGS;
     }
 
     /* длина -> память под копию (как в string_reverse) */
-    size_t dlina = 0;
-    status_code sc = string_length(str, &dlina);
+    size_t length = 0;
+    status_code sc = string_length(str, &length);
     if (sc != OK) {
         return sc;
     }
-    char *novaya = NULL;
-    sc = alloc_string(dlina, &novaya);
+    char *new_str = NULL;
+    sc = alloc_string(length, &new_str);
     if (sc != OK) {
         return sc;
     }
 
-    for (size_t i = 0; i < dlina; i++) {
+    for (size_t i = 0; i < length; i++) {
         if (i % 2 == 1) {
             /* нечетная позиция: toupper меняет 'a'..'z' на 'A'..'Z', остальное не трогает.
                (unsigned char) обязателен: char может быть знаковым, и байт русской буквы
                в UTF-8 тогда отрицательный, а toupper принимает только 0..255 или EOF.
                Отрицательное значение в toupper - неопределенное поведение */
-            novaya[i] = (char)toupper((unsigned char)str[i]);
+            new_str[i] = (char)toupper((unsigned char)str[i]);
         } else {
             /* четная позиция: копируем как есть */
-            novaya[i] = str[i];
+            new_str[i] = str[i];
         }
     }
-    novaya[dlina] = '\0';
+    new_str[length] = '\0';
 
-    *rez = novaya;
+    *result = new_str;
     return OK;
 }
 
@@ -213,19 +213,19 @@ status_code string_upper_odd(const char *str, char **rez) {
    потом все остальные символы. Внутри каждой группы порядок как в исходной строке.
    "a1-b2" -> "12ab-".
    Делаем три прохода по строке: 1) берем только цифры, 2) только буквы, 3) остальное */
-status_code string_regroup(const char *str, char **rez) {
-    if (str == NULL || rez == NULL) {
+status_code string_regroup(const char *str, char **result) {
+    if (str == NULL || result == NULL) {
         return INVALID_ARGS;
     }
 
     /* длина -> память: символов в новой строке столько же, сколько в старой */
-    size_t dlina = 0;
-    status_code sc = string_length(str, &dlina);
+    size_t length = 0;
+    status_code sc = string_length(str, &length);
     if (sc != OK) {
         return sc;
     }
-    char *novaya = NULL;
-    sc = alloc_string(dlina, &novaya);
+    char *new_str = NULL;
+    sc = alloc_string(length, &new_str);
     if (sc != OK) {
         return sc;
     }
@@ -236,115 +236,115 @@ status_code string_regroup(const char *str, char **rez) {
 
     /* 1 проход - цифры '0'..'9'.
        isdigit/isalpha тоже требуют (unsigned char) - причина как в string_upper_odd */
-    for (size_t i = 0; i < dlina; i++) {
+    for (size_t i = 0; i < length; i++) {
         if (isdigit((unsigned char)str[i])) {
-            novaya[pos] = str[i];
+            new_str[pos] = str[i];
             pos++;
         }
     }
     /* 2 проход - латинские буквы (в стандартной локали "C" isalpha - это только a..z, A..Z) */
-    for (size_t i = 0; i < dlina; i++) {
+    for (size_t i = 0; i < length; i++) {
         if (isalpha((unsigned char)str[i])) {
-            novaya[pos] = str[i];
+            new_str[pos] = str[i];
             pos++;
         }
     }
     /* 3 проход - все остальное: пробелы, знаки, байты русских букв.
        Условие - "не цифра и не буква", поэтому каждый символ попадет ровно в одну
-       группу, и в сумме pos дойдет ровно до dlina - за границу массива не выйдем */
-    for (size_t i = 0; i < dlina; i++) {
+       группу, и в сумме pos дойдет ровно до length - за границу массива не выйдем */
+    for (size_t i = 0; i < length; i++) {
         if (!isdigit((unsigned char)str[i]) && !isalpha((unsigned char)str[i])) {
-            novaya[pos] = str[i];
+            new_str[pos] = str[i];
             pos++;
         }
     }
-    novaya[pos] = '\0';
+    new_str[pos] = '\0';
 
-    *rez = novaya;
+    *result = new_str;
     return OK;
 }
 
-/* -c: склеить kolvo строк в одну в псевдослучайном порядке.
-   stroki - массив указателей на строки, seed - число для srand (по условию).
-   const char *const *stroki: функция не меняет ни сами строки, ни массив указателей.
+/* -c: склеить count строк в одну в псевдослучайном порядке.
+   strings - массив указателей на строки, seed - число для srand (по условию).
+   const char *const *strings: функция не меняет ни сами строки, ни массив указателей.
 
    Про srand/rand: у rand есть скрытое внутреннее состояние внутри библиотеки (по сути
    глобальная переменная). Обычно мы этого избегаем, но здесь условие прямо требует
    "для засеивания генератора используйте функцию srand", поэтому используем ее.
    Одинаковый seed -> одинаковая последовательность rand() -> одинаковый порядок
    (на одной и той же системе; на Windows и Linux rand устроен по-разному) */
-status_code string_concat_random(const char *const *stroki, const int kolvo,
-                                 const unsigned int seed, char **rez) {
-    if (stroki == NULL || rez == NULL || kolvo <= 0) {
+status_code string_concat_random(const char *const *strings, const int count,
+                                 const unsigned int seed, char **result) {
+    if (strings == NULL || result == NULL || count <= 0) {
         return INVALID_ARGS;
     }
 
     /* 1) Общая длина результата = сумма длин всех строк.
           Заодно проверяем, что ни один указатель не NULL */
-    size_t vsego = 0;
-    for (int i = 0; i < kolvo; i++) {
-        if (stroki[i] == NULL) {
+    size_t total = 0;
+    for (int i = 0; i < count; i++) {
+        if (strings[i] == NULL) {
             return INVALID_ARGS;
         }
-        size_t dlina = 0;
-        status_code sc = string_length(stroki[i], &dlina);
+        size_t length = 0;
+        status_code sc = string_length(strings[i], &length);
         if (sc != OK) {
             return sc;
         }
-        /* vsego + dlina > SIZE_MAX  <=>  vsego > SIZE_MAX - dlina (проверка до сложения) */
-        if (vsego > SIZE_MAX - dlina) {
+        /* total + length > SIZE_MAX  <=>  total > SIZE_MAX - length (проверка до сложения) */
+        if (total > SIZE_MAX - length) {
             return OVERFLOW_ERROR;
         }
-        vsego += dlina;
+        total += length;
     }
 
     /* 2) Порядок склейки. Сами строки не двигаем - перемешиваем копию массива
           указателей на них (переставить указатель быстрее, чем переписывать строку) */
-    const char **poryadok = (const char **)malloc((size_t)kolvo * sizeof(const char *));
-    if (poryadok == NULL) {
+    const char **order = (const char **)malloc((size_t)count * sizeof(const char *));
+    if (order == NULL) {
         return ALLOC_ERROR;
     }
-    for (int i = 0; i < kolvo; i++) {
-        poryadok[i] = stroki[i];
+    for (int i = 0; i < count; i++) {
+        order[i] = strings[i];
     }
 
-    /* 3) Память под результат. Если не дали - освобождаем poryadok, иначе утечка */
-    char *novaya = NULL;
-    status_code sc = alloc_string(vsego, &novaya);
+    /* 3) Память под результат. Если не дали - освобождаем order, иначе утечка */
+    char *new_str = NULL;
+    status_code sc = alloc_string(total, &new_str);
     if (sc != OK) {
-        free(poryadok);
+        free(order);
         return sc;
     }
 
     /* 4) Перемешивание Фишера-Йетса. Идем с конца массива: для места i выбираем
-          случайное место j от 0 до i и меняем poryadok[i] и poryadok[j] местами.
+          случайное место j от 0 до i и меняем order[i] и order[j] местами.
           После шага место i больше не трогаем - там уже стоит "случайно выбранная" строка.
           rand() % (i + 1) - остаток от деления, всегда от 0 до i.
-          Каждая из kolvo! перестановок получается с одинаковой вероятностью
+          Каждая из count! перестановок получается с одинаковой вероятностью
           (если не считать небольшого перекоса от % - для лабы это не важно) */
     srand(seed);
-    for (int i = kolvo - 1; i > 0; i--) {
+    for (int i = count - 1; i > 0; i--) {
         int j = rand() % (i + 1);
-        const char *tmp = poryadok[i];
-        poryadok[i] = poryadok[j];
-        poryadok[j] = tmp;
+        const char *tmp = order[i];
+        order[i] = order[j];
+        order[j] = tmp;
     }
 
     /* 5) Склейка: копируем символы строк одну за другой в новый блок.
           pos - куда писать следующий символ (замена strcat из string.h) */
     size_t pos = 0;
-    for (int i = 0; i < kolvo; i++) {
-        const char *s = poryadok[i];
+    for (int i = 0; i < count; i++) {
+        const char *s = order[i];
         for (size_t k = 0; s[k] != '\0'; k++) {
-            novaya[pos] = s[k];
+            new_str[pos] = s[k];
             pos++;
         }
     }
-    novaya[pos] = '\0';
+    new_str[pos] = '\0';
 
     /* массив указателей больше не нужен; сами строки не освобождаем - они чужие (argv) */
-    free(poryadok);
-    *rez = novaya;
+    free(order);
+    *result = new_str;
     return OK;
 }
 
@@ -394,21 +394,21 @@ int main(int argc, char *argv[]) {
         case 'l': {
             /* -l: длина строки. Память не выделяется, ошибок от пользователя нет.
                %zu - печать size_t */
-            size_t dlina = 0;
-            sc = string_length(str, &dlina);
+            size_t length = 0;
+            sc = string_length(str, &length);
             if (sc != OK) {
                 fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
-            printf("Length: %zu\n", dlina);
+            printf("Length: %zu\n", length);
             break;
         }
 
         case 'r': {
             /* -r: строка задом наперед. Ошибок от пользователя нет,
                возможна только нехватка памяти */
-            char *rez = NULL;
-            sc = string_reverse(str, &rez);
+            char *result = NULL;
+            sc = string_reverse(str, &result);
             if (sc == ALLOC_ERROR) {
                 fprintf(stderr, "Error: not enough memory\n");
                 return 1;
@@ -416,15 +416,15 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
-            printf("Result: %s\n", rez);
-            free(rez);   /* строку выделила функция через malloc - освобождаем здесь */
+            printf("Result: %s\n", result);
+            free(result);   /* строку выделила функция через malloc - освобождаем здесь */
             break;
         }
 
         case 'u': {
             /* -u: нечетные позиции в верхний регистр. Ошибок от пользователя нет */
-            char *rez = NULL;
-            sc = string_upper_odd(str, &rez);
+            char *result = NULL;
+            sc = string_upper_odd(str, &result);
             if (sc == ALLOC_ERROR) {
                 fprintf(stderr, "Error: not enough memory\n");
                 return 1;
@@ -432,15 +432,15 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
-            printf("Result: %s\n", rez);
-            free(rez);
+            printf("Result: %s\n", result);
+            free(result);
             break;
         }
 
         case 'n': {
             /* -n: цифры, потом буквы, потом остальное. Ошибок от пользователя нет */
-            char *rez = NULL;
-            sc = string_regroup(str, &rez);
+            char *result = NULL;
+            sc = string_regroup(str, &result);
             if (sc == ALLOC_ERROR) {
                 fprintf(stderr, "Error: not enough memory\n");
                 return 1;
@@ -448,8 +448,8 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
-            printf("Result: %s\n", rez);
-            free(rez);
+            printf("Result: %s\n", result);
+            free(result);
             break;
         }
 
@@ -473,24 +473,24 @@ int main(int argc, char *argv[]) {
                argv[2], затем argv[4], argv[5], ..., argv[argc - 1].
                argv[3] - это seed, его пропускаем.
                Сколько строк: одна (argv[2]) + все после seed (argc - 4 штук) */
-            int kolvo = 1 + (argc - 4);
-            const char **stroki = (const char **)malloc((size_t)kolvo * sizeof(const char *));
-            if (stroki == NULL) {
+            int count = 1 + (argc - 4);
+            const char **strings = (const char **)malloc((size_t)count * sizeof(const char *));
+            if (strings == NULL) {
                 fprintf(stderr, "Error: not enough memory\n");
                 return 1;
             }
-            /* stroki[0] = argv[2]; stroki[1] = argv[4]; stroki[2] = argv[5]; ...
+            /* strings[0] = argv[2]; strings[1] = argv[4]; strings[2] = argv[5]; ...
                то есть argv[i] кладем на место i - 3 (для i от 4) */
-            stroki[0] = argv[2];
+            strings[0] = argv[2];
             for (int i = 4; i < argc; i++) {
-                stroki[i - 3] = argv[i];
+                strings[i - 3] = argv[i];
             }
 
-            char *rez = NULL;
-            sc = string_concat_random(stroki, kolvo, seed, &rez);
+            char *result = NULL;
+            sc = string_concat_random(strings, count, seed, &result);
             /* массив указателей больше не нужен при любом исходе - освобождаем сразу,
                до проверки статуса, чтобы не забыть его в ветках с ошибкой */
-            free(stroki);
+            free(strings);
             if (sc == ALLOC_ERROR) {
                 fprintf(stderr, "Error: not enough memory\n");
                 return 1;
@@ -498,8 +498,8 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: internal error\n");
                 return 1;
             }
-            printf("Result: %s\n", rez);
-            free(rez);
+            printf("Result: %s\n", result);
+            free(result);
             break;
         }
 

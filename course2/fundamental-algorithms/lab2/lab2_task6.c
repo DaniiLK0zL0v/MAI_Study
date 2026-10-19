@@ -22,7 +22,7 @@
  *
  * Устройство (как в задании 5): у overfscanf и oversscanf одно общее ядро over_vscanf.
  * Разница только в том, откуда берутся символы: из файла (FILE *) или из строки.
- * Это описывает структура istochnik. Новые флаги ядро читает само, по одному символу.
+ * Это описывает структура source. Новые флаги ядро читает само, по одному символу.
  * Стандартные - разбирает (подавление *, ширина, модификатор длины, набор [...]),
  * достает указатель нужного типа и отдает ОДИН спецификатор стандартной vfscanf или
  * vsscanf, дописав к нему %n - чтобы узнать, сколько символов она прочитала.
@@ -69,11 +69,11 @@ typedef struct {
     const char *str;
     size_t pos;
     size_t count;
-} istochnik;
+} source;
 
 /* Взять следующий символ. *c - код символа (0..255) или EOF, если ввод кончился.
    unsigned char: русская буква в char отрицательна, а нам нужен код 0..255, как у fgetc */
-status_code get_char(istochnik *src, int *c) {
+status_code get_char(source *src, int *c) {
     if (src == NULL || c == NULL) {
         return INVALID_ARGS;
     }
@@ -96,7 +96,7 @@ status_code get_char(istochnik *src, int *c) {
 /* Вернуть прочитанный символ обратно ("подсмотрели" и он не подошел).
    Для файла - ungetc: стандарт гарантирует возврат одного символа, больше нам и
    не нужно (все наши чтения смотрят только на один символ вперед). EOF не возвращаем */
-status_code unget_char(istochnik *src, const int c) {
+status_code unget_char(source *src, const int c) {
     if (src == NULL) {
         return INVALID_ARGS;
     }
@@ -114,7 +114,7 @@ status_code unget_char(istochnik *src, const int c) {
 
 /* Пропустить пробелы, табуляции, переводы строк. *c - первый не пробельный символ
    (он уже прочитан!) или EOF */
-status_code skip_spaces(istochnik *src, int *c) {
+status_code skip_spaces(source *src, int *c) {
     if (src == NULL || c == NULL) {
         return INVALID_ARGS;
     }
@@ -129,19 +129,19 @@ status_code skip_spaces(istochnik *src, int *c) {
 
 /* Значение римской цифры; 0 - это не римская цифра (только большие буквы, как печатает
    задание 5) */
-status_code roman_digit(const int c, int *znach) {
-    if (znach == NULL) {
+status_code roman_digit(const int c, int *value) {
+    if (value == NULL) {
         return INVALID_ARGS;
     }
     switch (c) {
-        case 'I': *znach = 1; break;
-        case 'V': *znach = 5; break;
-        case 'X': *znach = 10; break;
-        case 'L': *znach = 50; break;
-        case 'C': *znach = 100; break;
-        case 'D': *znach = 500; break;
-        case 'M': *znach = 1000; break;
-        default: *znach = 0; break;
+        case 'I': *value = 1; break;
+        case 'V': *value = 5; break;
+        case 'X': *value = 10; break;
+        case 'L': *value = 50; break;
+        case 'C': *value = 100; break;
+        case 'D': *value = 500; break;
+        case 'M': *value = 1000; break;
+        default: *value = 0; break;
     }
     return OK;
 }
@@ -153,8 +153,8 @@ status_code roman_digit(const int c, int *znach) {
    вычитаем ее дважды. Пример "XIV": X: 10;  I: 11;  V > I: 11 + 5 - 2*1 = 14.
    Сумма больше INT_MAX (очень длинная строка из M) - MATCH_FAILURE: чтение
    останавливается, переполнения нет. Первый неподходящий символ возвращаем назад */
-status_code scan_roman(istochnik *src, int *rez) {
-    if (src == NULL || rez == NULL) {
+status_code scan_roman(source *src, int *result) {
+    if (src == NULL || result == NULL) {
         return INVALID_ARGS;
     }
     int c = EOF;
@@ -169,34 +169,34 @@ status_code scan_roman(istochnik *src, int *rez) {
     }
     /* ноль: одна буква N */
     if (c == 'N' && !minus) {
-        *rez = 0;
+        *result = 0;
         return OK;
     }
-    long long summa = 0;
-    int pred = 0;            /* значение предыдущей цифры (0 - еще не было) */
-    int kolvo = 0;           /* сколько римских цифр прочитано */
-    int cifra = 0;
-    roman_digit(c, &cifra);
-    while (cifra != 0) {
-        if (pred != 0 && pred < cifra) {
-            summa += cifra - 2LL * pred;
+    long long sum = 0;
+    int prev = 0;            /* значение предыдущей цифры (0 - еще не было) */
+    int item_count = 0;           /* сколько римских цифр прочитано */
+    int digit = 0;
+    roman_digit(c, &digit);
+    while (digit != 0) {
+        if (prev != 0 && prev < digit) {
+            sum += digit - 2LL * prev;
         } else {
-            summa += cifra;
+            sum += digit;
         }
-        if (summa > INT_MAX) {
+        if (sum > INT_MAX) {
             return MATCH_FAILURE;
         }
-        pred = cifra;
-        kolvo++;
+        prev = digit;
+        item_count++;
         get_char(src, &c);
-        roman_digit(c, &cifra);
+        roman_digit(c, &digit);
     }
     /* c - первый не римский символ: он не наш, возвращаем */
     unget_char(src, c);
-    if (kolvo == 0) {
+    if (item_count == 0) {
         return MATCH_FAILURE;
     }
-    *rez = (int)(minus ? -summa : summa);
+    *result = (int)(minus ? -sum : sum);
     return OK;
 }
 
@@ -207,12 +207,12 @@ status_code scan_roman(istochnik *src, int *rez) {
    Ноль задание 5 печатает как "01" - там нет "11". Поэтому, если цифры 0/1 кончились
    раньше "11", последняя прочитанная '1' - признак конца, и ее вклад вычитаем.
    Если последняя была '0' - признака конца нет, это MATCH_FAILURE.
-   Числа Фибоначчи считаем на ходу (tek, sled) в unsigned long long. Когда они
+   Числа Фибоначчи считаем на ходу (cur, next) в unsigned long long. Когда они
    становятся больше UINT_MAX, дальше их не растим (иначе переполнились бы на 93-м
    шаге): любая единица там дает сумму больше UINT_MAX, а это MATCH_FAILURE.
    Сумму тоже ограничиваем, чтобы она не переполнилась на очень длинном вводе */
-status_code scan_zeckendorf(istochnik *src, unsigned int *rez) {
-    if (src == NULL || rez == NULL) {
+status_code scan_zeckendorf(source *src, unsigned int *result) {
+    if (src == NULL || result == NULL) {
         return INVALID_ARGS;
     }
     int c = EOF;
@@ -220,93 +220,93 @@ status_code scan_zeckendorf(istochnik *src, unsigned int *rez) {
     if (c == EOF) {
         return INPUT_END;
     }
-    const unsigned long long bolshoe = (unsigned long long)UINT_MAX + 1;   /* "слишком много" */
-    unsigned long long tek = 1;     /* число Фибоначчи для текущего коэффициента */
-    unsigned long long sled = 2;    /* следующее */
-    unsigned long long summa = 0;
-    unsigned long long posledniy = 0;   /* вклад последней прочитанной '1' */
-    int pred = 0;                   /* предыдущий символ ('0', '1' или 0 - не было) */
-    int konec = 0;                  /* 1 - встретили "11" */
-    int kolvo = 0;
-    while ((c == '0' || c == '1') && !konec) {
-        kolvo++;
-        if (c == '1' && pred == '1') {
+    const unsigned long long too_big = (unsigned long long)UINT_MAX + 1;   /* "слишком много" */
+    unsigned long long cur = 1;     /* число Фибоначчи для текущего коэффициента */
+    unsigned long long next = 2;    /* следующее */
+    unsigned long long sum = 0;
+    unsigned long long last_value = 0;   /* вклад последней прочитанной '1' */
+    int prev = 0;                   /* предыдущий символ ('0', '1' или 0 - не было) */
+    int finished = 0;                  /* 1 - встретили "11" */
+    int item_count = 0;
+    while ((c == '0' || c == '1') && !finished) {
+        item_count++;
+        if (c == '1' && prev == '1') {
             /* вторая единица подряд - признак конца, в сумму не идет */
-            konec = 1;
+            finished = 1;
         } else {
-            posledniy = 0;
+            last_value = 0;
             if (c == '1') {
-                posledniy = tek;
-                summa += tek;
-                /* сумму держим не больше 2 * bolshoe: этого хватает, чтобы понять
+                last_value = cur;
+                sum += cur;
+                /* сумму держим не больше 2 * too_big: этого хватает, чтобы понять
                    "слишком много", и переполнения нет при любой длине ввода */
-                if (summa > 2 * bolshoe) {
-                    summa = 2 * bolshoe;
+                if (sum > 2 * too_big) {
+                    sum = 2 * too_big;
                 }
             }
-            pred = c;
+            prev = c;
             /* следующее число Фибоначчи; больше UINT_MAX - не растим дальше */
-            if (tek < bolshoe) {
-                unsigned long long novoe = tek + sled;
-                tek = sled;
-                sled = novoe;
+            if (cur < too_big) {
+                unsigned long long next_fib = cur + next;
+                cur = next;
+                next = next_fib;
             }
             get_char(src, &c);
         }
     }
-    if (!konec) {
+    if (!finished) {
         /* цифры кончились раньше "11": c - чужой символ, возвращаем его */
         unget_char(src, c);
-        if (kolvo == 0 || pred != '1') {
+        if (item_count == 0 || prev != '1') {
             return MATCH_FAILURE;
         }
         /* последняя '1' была признаком конца ("01" - это 0) */
-        summa -= posledniy;
+        sum -= last_value;
     }
-    if (summa > UINT_MAX) {
+    if (sum > UINT_MAX) {
         return MATCH_FAILURE;
     }
-    *rez = (unsigned int)summa;
+    *result = (unsigned int)sum;
     return OK;
 }
 
 /* Основание вне [2..36] -> 10 (так в условии) */
-status_code fix_base(const int base, int *rez) {
-    if (rez == NULL) {
+status_code fix_base(const int base, int *result) {
+    if (result == NULL) {
         return INVALID_ARGS;
     }
-    *rez = (base < 2 || base > 36) ? 10 : base;
+    *result = (base < 2 || base > 36) ? 10 : base;
     return OK;
 }
 
-/* Значение символа как цифры системы osn: 0..osn-1 или -1 (не цифра).
-   bolshie = 1 - буквы A..Z (%CV), 0 - a..z (%Cv); буква другого регистра - не цифра */
-status_code digit_value(const int c, const int osn, const int bolshie, int *znach) {
-    if (znach == NULL) {
+/* Значение символа как цифры системы radix: 0..radix-1 или -1 (не цифра).
+   upper = 1 - буквы A..Z (%CV), 0 - a..z (%Cv); буква другого регистра - не цифра */
+status_code digit_value(const int c, const int radix, const int upper, int *value) {
+    if (value == NULL) {
         return INVALID_ARGS;
     }
     int d = -1;
     if (c >= '0' && c <= '9') {
         d = c - '0';
-    } else if (bolshie && c >= 'A' && c <= 'Z') {
+    } else if (upper && c >= 'A' && c <= 'Z') {
         d = c - 'A' + 10;
-    } else if (!bolshie && c >= 'a' && c <= 'z') {
+    } else if (!upper && c >= 'a' && c <= 'z') {
         d = c - 'a' + 10;
     }
-    *znach = (d >= 0 && d < osn) ? d : -1;
+    *value = (d >= 0 && d < radix) ? d : -1;
     return OK;
 }
 
 /* %Cv / %CV: прочитать int в системе base. Пробелы, необязательный '-', цифры, пока
    они цифры этой системы (первая не цифра возвращается назад). Нет ни одной цифры -
    MATCH_FAILURE. Число не помещается в int - MATCH_FAILURE (проверка до умножения:
-   acc * osn + d > predel  <=>  acc > (predel - d) / osn) */
-status_code scan_in_base(istochnik *src, const int base, const int bolshie, int *rez) {
-    if (src == NULL || rez == NULL) {
+   acc * radix + d > limit  <=>  acc > (limit - d) / radix) */
+status_code scan_in_base(source *src, const int base, const int upper, int *result) {
+    if (src == NULL || result == NULL) {
         return INVALID_ARGS;
     }
-    int osn = 10;
-    fix_base(base, &osn);
+    int radix = 10;
+    fix_base(base, &radix);
     int c = EOF;
     skip_spaces(src, &c);
     if (c == EOF) {
@@ -317,83 +317,83 @@ status_code scan_in_base(istochnik *src, const int base, const int bolshie, int 
         minus = 1;
         get_char(src, &c);
     }
-    const long long predel = minus ? (long long)INT_MAX + 1 : (long long)INT_MAX;
+    const long long limit = minus ? (long long)INT_MAX + 1 : (long long)INT_MAX;
     long long acc = 0;
-    int kolvo = 0;
+    int item_count = 0;
     int d = -1;
-    digit_value(c, osn, bolshie, &d);
+    digit_value(c, radix, upper, &d);
     while (d >= 0) {
-        if (acc > (predel - d) / osn) {
+        if (acc > (limit - d) / radix) {
             return MATCH_FAILURE;
         }
-        acc = acc * osn + d;
-        kolvo++;
+        acc = acc * radix + d;
+        item_count++;
         get_char(src, &c);
-        digit_value(c, osn, bolshie, &d);
+        digit_value(c, radix, upper, &d);
     }
     unget_char(src, c);
-    if (kolvo == 0) {
+    if (item_count == 0) {
         return MATCH_FAILURE;
     }
-    *rez = (int)(minus ? -acc : acc);
+    *result = (int)(minus ? -acc : acc);
     return OK;
 }
 
-/* Новый флаг? s - символ сразу после '%'. *kakoy - "Ro", "Zr", "Cv", "CV" или NULL */
-status_code custom_flag(const char *s, const char **kakoy) {
-    if (s == NULL || kakoy == NULL) {
+/* Новый флаг? s - символ сразу после '%'. *which - "Ro", "Zr", "Cv", "CV" или NULL */
+status_code custom_flag(const char *s, const char **which) {
+    if (s == NULL || which == NULL) {
         return INVALID_ARGS;
     }
-    static const char *spisok[] = {"Ro", "Zr", "Cv", "CV"};
-    *kakoy = NULL;
+    static const char *list[] = {"Ro", "Zr", "Cv", "CV"};
+    *which = NULL;
     /* s[0] проверяем первым: если строка кончилась, s[1] читать нельзя */
     if (s[0] == '\0') {
         return OK;
     }
     for (int i = 0; i < 4; i++) {
-        if (s[0] == spisok[i][0] && s[1] == spisok[i][1]) {
-            *kakoy = spisok[i];
+        if (s[0] == list[i][0] && s[1] == list[i][1]) {
+            *which = list[i];
         }
     }
     return OK;
 }
 
-/* Прочитать новый флаг kakoy и записать значение по адресу из аргументов.
+/* Прочитать новый флаг which и записать значение по адресу из аргументов.
    args - указатель на va_list: va_arg(*args, ...) сдвигает общий список (если передать
    va_list по значению, после va_arg здесь список у вызывающего станет неопределенным).
-   bez_zapisi = 1 - было "%*Ro": прочитать и никуда не записывать (как "%*d" у scanf),
+   no_assign = 1 - было "%*Ro": прочитать и никуда не записывать (как "%*d" у scanf),
    тогда адреса в аргументах нет (у %*Cv основание все равно есть - без него не прочитать).
    Значение записываем, только если оно прочиталось: при ошибке переменная не меняется */
-status_code scan_custom(istochnik *src, const char *kakoy, const int bez_zapisi, va_list *args) {
-    if (src == NULL || kakoy == NULL || args == NULL) {
+status_code scan_custom(source *src, const char *which, const int no_assign, va_list *args) {
+    if (src == NULL || which == NULL || args == NULL) {
         return INVALID_ARGS;
     }
-    if (strcmp(kakoy, "Ro") == 0) {
-        int *p = bez_zapisi ? NULL : va_arg(*args, int *);
+    if (strcmp(which, "Ro") == 0) {
+        int *p = no_assign ? NULL : va_arg(*args, int *);
         int x = 0;
         status_code sc = scan_roman(src, &x);
-        if (sc == OK && !bez_zapisi) {
+        if (sc == OK && !no_assign) {
             if (p == NULL) return INVALID_ARGS;
             *p = x;
         }
         return sc;
     }
-    if (strcmp(kakoy, "Zr") == 0) {
-        unsigned int *p = bez_zapisi ? NULL : va_arg(*args, unsigned int *);
+    if (strcmp(which, "Zr") == 0) {
+        unsigned int *p = no_assign ? NULL : va_arg(*args, unsigned int *);
         unsigned int x = 0;
         status_code sc = scan_zeckendorf(src, &x);
-        if (sc == OK && !bez_zapisi) {
+        if (sc == OK && !no_assign) {
             if (p == NULL) return INVALID_ARGS;
             *p = x;
         }
         return sc;
     }
     /* Cv / CV: сначала адрес, потом основание (так в условии) */
-    int *p = bez_zapisi ? NULL : va_arg(*args, int *);
+    int *p = no_assign ? NULL : va_arg(*args, int *);
     int base = va_arg(*args, int);
     int x = 0;
-    status_code sc = scan_in_base(src, base, kakoy[1] == 'V', &x);
-    if (sc == OK && !bez_zapisi) {
+    status_code sc = scan_in_base(src, base, which[1] == 'V', &x);
+    if (sc == OK && !no_assign) {
         if (p == NULL) return INVALID_ARGS;
         *p = x;
     }
@@ -405,110 +405,110 @@ status_code scan_custom(istochnik *src, const char *kakoy, const int bez_zapisi,
 /* Модификатор длины: какого типа переменная (%hhd - signed char, %ld - long, %Lf - long double) */
 typedef enum {
     LEN_NONE, LEN_HH, LEN_H, LEN_L, LEN_LL, LEN_J, LEN_Z, LEN_T, LEN_BIG_L
-} dlina_kind;
+} length_kind;
 
 /* Разобранный стандартный спецификатор:  %[*][ширина][длина]тип  или  %[*][ширина][l][набор] */
 typedef struct {
-    int bez_zapisi;        /* 1 - есть '*': прочитать, но никуда не записывать (аргумента нет) */
-    int shirina;           /* ширина - сколько символов читать самое большее; -1 - не задана */
-    dlina_kind dlina;
-    char tip;              /* d i o u x X a A e E f F g G c s [ p n % */
-    const char *nabor;     /* для '[': где в формате начинается набор (сразу после '[') */
-    size_t nabor_dlina;    /* длина набора вместе с закрывающей ']' */
+    int no_assign;        /* 1 - есть '*': прочитать, но никуда не записывать (аргумента нет) */
+    int width;           /* ширина - сколько символов читать самое большее; -1 - не задана */
+    length_kind length;
+    char conv;              /* d i o u x X a A e E f F g G c s [ p n % */
+    const char *scanset;     /* для '[': где в формате начинается набор (сразу после '[') */
+    size_t scanset_length;    /* длина набора вместе с закрывающей ']' */
 } spec_info;
 
 /* Подходит ли модификатор длины к типу (C99):
    целые d i o u x X и n - любые, кроме L;  вещественные - без модификатора, l (double) или L;
    c s [ - без модификатора или l (широкие символы);  p и % - без модификатора */
-status_code check_dlina(const char tip, const dlina_kind dlina, int *podhodit) {
-    if (podhodit == NULL) {
+status_code check_length(const char conv, const length_kind length, int *fits) {
+    if (fits == NULL) {
         return INVALID_ARGS;
     }
-    if (strchr("diouxXn", tip) != NULL) {
-        *podhodit = (dlina != LEN_BIG_L);
-    } else if (strchr("aAeEfFgG", tip) != NULL) {
-        *podhodit = (dlina == LEN_NONE || dlina == LEN_L || dlina == LEN_BIG_L);
-    } else if (tip == 'c' || tip == 's' || tip == '[') {
-        *podhodit = (dlina == LEN_NONE || dlina == LEN_L);
+    if (strchr("diouxXn", conv) != NULL) {
+        *fits = (length != LEN_BIG_L);
+    } else if (strchr("aAeEfFgG", conv) != NULL) {
+        *fits = (length == LEN_NONE || length == LEN_L || length == LEN_BIG_L);
+    } else if (conv == 'c' || conv == 's' || conv == '[') {
+        *fits = (length == LEN_NONE || length == LEN_L);
     } else {
-        *podhodit = (dlina == LEN_NONE);
+        *fits = (length == LEN_NONE);
     }
     return OK;
 }
 
 /* Разобрать стандартный спецификатор. s - символ сразу после '%'.
-   *dlina_spec - сколько символов формата он занял (без '%').
+   *spec_length - сколько символов формата он занял (без '%').
    Набор [...]: после '[' может идти '^' (все, КРОМЕ перечисленных), и ']' сразу в
    начале набора - это обычный символ, а не конец: "[]abc]" - набор из ], a, b, c */
-status_code parse_spec(const char *s, spec_info *sp, size_t *dlina_spec) {
-    if (s == NULL || sp == NULL || dlina_spec == NULL) {
+status_code parse_spec(const char *s, spec_info *sp, size_t *spec_length) {
+    if (s == NULL || sp == NULL || spec_length == NULL) {
         return INVALID_ARGS;
     }
-    sp->bez_zapisi = 0;
-    sp->shirina = -1;
-    sp->dlina = LEN_NONE;
-    sp->tip = 0;
-    sp->nabor = NULL;
-    sp->nabor_dlina = 0;
+    sp->no_assign = 0;
+    sp->width = -1;
+    sp->length = LEN_NONE;
+    sp->conv = 0;
+    sp->scanset = NULL;
+    sp->scanset_length = 0;
     size_t i = 0;
 
     /* 1) '*' - не записывать */
     if (s[i] == '*') {
-        sp->bez_zapisi = 1;
+        sp->no_assign = 1;
         i++;
     }
     /* 2) ширина: число > 0. Проверка переполнения до умножения */
     if (s[i] >= '0' && s[i] <= '9') {
-        int znach = 0;
+        int value = 0;
         while (s[i] >= '0' && s[i] <= '9') {
-            int cifra = s[i] - '0';
-            if (znach > (INT_MAX - cifra) / 10) {
+            int digit = s[i] - '0';
+            if (value > (INT_MAX - digit) / 10) {
                 return INVALID_FORMAT;
             }
-            znach = znach * 10 + cifra;
+            value = value * 10 + digit;
             i++;
         }
         /* ширина 0 стандартом запрещена */
-        if (znach == 0) {
+        if (value == 0) {
             return INVALID_FORMAT;
         }
-        sp->shirina = znach;
+        sp->width = value;
     }
     /* 3) модификатор длины (двухбуквенные - первыми) */
     if (s[i] == 'h' && s[i + 1] == 'h') {
-        sp->dlina = LEN_HH;
+        sp->length = LEN_HH;
         i += 2;
     } else if (s[i] == 'l' && s[i + 1] == 'l') {
-        sp->dlina = LEN_LL;
+        sp->length = LEN_LL;
         i += 2;
     } else if (s[i] == 'h') {
-        sp->dlina = LEN_H;
+        sp->length = LEN_H;
         i++;
     } else if (s[i] == 'l') {
-        sp->dlina = LEN_L;
+        sp->length = LEN_L;
         i++;
     } else if (s[i] == 'j') {
-        sp->dlina = LEN_J;
+        sp->length = LEN_J;
         i++;
     } else if (s[i] == 'z') {
-        sp->dlina = LEN_Z;
+        sp->length = LEN_Z;
         i++;
     } else if (s[i] == 't') {
-        sp->dlina = LEN_T;
+        sp->length = LEN_T;
         i++;
     } else if (s[i] == 'L') {
-        sp->dlina = LEN_BIG_L;
+        sp->length = LEN_BIG_L;
         i++;
     }
     /* 4) тип */
     if (s[i] == '\0' || strchr("diouxXaAeEfFgGcs[pn%", s[i]) == NULL) {
         return INVALID_FORMAT;
     }
-    sp->tip = s[i];
+    sp->conv = s[i];
     i++;
     /* 5) набор [...]: ищем закрывающую ']' */
-    if (sp->tip == '[') {
-        sp->nabor = s + i;
+    if (sp->conv == '[') {
+        sp->scanset = s + i;
         size_t k = i;
         if (s[k] == '^') {
             k++;
@@ -522,73 +522,73 @@ status_code parse_spec(const char *s, spec_info *sp, size_t *dlina_spec) {
         if (s[k] != ']') {
             return INVALID_FORMAT;   /* нет закрывающей скобки */
         }
-        sp->nabor_dlina = k + 1 - i;
+        sp->scanset_length = k + 1 - i;
         i = k + 1;
     }
-    int podhodit = 0;
-    check_dlina(sp->tip, sp->dlina, &podhodit);
-    if (!podhodit) {
+    int fits = 0;
+    check_length(sp->conv, sp->length, &fits);
+    if (!fits) {
         return INVALID_FORMAT;
     }
     /* "%%" - только сам по себе; у %n нельзя '*' и ширину (неопределенное поведение) */
-    if ((sp->tip == '%' || sp->tip == 'n') && (sp->bez_zapisi || sp->shirina >= 0)) {
+    if ((sp->conv == '%' || sp->conv == 'n') && (sp->no_assign || sp->width >= 0)) {
         return INVALID_FORMAT;
     }
-    *dlina_spec = i;
+    *spec_length = i;
     return OK;
 }
 
 /* Собрать строку спецификатора для стандартной функции и дописать к ней "%n":
    "%*5lld" + набор + "%n". Строка в динамической памяти (освобождает вызывающий).
    Длина: '%' + '*' + 10 цифр ширины + 2 буквы длины + тип + набор + "%n" + '\0' */
-status_code build_spec(const spec_info *sp, char **rez) {
-    if (sp == NULL || rez == NULL) {
+status_code build_spec(const spec_info *sp, char **result) {
+    if (sp == NULL || result == NULL) {
         return INVALID_ARGS;
     }
-    char *s = (char *)malloc(20 + sp->nabor_dlina);
+    char *s = (char *)malloc(20 + sp->scanset_length);
     if (s == NULL) {
         return ALLOC_ERROR;
     }
     size_t i = 0;
     s[i++] = '%';
-    if (sp->bez_zapisi) {
+    if (sp->no_assign) {
         s[i++] = '*';
     }
-    if (sp->shirina > 0) {
-        i += (size_t)sprintf(s + i, "%d", sp->shirina);
+    if (sp->width > 0) {
+        i += (size_t)sprintf(s + i, "%d", sp->width);
     }
-    static const char *dliny[] = {"", "hh", "h", "l", "ll", "j", "z", "t", "L"};
-    const char *d = dliny[sp->dlina];
+    static const char *lengths[] = {"", "hh", "h", "l", "ll", "j", "z", "t", "L"};
+    const char *d = lengths[sp->length];
     for (size_t k = 0; d[k] != '\0'; k++) {
         s[i++] = d[k];
     }
-    s[i++] = sp->tip;
-    for (size_t k = 0; k < sp->nabor_dlina; k++) {
-        s[i++] = sp->nabor[k];
+    s[i++] = sp->conv;
+    for (size_t k = 0; k < sp->scanset_length; k++) {
+        s[i++] = sp->scanset[k];
     }
     s[i++] = '%';
     s[i++] = 'n';
     s[i] = '\0';
-    *rez = s;
+    *result = s;
     return OK;
 }
 
 /* Прочитать ОДИН стандартный спецификатор стандартной функцией.
    Сама функция с переменным числом аргументов: ей передают спецификатор (уже с "%n"
    в конце) и указатели: на переменную для значения (если нет '*') и на int для %n.
-   Например  scan_value(src, "%lld%n", &vernul, (long long *)p, &prochitano).
+   Например  scan_value(src, "%lld%n", &returned, (long long *)p, &consumed).
    Из файла читает vfscanf, из строки - vsscanf с текущей позиции.
-   *vernul - что вернула стандартная функция (1, 0 или EOF) */
-status_code scan_value(istochnik *src, const char *spec, int *vernul, ...) {
-    if (src == NULL || spec == NULL || vernul == NULL) {
+   *returned - что вернула стандартная функция (1, 0 или EOF) */
+status_code scan_value(source *src, const char *spec, int *returned, ...) {
+    if (src == NULL || spec == NULL || returned == NULL) {
         return INVALID_ARGS;
     }
     va_list args;
-    va_start(args, vernul);
+    va_start(args, returned);
     if (src->stream != NULL) {
-        *vernul = vfscanf(src->stream, spec, args);
+        *returned = vfscanf(src->stream, spec, args);
     } else {
-        *vernul = vsscanf(src->str + src->pos, spec, args);
+        *returned = vsscanf(src->str + src->pos, spec, args);
     }
     va_end(args);
     return OK;
@@ -600,31 +600,31 @@ status_code store_count(const spec_info *sp, va_list *args, const size_t count) 
     if (sp == NULL || args == NULL) {
         return INVALID_ARGS;
     }
-    if (sp->dlina == LEN_HH) {
+    if (sp->length == LEN_HH) {
         signed char *p = va_arg(*args, signed char *);
         if (p == NULL) return INVALID_ARGS;
         *p = (signed char)count;
-    } else if (sp->dlina == LEN_H) {
+    } else if (sp->length == LEN_H) {
         short *p = va_arg(*args, short *);
         if (p == NULL) return INVALID_ARGS;
         *p = (short)count;
-    } else if (sp->dlina == LEN_L) {
+    } else if (sp->length == LEN_L) {
         long *p = va_arg(*args, long *);
         if (p == NULL) return INVALID_ARGS;
         *p = (long)count;
-    } else if (sp->dlina == LEN_LL) {
+    } else if (sp->length == LEN_LL) {
         long long *p = va_arg(*args, long long *);
         if (p == NULL) return INVALID_ARGS;
         *p = (long long)count;
-    } else if (sp->dlina == LEN_J) {
+    } else if (sp->length == LEN_J) {
         intmax_t *p = va_arg(*args, intmax_t *);
         if (p == NULL) return INVALID_ARGS;
         *p = (intmax_t)count;
-    } else if (sp->dlina == LEN_Z) {
+    } else if (sp->length == LEN_Z) {
         size_t *p = va_arg(*args, size_t *);
         if (p == NULL) return INVALID_ARGS;
         *p = count;
-    } else if (sp->dlina == LEN_T) {
+    } else if (sp->length == LEN_T) {
         ptrdiff_t *p = va_arg(*args, ptrdiff_t *);
         if (p == NULL) return INVALID_ARGS;
         *p = (ptrdiff_t)count;
@@ -637,7 +637,7 @@ status_code store_count(const spec_info *sp, va_list *args, const size_t count) 
 }
 
 /* %%: как и числа, сначала пропускает пробелы, потом должен быть символ '%' */
-status_code scan_percent(istochnik *src) {
+status_code scan_percent(source *src) {
     int c = EOF;
     status_code sc = skip_spaces(src, &c);
     if (sc != OK) {
@@ -654,20 +654,20 @@ status_code scan_percent(istochnik *src) {
 }
 
 /* Прочитать стандартный спецификатор. Достаем указатель нужного типа (тип зависит от
-   типа спецификатора и модификатора длины) и отдаем scan_value вместе с &prochitano.
-   prochitano = -1 до вызова: если стандартная функция дошла до %n, там будет число
+   типа спецификатора и модификатора длины) и отдаем scan_value вместе с &consumed.
+   consumed = -1 до вызова: если стандартная функция дошла до %n, там будет число
    прочитанных символов (>= 0), значит спецификатор прочитан успешно. Иначе - ошибка:
    EOF от стандартной функции - ввод кончился, 0 - символы не подошли.
-   *zapisano = 1, если значение записано в переменную (для возвращаемого числа) */
-status_code scan_standard(istochnik *src, spec_info *sp, va_list *args, int *zapisano) {
-    if (src == NULL || sp == NULL || args == NULL || zapisano == NULL) {
+   *assigned = 1, если значение записано в переменную (для возвращаемого числа) */
+status_code scan_standard(source *src, spec_info *sp, va_list *args, int *assigned) {
+    if (src == NULL || sp == NULL || args == NULL || assigned == NULL) {
         return INVALID_ARGS;
     }
-    *zapisano = 0;
-    if (sp->tip == '%') {
+    *assigned = 0;
+    if (sp->conv == '%') {
         return scan_percent(src);
     }
-    if (sp->tip == 'n') {
+    if (sp->conv == 'n') {
         return store_count(sp, args, src->count);
     }
     char *spec = NULL;
@@ -675,61 +675,61 @@ status_code scan_standard(istochnik *src, spec_info *sp, va_list *args, int *zap
     if (sc != OK) {
         return sc;
     }
-    int prochitano = -1;
-    int vernul = 0;
-    const char t = sp->tip;
-    const dlina_kind d = sp->dlina;
+    int consumed = -1;
+    int returned = 0;
+    const char t = sp->conv;
+    const length_kind d = sp->length;
 
-    if (sp->bez_zapisi) {
-        /* '*': аргумента для значения нет, только &prochitano */
-        sc = scan_value(src, spec, &vernul, &prochitano);
+    if (sp->no_assign) {
+        /* '*': аргумента для значения нет, только &consumed */
+        sc = scan_value(src, spec, &returned, &consumed);
     } else if (t == 'd' || t == 'i') {
-        if (d == LEN_HH) sc = scan_value(src, spec, &vernul, va_arg(*args, signed char *), &prochitano);
-        else if (d == LEN_H) sc = scan_value(src, spec, &vernul, va_arg(*args, short *), &prochitano);
-        else if (d == LEN_L) sc = scan_value(src, spec, &vernul, va_arg(*args, long *), &prochitano);
-        else if (d == LEN_LL) sc = scan_value(src, spec, &vernul, va_arg(*args, long long *), &prochitano);
-        else if (d == LEN_J) sc = scan_value(src, spec, &vernul, va_arg(*args, intmax_t *), &prochitano);
-        else if (d == LEN_Z) sc = scan_value(src, spec, &vernul, va_arg(*args, size_t *), &prochitano);
-        else if (d == LEN_T) sc = scan_value(src, spec, &vernul, va_arg(*args, ptrdiff_t *), &prochitano);
-        else sc = scan_value(src, spec, &vernul, va_arg(*args, int *), &prochitano);
+        if (d == LEN_HH) sc = scan_value(src, spec, &returned, va_arg(*args, signed char *), &consumed);
+        else if (d == LEN_H) sc = scan_value(src, spec, &returned, va_arg(*args, short *), &consumed);
+        else if (d == LEN_L) sc = scan_value(src, spec, &returned, va_arg(*args, long *), &consumed);
+        else if (d == LEN_LL) sc = scan_value(src, spec, &returned, va_arg(*args, long long *), &consumed);
+        else if (d == LEN_J) sc = scan_value(src, spec, &returned, va_arg(*args, intmax_t *), &consumed);
+        else if (d == LEN_Z) sc = scan_value(src, spec, &returned, va_arg(*args, size_t *), &consumed);
+        else if (d == LEN_T) sc = scan_value(src, spec, &returned, va_arg(*args, ptrdiff_t *), &consumed);
+        else sc = scan_value(src, spec, &returned, va_arg(*args, int *), &consumed);
     } else if (t == 'o' || t == 'u' || t == 'x' || t == 'X') {
-        if (d == LEN_HH) sc = scan_value(src, spec, &vernul, va_arg(*args, unsigned char *), &prochitano);
-        else if (d == LEN_H) sc = scan_value(src, spec, &vernul, va_arg(*args, unsigned short *), &prochitano);
-        else if (d == LEN_L) sc = scan_value(src, spec, &vernul, va_arg(*args, unsigned long *), &prochitano);
-        else if (d == LEN_LL) sc = scan_value(src, spec, &vernul, va_arg(*args, unsigned long long *), &prochitano);
-        else if (d == LEN_J) sc = scan_value(src, spec, &vernul, va_arg(*args, uintmax_t *), &prochitano);
-        else if (d == LEN_Z) sc = scan_value(src, spec, &vernul, va_arg(*args, size_t *), &prochitano);
-        else if (d == LEN_T) sc = scan_value(src, spec, &vernul, va_arg(*args, ptrdiff_t *), &prochitano);
-        else sc = scan_value(src, spec, &vernul, va_arg(*args, unsigned int *), &prochitano);
+        if (d == LEN_HH) sc = scan_value(src, spec, &returned, va_arg(*args, unsigned char *), &consumed);
+        else if (d == LEN_H) sc = scan_value(src, spec, &returned, va_arg(*args, unsigned short *), &consumed);
+        else if (d == LEN_L) sc = scan_value(src, spec, &returned, va_arg(*args, unsigned long *), &consumed);
+        else if (d == LEN_LL) sc = scan_value(src, spec, &returned, va_arg(*args, unsigned long long *), &consumed);
+        else if (d == LEN_J) sc = scan_value(src, spec, &returned, va_arg(*args, uintmax_t *), &consumed);
+        else if (d == LEN_Z) sc = scan_value(src, spec, &returned, va_arg(*args, size_t *), &consumed);
+        else if (d == LEN_T) sc = scan_value(src, spec, &returned, va_arg(*args, ptrdiff_t *), &consumed);
+        else sc = scan_value(src, spec, &returned, va_arg(*args, unsigned int *), &consumed);
     } else if (t == 'c' || t == 's' || t == '[') {
         /* строка или символы: char * (с модификатором l - wchar_t *).
            Места в массиве должно хватать - как у стандартной функции, поэтому %s без
            ширины опасен: пишите %99s для массива из 100 символов */
-        if (d == LEN_L) sc = scan_value(src, spec, &vernul, va_arg(*args, wchar_t *), &prochitano);
-        else sc = scan_value(src, spec, &vernul, va_arg(*args, char *), &prochitano);
+        if (d == LEN_L) sc = scan_value(src, spec, &returned, va_arg(*args, wchar_t *), &consumed);
+        else sc = scan_value(src, spec, &returned, va_arg(*args, char *), &consumed);
     } else if (t == 'p') {
-        sc = scan_value(src, spec, &vernul, va_arg(*args, void **), &prochitano);
+        sc = scan_value(src, spec, &returned, va_arg(*args, void **), &consumed);
     } else {
         /* вещественные: float * (без модификатора), double * (l), long double * (L) */
-        if (d == LEN_L) sc = scan_value(src, spec, &vernul, va_arg(*args, double *), &prochitano);
-        else if (d == LEN_BIG_L) sc = scan_value(src, spec, &vernul, va_arg(*args, long double *), &prochitano);
-        else sc = scan_value(src, spec, &vernul, va_arg(*args, float *), &prochitano);
+        if (d == LEN_L) sc = scan_value(src, spec, &returned, va_arg(*args, double *), &consumed);
+        else if (d == LEN_BIG_L) sc = scan_value(src, spec, &returned, va_arg(*args, long double *), &consumed);
+        else sc = scan_value(src, spec, &returned, va_arg(*args, float *), &consumed);
     }
     free(spec);
     if (sc != OK) {
         return sc;
     }
-    if (prochitano < 0) {
+    if (consumed < 0) {
         /* до %n стандартная функция не дошла */
-        return (vernul == EOF) ? INPUT_END : MATCH_FAILURE;
+        return (returned == EOF) ? INPUT_END : MATCH_FAILURE;
     }
     /* сдвигаем позицию: из строки - на прочитанное (из файла стандартная функция
        уже сдвинула поток сама), и считаем символы для нашего %n */
     if (src->stream == NULL) {
-        src->pos += (size_t)prochitano;
+        src->pos += (size_t)consumed;
     }
-    src->count += (size_t)prochitano;
-    *zapisano = !sp->bez_zapisi;
+    src->count += (size_t)consumed;
+    *assigned = !sp->no_assign;
     return OK;
 }
 
@@ -739,14 +739,14 @@ status_code scan_standard(istochnik *src, spec_info *sp, va_list *args, int *zap
    - пробельный символ формата - пропустить во вводе любые пробелы (и ни одного тоже можно);
    - обычный символ - во вводе должен быть ровно он, иначе стоп;
    - '%' и новый флаг - scan_custom; иначе стандартный - parse_spec + scan_standard.
-   *kolvo - сколько значений записано в переменные.
+   *item_count - сколько значений записано в переменные.
    Возвращает OK, если дошли до конца формата, INPUT_END / MATCH_FAILURE - где-то
    остановились, INVALID_FORMAT / INVALID_ARGS / ALLOC_ERROR - ошибка */
-status_code over_vscanf(istochnik *src, const char *format, va_list *args, int *kolvo) {
-    if (src == NULL || format == NULL || args == NULL || kolvo == NULL) {
+status_code over_vscanf(source *src, const char *format, va_list *args, int *item_count) {
+    if (src == NULL || format == NULL || args == NULL || item_count == NULL) {
         return INVALID_ARGS;
     }
-    *kolvo = 0;
+    *item_count = 0;
     size_t i = 0;
     status_code sc = OK;
     while (format[i] != '\0' && sc == OK) {
@@ -774,28 +774,28 @@ status_code over_vscanf(istochnik *src, const char *format, va_list *args, int *
             continue;
         }
         /* '%': сначала новые флаги - две буквы сразу после '%' или после "%*" */
-        const int zvezda = (format[i + 1] == '*');
-        const char *kakoy = NULL;
-        custom_flag(format + i + 1 + zvezda, &kakoy);
-        if (kakoy != NULL) {
-            sc = scan_custom(src, kakoy, zvezda, args);
-            if (sc == OK && !zvezda) {
-                (*kolvo)++;
+        const int star = (format[i + 1] == '*');
+        const char *which = NULL;
+        custom_flag(format + i + 1 + star, &which);
+        if (which != NULL) {
+            sc = scan_custom(src, which, star, args);
+            if (sc == OK && !star) {
+                (*item_count)++;
             }
-            i += 3 + zvezda;
+            i += 3 + star;
             continue;
         }
         /* стандартный спецификатор */
         spec_info sp;
-        size_t dlina_spec = 0;
-        sc = parse_spec(format + i + 1, &sp, &dlina_spec);
+        size_t spec_length = 0;
+        sc = parse_spec(format + i + 1, &sp, &spec_length);
         if (sc == OK) {
-            int zapisano = 0;
-            sc = scan_standard(src, &sp, args, &zapisano);
+            int assigned = 0;
+            sc = scan_standard(src, &sp, args, &assigned);
             if (sc == OK) {
-                *kolvo += zapisano;
+                *item_count += assigned;
             }
-            i += 1 + dlina_spec;
+            i += 1 + spec_length;
         }
     }
     return sc;
@@ -806,16 +806,16 @@ status_code over_vscanf(istochnik *src, const char *format, va_list *args, int *
    - ввод кончился, а ни одного значения не записано - EOF (так делают стандартные
      библиотеки и Linux (glibc), и Windows: даже если перед этим было "%*d");
    - иначе - сколько значений записано (0 - символы не подошли сразу) */
-status_code itog(const status_code sc, const int kolvo, int *rez) {
-    if (rez == NULL) {
+status_code final_result(const status_code sc, const int item_count, int *result) {
+    if (result == NULL) {
         return INVALID_ARGS;
     }
     if (sc == INVALID_ARGS || sc == INVALID_FORMAT || sc == ALLOC_ERROR) {
-        *rez = EOF;
-    } else if (sc == INPUT_END && kolvo == 0) {
-        *rez = EOF;
+        *result = EOF;
+    } else if (sc == INPUT_END && item_count == 0) {
+        *result = EOF;
     } else {
-        *rez = kolvo;
+        *result = item_count;
     }
     return OK;
 }
@@ -828,15 +828,15 @@ int overfscanf(FILE *stream, const char *format, ...) {
     if (stream == NULL || format == NULL) {
         return EOF;
     }
-    istochnik src = {stream, NULL, 0, 0};
-    int kolvo = 0;
+    source src = {stream, NULL, 0, 0};
+    int item_count = 0;
     va_list args;
     va_start(args, format);
-    status_code sc = over_vscanf(&src, format, &args, &kolvo);
+    status_code sc = over_vscanf(&src, format, &args, &item_count);
     va_end(args);
-    int rez = EOF;
-    itog(sc, kolvo, &rez);
-    return rez;
+    int result = EOF;
+    final_result(sc, item_count, &result);
+    return result;
 }
 
 /* Как sscanf: читает из строки str по формату format. Конец строки - как конец файла */
@@ -844,15 +844,15 @@ int oversscanf(const char *str, const char *format, ...) {
     if (str == NULL || format == NULL) {
         return EOF;
     }
-    istochnik src = {NULL, str, 0, 0};
-    int kolvo = 0;
+    source src = {NULL, str, 0, 0};
+    int item_count = 0;
     va_list args;
     va_start(args, format);
-    status_code sc = over_vscanf(&src, format, &args, &kolvo);
+    status_code sc = over_vscanf(&src, format, &args, &item_count);
     va_end(args);
-    int rez = EOF;
-    itog(sc, kolvo, &rez);
-    return rez;
+    int result = EOF;
+    final_result(sc, item_count, &result);
+    return result;
 }
 
 /* ===================== демонстрация ===================== */
@@ -899,23 +899,23 @@ status_code run_demo(void) {
     printf("  \"ffz\" %%Cv 16 -> %d (stops before z)  (returned %d)\n", a, r);
 
     printf("\noversscanf, new and standard flags together:\n");
-    char slovo[16] = {0};
+    char word[16] = {0};
     double d = 0.0;
     a = b = c = -1;
-    r = oversscanf("year MMXXIV: 42 3.5 hello", "year %Ro: %d %lf %15s", &a, &b, &d, slovo);
-    printf("  year %%Ro: %%d %%lf %%15s -> %d %d %g \"%s\"  (returned %d)\n", a, b, d, slovo, r);
+    r = oversscanf("year MMXXIV: 42 3.5 hello", "year %Ro: %d %lf %15s", &a, &b, &d, word);
+    printf("  year %%Ro: %%d %%lf %%15s -> %d %d %g \"%s\"  (returned %d)\n", a, b, d, word, r);
     int n1 = -1;
     a = b = -1;
     r = oversscanf("XII,0x1F rest", "%Ro,%i%n", &a, &b, &n1);
     printf("  %%Ro,%%i%%n on \"XII,0x1F rest\" -> %d %d, %%n = %d  (returned %d)\n", a, b, n1, r);
-    char nabor[16] = {0};
+    char scanset[16] = {0};
     a = -1;
-    r = oversscanf("abc123 XX", "%15[a-z]%*d %Ro", nabor, &a);
-    printf("  %%15[a-z]%%*d %%Ro on \"abc123 XX\" -> \"%s\" %d  (returned %d)\n", nabor, a, r);
-    char sim[4] = {0};
+    r = oversscanf("abc123 XX", "%15[a-z]%*d %Ro", scanset, &a);
+    printf("  %%15[a-z]%%*d %%Ro on \"abc123 XX\" -> \"%s\" %d  (returned %d)\n", scanset, a, r);
+    char chars[4] = {0};
     a = -1;
-    r = oversscanf("  xyMCM", " %2c%Ro", sim, &a);
-    printf("  \" %%2c%%Ro\" on \"  xyMCM\" -> \"%s\" %d  (returned %d)\n", sim, a, r);
+    r = oversscanf("  xyMCM", " %2c%Ro", chars, &a);
+    printf("  \" %%2c%%Ro\" on \"  xyMCM\" -> \"%s\" %d  (returned %d)\n", chars, a, r);
     long long big = 0;
     unsigned short us = 0;
     r = oversscanf("-9000000000 65535 50%", "%lld %hu %d%%", &big, &us, &b);
@@ -956,14 +956,14 @@ status_code run_demo(void) {
         printf("  Error: can not open tests/data/task6_input.txt\n");
         return OK;
     }
-    char imya[32] = {0};
+    char name[32] = {0};
     a = b = c = -1;
     z = 777;
-    r = overfscanf(f, "%31s %Ro %Zr %Cv %CV", imya, &a, &z, &b, 16, &c, 36);
-    printf("  %%31s %%Ro %%Zr %%Cv 16 %%CV 36 -> \"%s\" %d %u %d %d  (returned %d)\n", imya, a, z, b, c, r);
+    r = overfscanf(f, "%31s %Ro %Zr %Cv %CV", name, &a, &z, &b, 16, &c, 36);
+    printf("  %%31s %%Ro %%Zr %%Cv 16 %%CV 36 -> \"%s\" %d %u %d %d  (returned %d)\n", name, a, z, b, c, r);
     /* дальше по файлу: строки "name roman" до конца */
-    while ((r = overfscanf(f, "%31s %Ro", imya, &a)) == 2) {
-        printf("  %%31s %%Ro -> \"%s\" %d\n", imya, a);
+    while ((r = overfscanf(f, "%31s %Ro", name, &a)) == 2) {
+        printf("  %%31s %%Ro -> \"%s\" %d\n", name, a);
     }
     printf("  last call returned %d (EOF = end of file)\n", r);
     fclose(f);
@@ -974,8 +974,8 @@ status_code run_demo(void) {
 
 /* Основание из командной строки: целое (int), разбираем вручную. Любое int можно:
    вне [2..36] функция сама возьмет 10 */
-status_code parse_int(const char *str, int *rez) {
-    if (str == NULL || rez == NULL) {
+status_code parse_int(const char *str, int *result) {
+    if (str == NULL || result == NULL) {
         return INVALID_ARGS;
     }
     size_t i = 0;
@@ -987,33 +987,33 @@ status_code parse_int(const char *str, int *rez) {
     if (str[i] == '\0') {
         return MATCH_FAILURE;
     }
-    const long long predel = minus ? (long long)INT_MAX + 1 : (long long)INT_MAX;
+    const long long limit = minus ? (long long)INT_MAX + 1 : (long long)INT_MAX;
     long long acc = 0;
     for (; str[i] != '\0'; i++) {
         if (str[i] < '0' || str[i] > '9') {
             return MATCH_FAILURE;
         }
         int d = str[i] - '0';
-        if (acc > (predel - d) / 10) {
+        if (acc > (limit - d) / 10) {
             return MATCH_FAILURE;
         }
         acc = acc * 10 + d;
     }
-    *rez = (int)(minus ? -acc : acc);
+    *result = (int)(minus ? -acc : acc);
     return OK;
 }
 
 /* Режим с аргументами: читать из stdin значения одного флага, пока читаются.
    Каждое значение печатается отдельной строкой. Конец ввода (EOF) - нормальный
    конец, код 0; неподходящие символы - сообщение и код 1 */
-status_code run_stdin(const char *flag, const int base, int *kod) {
-    if (flag == NULL || kod == NULL) {
+status_code run_stdin(const char *flag, const int base, int *exit_code) {
+    if (flag == NULL || exit_code == NULL) {
         return INVALID_ARGS;
     }
     char format[4] = {'%', flag[0], flag[1], '\0'};
     int r = 0;
-    int kolvo = 0;
-    *kod = 0;
+    int item_count = 0;
+    *exit_code = 0;
     while (1) {
         if (flag[0] == 'Z') {
             unsigned int z = 0;
@@ -1037,13 +1037,13 @@ status_code run_stdin(const char *flag, const int base, int *kod) {
         if (r != 1) {
             break;
         }
-        kolvo++;
+        item_count++;
     }
-    printf("values read: %d\n", kolvo);
+    printf("values read: %d\n", item_count);
     if (r != EOF) {
         /* остановились не на конце ввода: дальше символы, которые не подходят */
         fprintf(stderr, "Error: the input does not match %s\n", format);
-        *kod = 1;
+        *exit_code = 1;
     }
     return OK;
 }
@@ -1057,30 +1057,30 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     /* С аргументами: флаг (Ro, Zr, Cv, CV) и для Cv/CV - основание */
-    const char *kakoy = NULL;
-    custom_flag(argv[1], &kakoy);
-    if (argc > 3 || kakoy == NULL || argv[1][2] != '\0') {
+    const char *which = NULL;
+    custom_flag(argv[1], &which);
+    if (argc > 3 || which == NULL || argv[1][2] != '\0') {
         fprintf(stderr, "Usage: lab2_task6                 (demo)\n");
         fprintf(stderr, "       lab2_task6 Ro | Zr         (values from standard input)\n");
         fprintf(stderr, "       lab2_task6 Cv | CV <base>\n");
         return 1;
     }
-    const int nuzhno_osn = (kakoy[0] == 'C');
-    if (nuzhno_osn != (argc == 3)) {
-        fprintf(stderr, nuzhno_osn ? "Error: flag %s needs a base\n"
-                                   : "Error: flag %s does not need a base\n", kakoy);
+    const int needs_base = (which[0] == 'C');
+    if (needs_base != (argc == 3)) {
+        fprintf(stderr, needs_base ? "Error: flag %s needs a base\n"
+                                   : "Error: flag %s does not need a base\n", which);
         return 1;
     }
     int base = 10;
-    if (nuzhno_osn && parse_int(argv[2], &base) != OK) {
+    if (needs_base && parse_int(argv[2], &base) != OK) {
         fprintf(stderr, "Error: base '%s' must be a whole number (int)\n", argv[2]);
         return 1;
     }
-    int kod = 0;
-    if (run_stdin(kakoy, base, &kod) != OK) {
-        /* INVALID_ARGS быть не может: kakoy и kod не NULL - ошибка в программе */
+    int exit_code = 0;
+    if (run_stdin(which, base, &exit_code) != OK) {
+        /* INVALID_ARGS быть не может: which и exit_code не NULL - ошибка в программе */
         fprintf(stderr, "Error: internal error\n");
         return 1;
     }
-    return kod;
+    return exit_code;
 }

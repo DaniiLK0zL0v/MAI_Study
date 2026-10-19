@@ -11,7 +11,7 @@
  *          например: lab2_task9 1e-12 2 0.5 0.1  ->  0.5 конечна в двоичной, 0.1 - нет
  *
  * Главная функция задания - check_fractions с переменным числом аргументов (...):
- *   check_fractions(&rez, eps, base, kolvo, x1, x2, ..., x_kolvo)
+ *   check_fractions(&result, eps, base, count, x1, x2, ..., x_count)
  * Она выделяет память под массив результатов (по одному на каждое число;
  * освобождает вызывающий функцией free_results).
  *
@@ -65,17 +65,17 @@ typedef enum {
 
 /* Результат для одного числа x */
 typedef struct {
-    double chislo;        /* само число x (как его передали) */
+    double number;        /* само число x (как его передали) */
     status_code status;   /* OK, NOT_IN_RANGE или NO_FRACTION - ошибка именно этого числа */
     long long p;          /* x = p / q (несократимая дробь с точностью eps) */
     long long q;
-    int konechna;         /* 1 - запись в системе base конечная, 0 - бесконечная */
-    long long ostatok;    /* что осталось от q после деления на общие с base делители:
+    int is_finite;         /* 1 - запись в системе base конечная, 0 - бесконечная */
+    long long remaining;    /* что осталось от q после деления на общие с base делители:
                              1 у конечной дроби; у бесконечной - "лишний" множитель (для 1/10
                              в двоичной это 5: в 2 нет делителя 5) */
-    char *zapis;          /* конечная запись "0.0011" в системе base (своя память);
+    char *digits_str;          /* конечная запись "0.0011" в системе base (своя память);
                              NULL, если дробь бесконечная или была ошибка */
-} drob_result;
+} fraction_result;
 
 /* ===================== проверки ===================== */
 
@@ -108,8 +108,8 @@ status_code check_params(const double eps, const int base) {
 /* НОД (наибольший общий делитель) алгоритмом Евклида: НОД(a, b) = НОД(b, a % b),
    пока b не станет 0. Пример: НОД(10, 4) = НОД(4, 2) = НОД(2, 0) = 2.
    Числа здесь всегда неотрицательные (знаменатель и основание) */
-status_code gcd_ll(long long a, long long b, long long *rez) {
-    if (rez == NULL) {
+status_code gcd_ll(long long a, long long b, long long *result) {
+    if (result == NULL) {
         return INVALID_ARGS;
     }
     if (a < 0 || b < 0) {
@@ -120,44 +120,44 @@ status_code gcd_ll(long long a, long long b, long long *rez) {
         a = b;
         b = tmp;
     }
-    *rez = a;
+    *result = a;
     return OK;
 }
 
-/* Одна цифра при переводе дроби ostatok/q в систему base.
+/* Одна цифра при переводе дроби remaining/q в систему base.
    Обычный способ (как столбиком): умножить на base, целая часть - очередная цифра,
-   остаток от деления на q - новый ostatok:
-       cifra = ostatok * base / q,   noviy = ostatok * base % q.
+   остаток от деления на q - новый remaining:
+       digit = remaining * base / q,   new_remainder = remaining * base % q.
    Пример: 1/4 в десятичной: 1*10 = 10 -> цифра 2, остаток 2; 2*10 = 20 -> цифра 5,
    остаток 0 -> 0.25.
-   Но ostatok * base может не поместиться в long long (q бывает до ~9.2e18), поэтому
-   умножение заменяем сложением ostatok с самим собой base раз, и после каждого
+   Но remaining * base может не поместиться в long long (q бывает до ~9.2e18), поэтому
+   умножение заменяем сложением remaining с самим собой base раз, и после каждого
    сложения сразу вычитаем q, если сумма дошла до q (считаем, сколько раз вычли -
    это и есть цифра). Сумма все время меньше q, переполнения нет.
-   Как сложить без переполнения: "summa + ostatok >= q" то же самое, что
-   "summa >= q - ostatok", а q - ostatok посчитать можно (ostatok < q).
-   Тогда новая сумма: summa + ostatok - q = summa - (q - ostatok) */
-status_code next_digit(const long long ostatok, const int base, const long long q,
-                       int *cifra, long long *noviy) {
-    if (cifra == NULL || noviy == NULL) {
+   Как сложить без переполнения: "sum + remaining >= q" то же самое, что
+   "sum >= q - remaining", а q - remaining посчитать можно (remaining < q).
+   Тогда новая сумма: sum + remaining - q = sum - (q - remaining) */
+status_code next_digit(const long long remaining, const int base, const long long q,
+                       int *digit, long long *new_remainder) {
+    if (digit == NULL || new_remainder == NULL) {
         return INVALID_ARGS;
     }
-    if (q < 1 || ostatok < 0 || ostatok >= q || base < MIN_BASE || base > MAX_BASE) {
+    if (q < 1 || remaining < 0 || remaining >= q || base < MIN_BASE || base > MAX_BASE) {
         return INVALID_ARGS;
     }
-    long long summa = 0;
-    int kolvo_q = 0;
+    long long sum = 0;
+    int q_times = 0;
     for (int i = 0; i < base; i++) {
-        if (summa >= q - ostatok) {
-            /* summa + ostatok >= q: вычитаем q, цифра растет на 1 */
-            summa = summa - (q - ostatok);
-            kolvo_q++;
+        if (sum >= q - remaining) {
+            /* sum + remaining >= q: вычитаем q, цифра растет на 1 */
+            sum = sum - (q - remaining);
+            q_times++;
         } else {
-            summa = summa + ostatok;
+            sum = sum + remaining;
         }
     }
-    *cifra = kolvo_q;
-    *noviy = summa;
+    *digit = q_times;
+    *new_remainder = sum;
     return OK;
 }
 
@@ -205,8 +205,8 @@ status_code to_fraction(const double x, const double eps, long long *p, long lon
     if (!isfinite(x) || x <= 0 || x >= 1) {
         return NOT_IN_RANGE;
     }
-    long long h_staroe = 1;
-    long long k_staroe = 0;
+    long long h_old = 1;
+    long long k_old = 0;
     long long h = 0;
     long long k = 1;
     double r = x;   /* то, что еще осталось разложить; всегда в [0; 1) */
@@ -217,27 +217,27 @@ status_code to_fraction(const double x, const double eps, long long *p, long lon
         /* r = 0 - цепная дробь кончилась, а точности не хватило (eps меньше, чем
            погрешность double): 1/0 = бесконечность. Огромное 1/r (>= 2^63)
            не поместится в long long. В обоих случаях дроби не найти */
-        double obr = 1.0 / r;
-        if (!isfinite(obr) || obr >= (double)LLONG_MAX) {
+        double inverse = 1.0 / r;
+        if (!isfinite(inverse) || inverse >= (double)LLONG_MAX) {
             return NO_FRACTION;
         }
-        /* целая часть числа obr > 1: приведение к long long отбрасывает дробную часть */
-        long long a = (long long)obr;
-        r = obr - (double)a;
+        /* целая часть числа inverse > 1: приведение к long long отбрасывает дробную часть */
+        long long a = (long long)inverse;
+        r = inverse - (double)a;
 
         /* k_новое = a * k + k_старое не должно превысить LLONG_MAX.
            Проверяем без умножения (оно само могло бы переполниться):
            a * k + k_старое > LLONG_MAX  <=>  a > (LLONG_MAX - k_старое) / k.
            Числитель h проверять не нужно: дробь h/k меньше или равна 1, значит h <= k */
-        if (a > (LLONG_MAX - k_staroe) / k) {
+        if (a > (LLONG_MAX - k_old) / k) {
             return NO_FRACTION;
         }
-        long long h_novoe = a * h + h_staroe;
-        long long k_novoe = a * k + k_staroe;
-        h_staroe = h;
-        k_staroe = k;
-        h = h_novoe;
-        k = k_novoe;
+        long long h_new = a * h + h_old;
+        long long k_new = a * k + k_old;
+        h_old = h;
+        k_old = k;
+        h = h_new;
+        k = k_new;
     }
     *p = h;
     *q = k;
@@ -251,24 +251,24 @@ status_code to_fraction(const double x, const double eps, long long *p, long lon
            НОД = 2 -> q = 1  ->  конечная (1/40 = 0.025).
            q = 12 = 2*2*3, base = 10:  НОД = 2 -> q = 6;  НОД = 2 -> q = 3;
            НОД(3, 10) = 1 -> осталось 3  ->  бесконечная (1/12 = 0.08333...).
-   *ostatok - что осталось от q: 1 у конечной дроби, иначе множитель, которого нет в base */
-status_code is_finite_in_base(const long long q, const int base, int *konechna, long long *ostatok) {
-    if (konechna == NULL || ostatok == NULL) {
+   *remaining - что осталось от q: 1 у конечной дроби, иначе множитель, которого нет в base */
+status_code is_finite_in_base(const long long q, const int base, int *is_finite, long long *remaining) {
+    if (is_finite == NULL || remaining == NULL) {
         return INVALID_ARGS;
     }
     if (q < 1 || base < MIN_BASE || base > MAX_BASE) {
         return INVALID_ARGS;
     }
-    long long ost = q;
-    long long nod = 0;
-    gcd_ll(ost, base, &nod);
-    /* q делится на nod, поэтому деление точное; ost уменьшается, цикл конечен */
-    while (nod > 1) {
-        ost = ost / nod;
-        gcd_ll(ost, base, &nod);
+    long long rest = q;
+    long long gcd = 0;
+    gcd_ll(rest, base, &gcd);
+    /* q делится на gcd, поэтому деление точное; rest уменьшается, цикл конечен */
+    while (gcd > 1) {
+        rest = rest / gcd;
+        gcd_ll(rest, base, &gcd);
     }
-    *konechna = (ost == 1);
-    *ostatok = ost;
+    *is_finite = (rest == 1);
+    *remaining = rest;
     return OK;
 }
 
@@ -279,31 +279,31 @@ status_code is_finite_in_base(const long long q, const int base, int *konechna, 
    второй пишет их в строку. Цифр немного: каждая цифра "съедает" из q хотя бы
    один простой множитель (q делит base^n), а простых множителей в q меньше 63,
    потому что каждый не меньше 2 и q < 2^63 */
-status_code fraction_digits(const long long p, const long long q, const int base, char **zapis) {
-    if (zapis == NULL) {
+status_code fraction_digits(const long long p, const long long q, const int base, char **digits_str) {
+    if (digits_str == NULL) {
         return INVALID_ARGS;
     }
     if (q < 1 || p <= 0 || p >= q || base < MIN_BASE || base > MAX_BASE) {
         return INVALID_ARGS;
     }
-    int konechna = 0;
-    long long ostatok_q = 0;
-    is_finite_in_base(q, base, &konechna, &ostatok_q);
-    if (!konechna) {
+    int is_finite = 0;
+    long long q_rest = 0;
+    is_finite_in_base(q, base, &is_finite, &q_rest);
+    if (!is_finite) {
         return NOT_FINITE;
     }
 
     /* проход 1: сколько цифр после точки (пока остаток не станет 0) */
-    size_t kolvo_cifr = 0;
-    long long ostatok = p;
-    while (ostatok != 0) {
-        int cifra = 0;
-        next_digit(ostatok, base, q, &cifra, &ostatok);
-        kolvo_cifr++;
+    size_t digit_count = 0;
+    long long remaining = p;
+    while (remaining != 0) {
+        int digit = 0;
+        next_digit(remaining, base, q, &digit, &remaining);
+        digit_count++;
     }
 
     /* "0." + цифры + '\0' в конце строки */
-    char *str = (char *)malloc(kolvo_cifr + 3);
+    char *str = (char *)malloc(digit_count + 3);
     if (str == NULL) {
         return ALLOC_ERROR;
     }
@@ -312,39 +312,39 @@ status_code fraction_digits(const long long p, const long long q, const int base
 
     /* проход 2: те же шаги еще раз, теперь записываем каждую цифру.
        Цифра 0..9 -> символ '0'..'9', 10..35 -> 'A'..'Z' */
-    ostatok = p;
-    for (size_t i = 0; i < kolvo_cifr; i++) {
-        int cifra = 0;
-        next_digit(ostatok, base, q, &cifra, &ostatok);
-        if (cifra < 10) {
-            str[2 + i] = (char)('0' + cifra);
+    remaining = p;
+    for (size_t i = 0; i < digit_count; i++) {
+        int digit = 0;
+        next_digit(remaining, base, q, &digit, &remaining);
+        if (digit < 10) {
+            str[2 + i] = (char)('0' + digit);
         } else {
-            str[2 + i] = (char)('A' + cifra - 10);
+            str[2 + i] = (char)('A' + digit - 10);
         }
     }
-    str[2 + kolvo_cifr] = '\0';
-    *zapis = str;
+    str[2 + digit_count] = '\0';
+    *digits_str = str;
     return OK;
 }
 
 /* Полная обработка одного числа x: заполняет *r.
-   Возвращает OK, если с самим x все в порядке (ответ - в r->konechna и r->zapis),
+   Возвращает OK, если с самим x все в порядке (ответ - в r->is_finite и r->digits_str),
    NOT_IN_RANGE или NO_FRACTION - ошибка этого числа, ALLOC_ERROR - нет памяти.
    r->status - то же, что вернула функция: так результат каждого числа хранится в массиве.
    eps и base уже проверены вызывающим (check_params) */
-status_code analyze_one(const double x, const double eps, const int base, drob_result *r) {
+status_code analyze_one(const double x, const double eps, const int base, fraction_result *r) {
     if (r == NULL) {
         return INVALID_ARGS;
     }
     /* сначала заполняем "пустыми" значениями: при ошибке структура тоже аккуратная,
-       а zapis = NULL можно спокойно передать в free */
-    r->chislo = x;
+       а digits_str = NULL можно спокойно передать в free */
+    r->number = x;
     r->status = OK;
     r->p = 0;
     r->q = 1;
-    r->konechna = 0;
-    r->ostatok = 1;
-    r->zapis = NULL;
+    r->is_finite = 0;
+    r->remaining = 1;
+    r->digits_str = NULL;
 
     /* x должен быть из (0; 1). Здесь сравнение с точными границами интервала
        (0 и 1 сами не входят) - для этого eps не нужен.
@@ -370,11 +370,11 @@ status_code analyze_one(const double x, const double eps, const int base, drob_r
     }
 
     /* шаг 2: конечна ли p/q в системе base */
-    is_finite_in_base(r->q, base, &r->konechna, &r->ostatok);
+    is_finite_in_base(r->q, base, &r->is_finite, &r->remaining);
 
     /* для конечной дроби - еще и сама запись цифрами */
-    if (r->konechna) {
-        sc = fraction_digits(r->p, r->q, base, &r->zapis);
+    if (r->is_finite) {
+        sc = fraction_digits(r->p, r->q, base, &r->digits_str);
         if (sc != OK) {
             r->status = sc;
             return sc;
@@ -383,89 +383,89 @@ status_code analyze_one(const double x, const double eps, const int base, drob_r
     return OK;
 }
 
-/* Освободить массив результатов: сначала строки zapis внутри, потом сам массив.
-   free(NULL) ничего не делает, поэтому NULL в zapis (и rez == NULL) - не ошибка */
-status_code free_results(drob_result *rez, const int kolvo) {
-    if (rez == NULL) {
+/* Освободить массив результатов: сначала строки digits_str внутри, потом сам массив.
+   free(NULL) ничего не делает, поэтому NULL в digits_str (и result == NULL) - не ошибка */
+status_code free_results(fraction_result *result, const int count) {
+    if (result == NULL) {
         return OK;
     }
-    for (int i = 0; i < kolvo; i++) {
-        free(rez[i].zapis);
+    for (int i = 0; i < count; i++) {
+        free(result[i].digits_str);
     }
-    free(rez);
+    free(result);
     return OK;
 }
 
 /* ===================== функция с переменным числом аргументов ===================== */
 
-/* Для каждого из kolvo чисел x определить, конечна ли его запись в системе base:
-     check_fractions(&rez, 1e-12, 10, 3, 0.5, 0.1, 1.0 / 3)
-       -> rez[0]: 1/2 конечна "0.5",  rez[1]: 1/10 конечна "0.1",  rez[2]: 1/3 бесконечна.
-   rez   - сюда кладем адрес массива из kolvo результатов в динамической памяти
-           (освобождать функцией free_results(rez, kolvo));
+/* Для каждого из count чисел x определить, конечна ли его запись в системе base:
+     check_fractions(&result, 1e-12, 10, 3, 0.5, 0.1, 1.0 / 3)
+       -> result[0]: 1/2 конечна "0.5",  result[1]: 1/10 конечна "0.1",  result[2]: 1/3 бесконечна.
+   result   - сюда кладем адрес массива из count результатов в динамической памяти
+           (освобождать функцией free_results(result, count));
    eps   - точность перевода x в дробь p/q, 0 < eps < 1;
    base  - основание системы счисления, от 2 до 36;
-   kolvo - сколько чисел передано дальше, kolvo >= 1;
-   ...   - сами числа, ровно kolvo штук, тип double, каждое из (0; 1).
-   kolvo стоит последним перед ...: va_start отсчитывает список с последнего
-   именованного параметра, а сколько чисел читать, функция знает только из kolvo.
+   count - сколько чисел передано дальше, count >= 1;
+   ...   - сами числа, ровно count штук, тип double, каждое из (0; 1).
+   count стоит последним перед ...: va_start отсчитывает список с последнего
+   именованного параметра, а сколько чисел читать, функция знает только из count.
 
    Ошибка одного числа (например 1.5 - не из (0; 1)) не останавливает остальные: она
-   записывается в rez[i].status, а функция возвращает OK. Ошибкой всей функции
-   (rez не выделяется) бывают только неверные eps, base, kolvo и нехватка памяти.
+   записывается в result[i].status, а функция возвращает OK. Ошибкой всей функции
+   (result не выделяется) бывают только неверные eps, base, count и нехватка памяти.
 
    ВАЖНО: числа передавать именно как double: 0.5 или 1.0 / 3, а не 1 / 3
    (это деление целых, получится int 0). Тип аргумента функция узнать не может -
    va_arg(args, double) просто читает 8 байт как double; если передать int,
    прочитается мусор (неопределенное поведение). float передавать можно:
    в ... он сам превращается в double */
-status_code check_fractions(drob_result **rez, const double eps, const int base, const int kolvo, ...) {
-    if (rez == NULL) {
+status_code check_fractions(fraction_result **result, const double eps, const int base, const int count, ...) {
+    if (result == NULL) {
         return INVALID_ARGS;
     }
     status_code sc = check_params(eps, base);
     if (sc != OK) {
         return sc;
     }
-    if (kolvo < 1) {
+    if (count < 1) {
         return INVALID_COUNT;
     }
-    /* Размер памяти = kolvo * sizeof(drob_result). Проверка "kolvo > SIZE_MAX / sizeof"
-       - то же, что "kolvo * sizeof > SIZE_MAX", но без умножения, которое само могло бы
+    /* Размер памяти = count * sizeof(fraction_result). Проверка "count > SIZE_MAX / sizeof"
+       - то же, что "count * sizeof > SIZE_MAX", но без умножения, которое само могло бы
        переполниться (на 64-битной системе int для этого слишком мал, на 32-битной - нет) */
-    if ((size_t)kolvo > SIZE_MAX / sizeof(drob_result)) {
+    if ((size_t)count > SIZE_MAX / sizeof(fraction_result)) {
         return ALLOC_ERROR;
     }
-    drob_result *mas = (drob_result *)malloc((size_t)kolvo * sizeof(drob_result));
-    if (mas == NULL) {
+    fraction_result *arr = (fraction_result *)malloc((size_t)count * sizeof(fraction_result));
+    if (arr == NULL) {
         return ALLOC_ERROR;
     }
-    /* Сразу ставим zapis = NULL во всех элементах: если на середине кончится память,
+    /* Сразу ставим digits_str = NULL во всех элементах: если на середине кончится память,
        free_results освободит уже готовые строки, а в остальных будет free(NULL) */
-    for (int i = 0; i < kolvo; i++) {
-        mas[i].zapis = NULL;
+    for (int i = 0; i < count; i++) {
+        arr[i].digits_str = NULL;
     }
 
     /* va_list - "указатель" на следующий безымянный аргумент.
-       va_start(args, kolvo) ставит его сразу после параметра kolvo */
+       va_start(args, count) ставит его сразу после параметра count */
     va_list args;
-    va_start(args, kolvo);
-    for (int i = 0; i < kolvo; i++) {
+    va_start(args, count);
+    for (int i = 0; i < count; i++) {
         /* va_arg достает следующий аргумент и считает, что он типа double */
         double x = va_arg(args, double);
-        sc = analyze_one(x, eps, base, &mas[i]);
-        /* ошибки самого числа (NOT_IN_RANGE, NO_FRACTION) уже записаны в mas[i].status -
+        sc = analyze_one(x, eps, base, &arr[i]);
+        /* ошибки самого числа (NOT_IN_RANGE, NO_FRACTION) уже записаны в arr[i].status -
            идем дальше. Нехватка памяти - ошибка всей функции: выходим */
         if (sc == ALLOC_ERROR) {
             /* va_end обязателен после va_start, даже при досрочном выходе */
             va_end(args);
-            free_results(mas, kolvo);
+            free_results(arr, count);
             return ALLOC_ERROR;
         }
     }
     va_end(args);
 
-    *rez = mas;
+    *result = arr;
     return OK;
 }
 
@@ -477,8 +477,8 @@ status_code check_fractions(drob_result **rez, const double eps, const int base,
    strtod сам пропускает пробелы в начале, а мы их не разрешаем: " 0.5" - ошибка.
    "inf", "nan", 1e999 (strtod дает бесконечность) читаются как числа: их отсеет
    проверка интервала (NOT_IN_RANGE) или eps (INVALID_EPS) */
-status_code parse_double(const char *str, double *chislo) {
-    if (str == NULL || chislo == NULL) {
+status_code parse_double(const char *str, double *number) {
+    if (str == NULL || number == NULL) {
         return INVALID_ARGS;
     }
     /* isspace принимает unsigned char: русская буква в char отрицательна,
@@ -487,12 +487,12 @@ status_code parse_double(const char *str, double *chislo) {
         return INVALID_NUMBER;
     }
     char *end = NULL;
-    double znach = strtod(str, &end);
+    double value = strtod(str, &end);
     /* end == str - ни одной цифры не прочитано ("abc"), *end != '\0' - мусор после числа */
     if (end == str || *end != '\0') {
         return INVALID_NUMBER;
     }
-    *chislo = znach;
+    *number = value;
     return OK;
 }
 
@@ -504,50 +504,50 @@ status_code parse_base(const char *str, int *base) {
     if (str[0] == '\0') {
         return INVALID_BASE;
     }
-    /* Собираем число слева направо (znach * 10 + цифра). Как только стало больше 36,
+    /* Собираем число слева направо (value * 10 + цифра). Как только стало больше 36,
        дальше можно не читать - это уже ошибка; так и переполнения int не бывает */
-    int znach = 0;
+    int value = 0;
     for (size_t i = 0; str[i] != '\0'; i++) {
         if (str[i] < '0' || str[i] > '9') {
             return INVALID_BASE;
         }
-        znach = znach * 10 + (str[i] - '0');
-        if (znach > MAX_BASE) {
+        value = value * 10 + (str[i] - '0');
+        if (value > MAX_BASE) {
             return INVALID_BASE;
         }
     }
-    if (znach < MIN_BASE) {
+    if (value < MIN_BASE) {
         return INVALID_BASE;
     }
-    *base = znach;
+    *base = value;
     return OK;
 }
 
 /* ===================== вывод (только для main) ===================== */
 
-/* Текст ошибки для статуса. Строка сообщения кладется в *soobshenie
+/* Текст ошибки для статуса. Строка сообщения кладется в *message
    (строковые литералы живут всю программу, поэтому возвращать их адрес можно) */
-status_code error_text(const status_code sc, const char **soobshenie) {
-    if (soobshenie == NULL) {
+status_code error_text(const status_code sc, const char **message) {
+    if (message == NULL) {
         return INVALID_ARGS;
     }
     if (sc == INVALID_EPS) {
-        *soobshenie = "eps must be greater than 0 and less than 1";
+        *message = "eps must be greater than 0 and less than 1";
     } else if (sc == INVALID_BASE) {
-        *soobshenie = "base must be from 2 to 36";
+        *message = "base must be from 2 to 36";
     } else if (sc == INVALID_COUNT) {
-        *soobshenie = "count of numbers must be 1 or more";
+        *message = "count of numbers must be 1 or more";
     } else if (sc == NOT_IN_RANGE) {
-        *soobshenie = "the number is not in (0; 1)";
+        *message = "the number is not in (0; 1)";
     } else if (sc == NO_FRACTION) {
-        *soobshenie = "can not find p/q, q would be too big";
+        *message = "can not find p/q, q would be too big";
     } else if (sc == ALLOC_ERROR) {
-        *soobshenie = "not enough memory";
+        *message = "not enough memory";
     } else {
         /* INVALID_ARGS (NULL), INVALID_NUMBER, NOT_FINITE сюда прийти не могут:
            main и демонстрация их не передают. Если сообщение появилось -
            ошибка в самой программе */
-        *soobshenie = "internal error";
+        *message = "internal error";
     }
     return OK;
 }
@@ -558,58 +558,58 @@ status_code error_text(const status_code sc, const char **soobshenie) {
    Ошибка числа печатается в err ("Error: 1.5: the number is not in (0; 1)"),
    остальное - в out. Числа печатаем через %.15g: до 15 значащих цифр, без лишних
    нулей, - так 0.1 печатается как 0.1, а не 0.10000000000000001 */
-status_code print_one(FILE *out, FILE *err, const drob_result *r, const int base) {
+status_code print_one(FILE *out, FILE *err, const fraction_result *r, const int base) {
     if (out == NULL || err == NULL || r == NULL) {
         return INVALID_ARGS;
     }
     if (r->status != OK) {
-        const char *soobshenie = NULL;
-        error_text(r->status, &soobshenie);
-        fprintf(err, "Error: %.15g: %s\n", r->chislo, soobshenie);
+        const char *message = NULL;
+        error_text(r->status, &message);
+        fprintf(err, "Error: %.15g: %s\n", r->number, message);
         return OK;
     }
-    fprintf(out, "%.15g = %lld/%lld -> ", r->chislo, r->p, r->q);
-    if (r->konechna) {
-        fprintf(out, "finite: %s\n", r->zapis);
+    fprintf(out, "%.15g = %lld/%lld -> ", r->number, r->p, r->q);
+    if (r->is_finite) {
+        fprintf(out, "finite: %s\n", r->digits_str);
     } else {
         fprintf(out, "infinite (factor %lld of q has no common divisor with base %d)\n",
-                r->ostatok, base);
+                r->remaining, base);
     }
     return OK;
 }
 
-/* Печать всех результатов. *kolvo_oshibok - сколько чисел с ошибкой (для кода возврата) */
-status_code print_results(FILE *out, FILE *err, const drob_result *rez, const int kolvo,
-                          const int base, int *kolvo_oshibok) {
-    if (out == NULL || err == NULL || rez == NULL || kolvo_oshibok == NULL) {
+/* Печать всех результатов. *error_count - сколько чисел с ошибкой (для кода возврата) */
+status_code print_results(FILE *out, FILE *err, const fraction_result *result, const int count,
+                          const int base, int *error_count) {
+    if (out == NULL || err == NULL || result == NULL || error_count == NULL) {
         return INVALID_ARGS;
     }
-    *kolvo_oshibok = 0;
-    for (int i = 0; i < kolvo; i++) {
-        print_one(out, err, &rez[i], base);
-        if (rez[i].status != OK) {
-            (*kolvo_oshibok)++;
+    *error_count = 0;
+    for (int i = 0; i < count; i++) {
+        print_one(out, err, &result[i], base);
+        if (result[i].status != OK) {
+            (*error_count)++;
         }
     }
     return OK;
 }
 
 /* Один пример демонстрации: заголовок "Base 10, eps = 1e-09:", потом результаты
-   (или ошибка всей функции). sc и rez - то, что вернула check_fractions.
+   (или ошибка всей функции). sc и result - то, что вернула check_fractions.
    Ошибки чисел в демонстрации печатаем в stdout - чтобы все шло по порядку */
-status_code print_demo(const double eps, const int base, const int kolvo, const status_code sc,
-                       const drob_result *rez) {
+status_code print_demo(const double eps, const int base, const int count, const status_code sc,
+                       const fraction_result *result) {
     printf("Base %d, eps = %g:\n", base, eps);
     if (sc == OK) {
-        if (rez == NULL) {
+        if (result == NULL) {
             return INVALID_ARGS;
         }
-        int kolvo_oshibok = 0;
-        print_results(stdout, stdout, rez, kolvo, base, &kolvo_oshibok);
+        int error_count = 0;
+        print_results(stdout, stdout, result, count, base, &error_count);
     } else {
-        const char *soobshenie = NULL;
-        error_text(sc, &soobshenie);
-        printf("Error: %s\n", soobshenie);
+        const char *message = NULL;
+        error_text(sc, &message);
+        printf("Error: %s\n", message);
     }
     printf("\n");
     return OK;
@@ -617,10 +617,10 @@ status_code print_demo(const double eps, const int base, const int kolvo, const 
 
 /* Демонстрация: готовые вызовы check_fractions с разным количеством чисел.
    Каждый пример: 1) вызов, числа передаются через ... прямо в вызове;
-   2) печать; 3) free_results. После ошибки всей функции rez остается NULL,
+   2) печать; 3) free_results. После ошибки всей функции result остается NULL,
    и free_results(NULL, ...) ничего не делает - поэтому освобождаем всегда */
 status_code run_demo(void) {
-    drob_result *rez = NULL;
+    fraction_result *result = NULL;
     status_code sc = OK;
 
     printf("Is the number x from (0; 1) a finite fraction in base b?\n");
@@ -629,79 +629,79 @@ status_code run_demo(void) {
 
     /* 1) десятичная: 2 и 5 делят 10, поэтому 1/2, 1/4, 1/10, 1/8 конечны,
           а 1/3 и 1/7 - нет */
-    sc = check_fractions(&rez, EPS_DEMO, 10, 6, 0.5, 0.25, 0.1, 0.125, 1.0 / 3, 1.0 / 7);
-    print_demo(EPS_DEMO, 10, 6, sc, rez);
-    free_results(rez, 6);
-    rez = NULL;   /* чтобы в следующем примере при ошибке не напечатать и не освободить старое */
+    sc = check_fractions(&result, EPS_DEMO, 10, 6, 0.5, 0.25, 0.1, 0.125, 1.0 / 3, 1.0 / 7);
+    print_demo(EPS_DEMO, 10, 6, sc, result);
+    free_results(result, 6);
+    result = NULL;   /* чтобы в следующем примере при ошибке не напечатать и не освободить старое */
 
     /* 2) двоичная: конечны только дроби со знаменателем 2^k. 0.1 = 1/10 - бесконечна
           (0.000110011... в двоичной), хотя в десятичной она конечная */
-    sc = check_fractions(&rez, EPS_DEMO, 2, 4, 0.5, 0.75, 0.0625, 0.1);
-    print_demo(EPS_DEMO, 2, 4, sc, rez);
-    free_results(rez, 4);
-    rez = NULL;
+    sc = check_fractions(&result, EPS_DEMO, 2, 4, 0.5, 0.75, 0.0625, 0.1);
+    print_demo(EPS_DEMO, 2, 4, sc, result);
+    free_results(result, 4);
+    result = NULL;
 
     /* 3) троичная: 1/3 и 2/9 конечны (0.1 и 0.02), а 1/2 - нет */
-    sc = check_fractions(&rez, EPS_DEMO, 3, 3, 1.0 / 3, 2.0 / 9, 0.5);
-    print_demo(EPS_DEMO, 3, 3, sc, rez);
-    free_results(rez, 3);
-    rez = NULL;
+    sc = check_fractions(&result, EPS_DEMO, 3, 3, 1.0 / 3, 2.0 / 9, 0.5);
+    print_demo(EPS_DEMO, 3, 3, sc, result);
+    free_results(result, 3);
+    result = NULL;
 
     /* 4) основание 12 = 2*2*3: конечны знаменатели из двоек и троек (1/3, 1/4, 1/6),
           а 1/5 - нет. 1/6 = 0.2 в двенадцатеричной: 2/12 = 1/6 */
-    sc = check_fractions(&rez, EPS_DEMO, 12, 4, 1.0 / 3, 0.25, 1.0 / 6, 0.2);
-    print_demo(EPS_DEMO, 12, 4, sc, rez);
-    free_results(rez, 4);
-    rez = NULL;
+    sc = check_fractions(&result, EPS_DEMO, 12, 4, 1.0 / 3, 0.25, 1.0 / 6, 0.2);
+    print_demo(EPS_DEMO, 12, 4, sc, result);
+    free_results(result, 4);
+    result = NULL;
 
     /* 5) основание 16: цифры больше 9 - буквы. 0.6875 = 11/16 = 0.B */
-    sc = check_fractions(&rez, EPS_DEMO, 16, 2, 0.6875, 0.1);
-    print_demo(EPS_DEMO, 16, 2, sc, rez);
-    free_results(rez, 2);
-    rez = NULL;
+    sc = check_fractions(&result, EPS_DEMO, 16, 2, 0.6875, 0.1);
+    print_demo(EPS_DEMO, 16, 2, sc, result);
+    free_results(result, 2);
+    result = NULL;
 
     /* 6) роль eps: 0.33333 (5 троек) с eps = 1e-12 - это 33333/100000, конечная;
           с eps = 1e-3 то же число "равно" 1/3 (отличается на 0.0000033) - бесконечная */
-    sc = check_fractions(&rez, EPS_DEMO, 10, 1, 0.33333);
-    print_demo(EPS_DEMO, 10, 1, sc, rez);
-    free_results(rez, 1);
-    rez = NULL;
-    sc = check_fractions(&rez, 1e-3, 10, 1, 0.33333);
-    print_demo(1e-3, 10, 1, sc, rez);
-    free_results(rez, 1);
-    rez = NULL;
+    sc = check_fractions(&result, EPS_DEMO, 10, 1, 0.33333);
+    print_demo(EPS_DEMO, 10, 1, sc, result);
+    free_results(result, 1);
+    result = NULL;
+    sc = check_fractions(&result, 1e-3, 10, 1, 0.33333);
+    print_demo(1e-3, 10, 1, sc, result);
+    free_results(result, 1);
+    result = NULL;
 
     printf("Errors:\n\n");
 
     /* 7) ошибки отдельных чисел: остальные числа все равно обработаны.
           1.5 и -0.25 не из (0; 1), 0 и 1 - границы (не входят), 1e-13 меньше eps -
           "почти 0", бесконечность и NaN - не числа (INFINITY, NAN - макросы из math.h) */
-    sc = check_fractions(&rez, EPS_DEMO, 10, 8, 0.5, 1.5, -0.25, 0.0, 1.0, 1e-13, INFINITY, NAN);
-    print_demo(EPS_DEMO, 10, 8, sc, rez);
-    free_results(rez, 8);
-    rez = NULL;
+    sc = check_fractions(&result, EPS_DEMO, 10, 8, 0.5, 1.5, -0.25, 0.0, 1.0, 1e-13, INFINITY, NAN);
+    print_demo(EPS_DEMO, 10, 8, sc, result);
+    free_results(result, 8);
+    result = NULL;
 
     /* 8) ошибки всей функции: результата нет вообще */
-    sc = check_fractions(&rez, 0.0, 10, 1, 0.5);
-    print_demo(0.0, 10, 1, sc, rez);
-    free_results(rez, 1);
-    rez = NULL;
+    sc = check_fractions(&result, 0.0, 10, 1, 0.5);
+    print_demo(0.0, 10, 1, sc, result);
+    free_results(result, 1);
+    result = NULL;
 
-    sc = check_fractions(&rez, EPS_DEMO, 1, 1, 0.5);
-    print_demo(EPS_DEMO, 1, 1, sc, rez);
-    free_results(rez, 1);
-    rez = NULL;
+    sc = check_fractions(&result, EPS_DEMO, 1, 1, 0.5);
+    print_demo(EPS_DEMO, 1, 1, sc, result);
+    free_results(result, 1);
+    result = NULL;
 
-    sc = check_fractions(&rez, EPS_DEMO, 37, 1, 0.5);
-    print_demo(EPS_DEMO, 37, 1, sc, rez);
-    free_results(rez, 1);
-    rez = NULL;
+    sc = check_fractions(&result, EPS_DEMO, 37, 1, 0.5);
+    print_demo(EPS_DEMO, 37, 1, sc, result);
+    free_results(result, 1);
+    result = NULL;
 
-    /* kolvo = 0: после kolvo чисел нет */
-    sc = check_fractions(&rez, EPS_DEMO, 10, 0);
-    print_demo(EPS_DEMO, 10, 0, sc, rez);
-    free_results(rez, 0);
-    rez = NULL;
+    /* count = 0: после count чисел нет */
+    sc = check_fractions(&result, EPS_DEMO, 10, 0);
+    print_demo(EPS_DEMO, 10, 0, sc, result);
+    free_results(result, 0);
+    result = NULL;
 
     return OK;
 }
@@ -739,34 +739,34 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    /* 3) Числа обрабатываем по одному: check_fractions(&rez, eps, base, 1, x).
+    /* 3) Числа обрабатываем по одному: check_fractions(&result, eps, base, 1, x).
        Число аргументов "..." должно быть известно при компиляции, а чисел в командной
        строке может быть сколько угодно - поэтому вызов на каждое число.
        Ошибка одного числа не останавливает остальные; код возврата 1, если ошибки были */
-    int kod = 0;
+    int exit_code = 0;
     for (int i = 3; i < argc; i++) {
         double x = 0.0;
         if (parse_double(argv[i], &x) != OK) {
             /* не число вообще ("abc", "0.5x") - сообщаем и идем к следующему */
             fprintf(stderr, "Error: '%s' is not a number\n", argv[i]);
-            kod = 1;
+            exit_code = 1;
             continue;
         }
-        drob_result *rez = NULL;
-        status_code sc = check_fractions(&rez, eps, base, 1, x);
+        fraction_result *result = NULL;
+        status_code sc = check_fractions(&result, eps, base, 1, x);
         if (sc != OK) {
-            /* eps и base уже проверены, kolvo = 1 - остается только ALLOC_ERROR.
+            /* eps и base уже проверены, count = 1 - остается только ALLOC_ERROR.
                "internal error" - для статусов, которых тут быть не может (ошибка в программе) */
             fprintf(stderr, sc == ALLOC_ERROR ? "Error: not enough memory\n"
                                               : "Error: internal error\n");
             return 1;
         }
-        int kolvo_oshibok = 0;
-        print_results(stdout, stderr, rez, 1, base, &kolvo_oshibok);
-        if (kolvo_oshibok > 0) {
-            kod = 1;
+        int error_count = 0;
+        print_results(stdout, stderr, result, 1, base, &error_count);
+        if (error_count > 0) {
+            exit_code = 1;
         }
-        free_results(rez, 1);
+        free_results(result, 1);
     }
-    return kod;
+    return exit_code;
 }

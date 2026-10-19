@@ -63,9 +63,9 @@ typedef enum {
 
 /* Направление сортировки */
 typedef enum {
-    VOZRASTANIE,       /* флаг a */
-    UBYVANIE           /* флаг d */
-} napravlenie;
+    ASCENDING,       /* флаг a */
+    DESCENDING           /* флаг d */
+} sort_order;
 
 /* Сотрудник. Строки - в динамической памяти (любой длины).
    Зарплата хранится тремя способами, у каждого своя работа:
@@ -85,17 +85,17 @@ typedef struct {
 /* ===================== память ===================== */
 
 /* Копия строки в динамической памяти (освобождает вызывающий) */
-status_code copy_string(const char *str, char **kopiya) {
-    if (str == NULL || kopiya == NULL) {
+status_code copy_string(const char *str, char **copy) {
+    if (str == NULL || copy == NULL) {
         return INVALID_ARGS;
     }
-    size_t dlina = strlen(str);
-    char *novaya = (char *)malloc(dlina + 1);   /* + 1 байт на '\0' */
-    if (novaya == NULL) {
+    size_t length = strlen(str);
+    char *new_str = (char *)malloc(length + 1);   /* + 1 байт на '\0' */
+    if (new_str == NULL) {
         return ALLOC_ERROR;
     }
-    memcpy(novaya, str, dlina + 1);   /* копируем вместе с '\0' */
-    *kopiya = novaya;
+    memcpy(new_str, str, length + 1);   /* копируем вместе с '\0' */
+    *copy = new_str;
     return OK;
 }
 
@@ -115,11 +115,11 @@ status_code free_employee(Employee *emp) {
 }
 
 /* Освободить массив сотрудников: сначала строки каждого, потом сам массив */
-status_code free_employees(Employee *arr, const size_t kolvo) {
+status_code free_employees(Employee *arr, const size_t count) {
     if (arr == NULL) {
         return OK;
     }
-    for (size_t i = 0; i < kolvo; i++) {
+    for (size_t i = 0; i < count; i++) {
         free_employee(&arr[i]);
     }
     free(arr);
@@ -139,20 +139,20 @@ status_code parse_id(const char *str, long long *id) {
     if (str[0] == '\0') {
         return INVALID_NUMBER;
     }
-    long long znach = 0;
+    long long value = 0;
     for (size_t i = 0; str[i] != '\0'; i++) {
         if (str[i] < '0' || str[i] > '9') {
             return INVALID_NUMBER;
         }
-        int cifra = str[i] - '0';
-        /* znach * 10 + cifra > LLONG_MAX  <=>  znach > (LLONG_MAX - cifra) / 10
+        int digit = str[i] - '0';
+        /* value * 10 + digit > LLONG_MAX  <=>  value > (LLONG_MAX - digit) / 10
            (проверяем до умножения - само умножение могло бы переполниться) */
-        if (znach > (LLONG_MAX - cifra) / 10) {
+        if (value > (LLONG_MAX - digit) / 10) {
             return OVERFLOW_ERROR;
         }
-        znach = znach * 10 + cifra;
+        value = value * 10 + digit;
     }
-    *id = znach;
+    *id = value;
     return OK;
 }
 
@@ -209,11 +209,11 @@ status_code parse_salary(const char *str, double *salary) {
     }
     /* вид правильный - переводим. Второй параметр (где strtod остановилась)
        не нужен: что строка - число целиком, мы уже проверили сами */
-    double znach = strtod(str, NULL);
-    if (isinf(znach)) {
+    double value = strtod(str, NULL);
+    if (isinf(value)) {
         return OVERFLOW_ERROR;
     }
-    *salary = znach;
+    *salary = value;
     return OK;
 }
 
@@ -238,14 +238,14 @@ status_code salary_to_units(const double salary, const double eps, long long *un
     if (salary < 0) {
         return INVALID_ARGS;
     }
-    double kolvo_eps = salary / eps;
+    double eps_units = salary / eps;
     /* (double)LLONG_MAX = 2^63 - это точная граница: все, что меньше,
        после округления помещается в long long */
-    if (kolvo_eps >= (double)LLONG_MAX) {
+    if (eps_units >= (double)LLONG_MAX) {
         return SALARY_TOO_BIG;
     }
     /* llround - округление до ближайшего целого (из math.h, C99) */
-    *units = llround(kolvo_eps);
+    *units = llround(eps_units);
     return OK;
 }
 
@@ -258,9 +258,9 @@ status_code read_line(FILE *in, char **line) {
     if (in == NULL || line == NULL) {
         return INVALID_ARGS;
     }
-    size_t razmer = 16;   /* сколько байт выделено */
-    size_t dlina = 0;     /* сколько символов уже прочитано */
-    char *buf = (char *)malloc(razmer);
+    size_t size = 16;   /* сколько байт выделено */
+    size_t length = 0;     /* сколько символов уже прочитано */
+    char *buf = (char *)malloc(size);
     if (buf == NULL) {
         return ALLOC_ERROR;
     }
@@ -271,36 +271,36 @@ status_code read_line(FILE *in, char **line) {
     }
     while (c != EOF && c != '\n') {
         /* нужен байт под этот символ и еще один под '\0' в конце */
-        if (dlina + 1 >= razmer) {
-            if (razmer > SIZE_MAX / 2) {
+        if (length + 1 >= size) {
+            if (size > SIZE_MAX / 2) {
                 free(buf);
                 return ALLOC_ERROR;
             }
             /* realloc - во временную переменную: если он вернет NULL,
                старый блок останется, и мы сможем его освободить */
-            char *novyy = (char *)realloc(buf, razmer * 2);
-            if (novyy == NULL) {
+            char *new_ptr = (char *)realloc(buf, size * 2);
+            if (new_ptr == NULL) {
                 free(buf);
                 return ALLOC_ERROR;
             }
-            buf = novyy;
-            razmer *= 2;
+            buf = new_ptr;
+            size *= 2;
         }
-        buf[dlina] = (char)c;
-        dlina++;
+        buf[length] = (char)c;
+        length++;
         c = fgetc(in);
     }
-    buf[dlina] = '\0';
+    buf[length] = '\0';
     *line = buf;
     return OK;
 }
 
 /* Разбить строку на слова (слова разделены пробелами, табуляциями, '\r' от Windows).
-   Строка меняется: после каждого слова пишется '\0', а в slova[] кладутся
-   адреса начал слов. Больше max_slov слов не записываем, но считаем всех:
-   *kolvo - сколько слов в строке на самом деле (чтобы заметить лишние) */
-status_code split_words(char *line, char **slova, const size_t max_slov, size_t *kolvo) {
-    if (line == NULL || slova == NULL || kolvo == NULL) {
+   Строка меняется: после каждого слова пишется '\0', а в words[] кладутся
+   адреса начал слов. Больше max_words слов не записываем, но считаем всех:
+   *count - сколько слов в строке на самом деле (чтобы заметить лишние) */
+status_code split_words(char *line, char **words, const size_t max_words, size_t *count) {
+    if (line == NULL || words == NULL || count == NULL) {
         return INVALID_ARGS;
     }
     size_t k = 0;
@@ -315,8 +315,8 @@ status_code split_words(char *line, char **slova, const size_t max_slov, size_t 
             break;
         }
         /* начало слова */
-        if (k < max_slov) {
-            slova[k] = &line[i];
+        if (k < max_words) {
+            words[k] = &line[i];
         }
         k++;
         /* идем до конца слова */
@@ -329,7 +329,7 @@ status_code split_words(char *line, char **slova, const size_t max_slov, size_t 
             i++;
         }
     }
-    *kolvo = k;
+    *count = k;
     return OK;
 }
 
@@ -342,10 +342,10 @@ status_code parse_employee(char *line, const double eps, Employee *emp) {
         return INVALID_ARGS;
     }
     /* больше 5 слов запоминать не нужно: уже 5-е слово - ошибка (лишнее слово) */
-    char *slova[5];
-    size_t kolvo_slov = 0;
-    split_words(line, slova, 5, &kolvo_slov);
-    if (kolvo_slov != 4) {
+    char *words[5];
+    size_t word_count = 0;
+    split_words(line, words, 5, &word_count);
+    if (word_count != 4) {
         return BAD_LINE;
     }
 
@@ -356,21 +356,21 @@ status_code parse_employee(char *line, const double eps, Employee *emp) {
     tmp.salary_text = NULL;
 
     /* 1) id: любая ошибка числа (не число, слишком большое) - BAD_ID */
-    if (parse_id(slova[0], &tmp.id) != OK) {
+    if (parse_id(words[0], &tmp.id) != OK) {
         return BAD_ID;
     }
     /* 2) имя и 3) фамилия: только латинские буквы */
     int da = 0;
-    is_latin_word(slova[1], &da);
+    is_latin_word(words[1], &da);
     if (!da) {
         return BAD_NAME;
     }
-    is_latin_word(slova[2], &da);
+    is_latin_word(words[2], &da);
     if (!da) {
         return BAD_SURNAME;
     }
     /* 4) зарплата: само число, потом число единиц eps для сортировки */
-    if (parse_salary(slova[3], &tmp.salary) != OK) {
+    if (parse_salary(words[3], &tmp.salary) != OK) {
         /* INVALID_NUMBER (не тот вид) и OVERFLOW_ERROR (больше double) - для
            пользователя это одна ошибка: "зарплата должна быть числом ..." */
         return BAD_SALARY;
@@ -380,14 +380,14 @@ status_code parse_employee(char *line, const double eps, Employee *emp) {
         return sc;   /* SALARY_TOO_BIG */
     }
 
-    /* все поля правильные - копируем строки (slova указывают внутрь line,
+    /* все поля правильные - копируем строки (words указывают внутрь line,
        а line вызывающий освободит сразу после разбора) */
-    sc = copy_string(slova[1], &tmp.name);
+    sc = copy_string(words[1], &tmp.name);
     if (sc == OK) {
-        sc = copy_string(slova[2], &tmp.surname);
+        sc = copy_string(words[2], &tmp.surname);
     }
     if (sc == OK) {
-        sc = copy_string(slova[3], &tmp.salary_text);
+        sc = copy_string(words[3], &tmp.salary_text);
     }
     if (sc != OK) {
         free_employee(&tmp);   /* освобождаем то, что успели скопировать */
@@ -398,45 +398,45 @@ status_code parse_employee(char *line, const double eps, Employee *emp) {
 }
 
 /* Добавить сотрудника в конец массива, который растет удвоением (как буфер строки).
-   *razmer - сколько элементов выделено, *kolvo - сколько занято */
-status_code add_employee(Employee **arr, size_t *razmer, size_t *kolvo, const Employee *emp) {
-    if (arr == NULL || razmer == NULL || kolvo == NULL || emp == NULL) {
+   *size - сколько элементов выделено, *count - сколько занято */
+status_code add_employee(Employee **arr, size_t *size, size_t *count, const Employee *emp) {
+    if (arr == NULL || size == NULL || count == NULL || emp == NULL) {
         return INVALID_ARGS;
     }
-    if (*kolvo == *razmer) {
+    if (*count == *size) {
         /* новый размер: 8 для начала, потом вдвое больше; проверяем, что
            (новый размер * размер элемента) помещается в size_t */
-        size_t novyy_razmer = (*razmer == 0) ? 8 : *razmer * 2;
-        if (*razmer > SIZE_MAX / 2 || novyy_razmer > SIZE_MAX / sizeof(Employee)) {
+        size_t new_size = (*size == 0) ? 8 : *size * 2;
+        if (*size > SIZE_MAX / 2 || new_size > SIZE_MAX / sizeof(Employee)) {
             return ALLOC_ERROR;
         }
-        Employee *novyy = (Employee *)realloc(*arr, novyy_razmer * sizeof(Employee));
-        if (novyy == NULL) {
+        Employee *new_ptr = (Employee *)realloc(*arr, new_size * sizeof(Employee));
+        if (new_ptr == NULL) {
             return ALLOC_ERROR;   /* старый массив цел - его освободит вызывающий */
         }
-        *arr = novyy;
-        *razmer = novyy_razmer;
+        *arr = new_ptr;
+        *size = new_size;
     }
-    (*arr)[*kolvo] = *emp;   /* копируется структура: указатели на строки переходят в массив */
-    (*kolvo)++;
+    (*arr)[*count] = *emp;   /* копируется структура: указатели на строки переходят в массив */
+    (*count)++;
     return OK;
 }
 
 /* Прочитать всех сотрудников из открытого файла в динамический массив.
    Пустые строки (и строки из одних пробелов) пропускаем.
-   *nomer_stroki - номер строки, на которой остановились (считаем и пустые строки,
+   *line_number - номер строки, на которой остановились (считаем и пустые строки,
    так номер совпадет с номером в файле); при ошибке по нему main скажет, где ошибка.
-   При ошибке все прочитанное освобождается, *arr и *kolvo не меняются.
+   При ошибке все прочитанное освобождается, *arr и *count не меняются.
    Файл пустой (или только пустые строки) - не ошибка: сотрудников 0 */
-status_code read_employees(FILE *in, const double eps, Employee **arr, size_t *kolvo,
-                           size_t *nomer_stroki) {
-    if (in == NULL || arr == NULL || kolvo == NULL || nomer_stroki == NULL || eps <= 0) {
+status_code read_employees(FILE *in, const double eps, Employee **arr, size_t *count,
+                           size_t *line_number) {
+    if (in == NULL || arr == NULL || count == NULL || line_number == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
-    Employee *massiv = NULL;
-    size_t razmer = 0;   /* сколько элементов выделено */
+    Employee *array = NULL;
+    size_t size = 0;   /* сколько элементов выделено */
     size_t n = 0;        /* сколько сотрудников прочитано */
-    *nomer_stroki = 0;
+    *line_number = 0;
 
     while (1) {
         char *line = NULL;
@@ -445,20 +445,20 @@ status_code read_employees(FILE *in, const double eps, Employee **arr, size_t *k
             break;   /* файл кончился - все прочитано */
         }
         if (sc != OK) {
-            free_employees(massiv, n);
+            free_employees(array, n);
             return sc;   /* ALLOC_ERROR */
         }
-        (*nomer_stroki)++;
+        (*line_number)++;
 
         /* пустую строку пропускаем: ищем в ней хоть один не пробельный символ */
-        int pustaya = 1;
+        int empty = 1;
         for (size_t i = 0; line[i] != '\0'; i++) {
             if (!isspace((unsigned char)line[i])) {
-                pustaya = 0;
+                empty = 0;
                 break;
             }
         }
-        if (pustaya) {
+        if (empty) {
             free(line);
             continue;
         }
@@ -468,19 +468,19 @@ status_code read_employees(FILE *in, const double eps, Employee **arr, size_t *k
         sc = parse_employee(line, eps, &emp);
         free(line);
         if (sc == OK) {
-            sc = add_employee(&massiv, &razmer, &n, &emp);
+            sc = add_employee(&array, &size, &n, &emp);
             if (sc != OK) {
                 free_employee(&emp);   /* сотрудник не попал в массив - освобождаем отдельно */
             }
         }
         if (sc != OK) {
             /* ошибка в строке - дальше не читаем, освобождаем все прочитанное */
-            free_employees(massiv, n);
+            free_employees(array, n);
             return sc;
         }
     }
-    *arr = massiv;   /* при 0 сотрудников massiv = NULL - это нормально */
-    *kolvo = n;
+    *arr = array;   /* при 0 сотрудников array = NULL - это нормально */
+    *count = n;
     return OK;
 }
 
@@ -490,9 +490,9 @@ status_code read_employees(FILE *in, const double eps, Employee **arr, size_t *k
    Сначала без учета регистра ("adam" раньше "Zed", хотя в таблице ASCII 'Z' < 'a'),
    а если слова отличаются только регистром - то обычным strcmp (заглавные раньше:
    "Ivanov" раньше "ivanov"). Так одинаковые слова дают 0, разные - никогда не 0.
-   *rez < 0 - a раньше b, 0 - одинаковые, > 0 - a позже b */
-status_code compare_words(const char *a, const char *b, int *rez) {
-    if (a == NULL || b == NULL || rez == NULL) {
+   *result < 0 - a раньше b, 0 - одинаковые, > 0 - a позже b */
+status_code compare_words(const char *a, const char *b, int *result) {
+    if (a == NULL || b == NULL || result == NULL) {
         return INVALID_ARGS;
     }
     size_t i = 0;
@@ -509,7 +509,7 @@ status_code compare_words(const char *a, const char *b, int *rez) {
         if (ca != cb) {
             /* первая разная буква решает; если одно слово кончилось ('\0' = 0),
                оно меньше - короткое слово раньше длинного ("Ann" раньше "Anna") */
-            *rez = (ca < cb) ? -1 : 1;
+            *result = (ca < cb) ? -1 : 1;
             return OK;
         }
         if (ca == '\0') {
@@ -517,7 +517,7 @@ status_code compare_words(const char *a, const char *b, int *rez) {
         }
         i++;
     }
-    *rez = strcmp(a, b);
+    *result = strcmp(a, b);
     return OK;
 }
 
@@ -525,30 +525,30 @@ status_code compare_words(const char *a, const char *b, int *rez) {
    зарплата, при равных - фамилия, при равных - имя, при равных - id.
    Зарплаты сравниваются по salary_units - целым числам (см. salary_to_units),
    поэтому eps здесь не нужен. Пятый признак (текст зарплаты) - только чтобы порядок
-   всегда был одним и тем же, см. шаг 5. *rez < 0 - a раньше b, 0 - равны, > 0 - a позже b */
-status_code compare_employees(const Employee *a, const Employee *b, int *rez) {
-    if (a == NULL || b == NULL || rez == NULL) {
+   всегда был одним и тем же, см. шаг 5. *result < 0 - a раньше b, 0 - равны, > 0 - a позже b */
+status_code compare_employees(const Employee *a, const Employee *b, int *result) {
+    if (a == NULL || b == NULL || result == NULL) {
         return INVALID_ARGS;
     }
     /* 1) зарплата */
     if (a->salary_units != b->salary_units) {
-        *rez = (a->salary_units < b->salary_units) ? -1 : 1;
+        *result = (a->salary_units < b->salary_units) ? -1 : 1;
         return OK;
     }
     /* 2) фамилия */
-    compare_words(a->surname, b->surname, rez);
-    if (*rez != 0) {
+    compare_words(a->surname, b->surname, result);
+    if (*result != 0) {
         return OK;
     }
     /* 3) имя */
-    compare_words(a->name, b->name, rez);
-    if (*rez != 0) {
+    compare_words(a->name, b->name, result);
+    if (*result != 0) {
         return OK;
     }
     /* 4) id. Не "a->id - b->id": разность больших чисел может переполнить
        long long (и даже int, если вернуть ее из компаратора) */
     if (a->id != b->id) {
-        *rez = (a->id < b->id) ? -1 : 1;
+        *result = (a->id < b->id) ? -1 : 1;
         return OK;
     }
     /* 5) Условие тут кончается, но записи еще могут отличаться текстом зарплаты:
@@ -557,7 +557,7 @@ status_code compare_employees(const Employee *a, const Employee *b, int *rez) {
        системах порядок мог бы быть разным. Сравниваем текст зарплаты (strcmp):
        тогда 0 получается, только если строки сотрудников совпадают целиком,
        и выходной файл всегда один и тот же */
-    *rez = strcmp(a->salary_text, b->salary_text);
+    *result = strcmp(a->salary_text, b->salary_text);
     return OK;
 }
 
@@ -566,32 +566,32 @@ status_code compare_employees(const Employee *a, const Employee *b, int *rez) {
    (int, два параметра const void *). qsort передает адреса двух элементов массива;
    ответ < 0 - первый должен стоять раньше, 0 - все равно, > 0 - позже */
 int compare_asc(const void *a, const void *b) {
-    int rez = 0;
-    compare_employees((const Employee *)a, (const Employee *)b, &rez);
-    return rez;
+    int result = 0;
+    compare_employees((const Employee *)a, (const Employee *)b, &result);
+    return result;
 }
 
 /* По убыванию - то же сравнение с переставленными сотрудниками: кто был "раньше",
    становится "позже". Порядок обратный по всем признакам сразу */
 int compare_desc(const void *a, const void *b) {
-    int rez = 0;
-    compare_employees((const Employee *)b, (const Employee *)a, &rez);
-    return rez;
+    int result = 0;
+    compare_employees((const Employee *)b, (const Employee *)a, &result);
+    return result;
 }
 
 /* Отсортировать массив сотрудников стандартной функцией qsort */
-status_code sort_employees(Employee *arr, const size_t kolvo, const napravlenie napr) {
-    if (arr == NULL && kolvo > 0) {
+status_code sort_employees(Employee *arr, const size_t count, const sort_order order) {
+    if (arr == NULL && count > 0) {
         return INVALID_ARGS;
     }
-    if (kolvo < 2) {
+    if (count < 2) {
         return OK;   /* 0 или 1 сотрудник уже "отсортированы" (и qsort с NULL не зовем) */
     }
     /* qsort(массив, количество, размер одного элемента, компаратор) */
-    if (napr == VOZRASTANIE) {
-        qsort(arr, kolvo, sizeof(Employee), compare_asc);
+    if (order == ASCENDING) {
+        qsort(arr, count, sizeof(Employee), compare_asc);
     } else {
-        qsort(arr, kolvo, sizeof(Employee), compare_desc);
+        qsort(arr, count, sizeof(Employee), compare_desc);
     }
     return OK;
 }
@@ -599,8 +599,8 @@ status_code sort_employees(Employee *arr, const size_t kolvo, const napravlenie 
 /* ===================== аргументы и файлы ===================== */
 
 /* Разобрать флаг: ровно 2 символа, первый '-' или '/', второй 'a' или 'd' */
-status_code parse_flag(const char *str, napravlenie *napr) {
-    if (str == NULL || napr == NULL) {
+status_code parse_flag(const char *str, sort_order *order) {
+    if (str == NULL || order == NULL) {
         return INVALID_ARGS;
     }
     /* str[0] != '\0' проверяем раньше, чем смотреть str[1] и str[2]:
@@ -609,9 +609,9 @@ status_code parse_flag(const char *str, napravlenie *napr) {
         return INVALID_FLAG;
     }
     if (str[1] == 'a') {
-        *napr = VOZRASTANIE;
+        *order = ASCENDING;
     } else if (str[1] == 'd') {
-        *napr = UBYVANIE;
+        *order = DESCENDING;
     } else {
         return INVALID_FLAG;
     }
@@ -627,17 +627,17 @@ status_code parse_flag(const char *str, napravlenie *napr) {
    _fullpath(NULL, ...) умеет выделить память сам, но так не делаем: эту память выделяет
    библиотека Windows внутри себя, и программа Dr. Memory (проверка утечек) ее не видит -
    считает ошибкой наш free. Со своим malloc все выделения видны и понятны */
-status_code full_path(const char *put, char **polny) {
-    if (put == NULL || polny == NULL) {
+status_code full_path(const char *path, char **full) {
+    if (path == NULL || full == NULL) {
         return INVALID_ARGS;
     }
-    for (size_t razmer = 260; razmer <= 65536; razmer *= 2) {
-        char *buf = (char *)malloc(razmer);
+    for (size_t size = 260; size <= 65536; size *= 2) {
+        char *buf = (char *)malloc(size);
         if (buf == NULL) {
             return ALLOC_ERROR;
         }
-        if (_fullpath(buf, put, razmer) != NULL) {
-            *polny = buf;   /* освобождает вызывающий */
+        if (_fullpath(buf, path, size) != NULL) {
+            *full = buf;   /* освобождает вызывающий */
             return OK;
         }
         free(buf);   /* не поместилось (или путь плохой) - пробуем буфер вдвое больше */
@@ -654,33 +654,33 @@ status_code full_path(const char *put, char **polny) {
    сравниваем без учета регистра (_stricmp) - в Windows "IN.TXT" и "in.txt" один файл.
    Файла еще нет (выходной файл часто так) - значит, это точно не входной файл.
    Путь неправильный - тоже "разные": fopen дальше сам сообщит об ошибке */
-status_code same_file(const char *put1, const char *put2, int *odinakovye) {
-    if (put1 == NULL || put2 == NULL || odinakovye == NULL) {
+status_code same_file(const char *path1, const char *path2, int *equal) {
+    if (path1 == NULL || path2 == NULL || equal == NULL) {
         return INVALID_ARGS;
     }
-    *odinakovye = 0;
+    *equal = 0;
 #ifdef _WIN32
-    char *polny1 = NULL;
-    char *polny2 = NULL;
-    status_code sc1 = full_path(put1, &polny1);
-    status_code sc2 = full_path(put2, &polny2);
+    char *full1 = NULL;
+    char *full2 = NULL;
+    status_code sc1 = full_path(path1, &full1);
+    status_code sc2 = full_path(path2, &full2);
     if (sc1 == ALLOC_ERROR || sc2 == ALLOC_ERROR) {
-        free(polny1);   /* free(NULL) ничего не делает - можно не проверять */
-        free(polny2);
+        free(full1);   /* free(NULL) ничего не делает - можно не проверять */
+        free(full2);
         return ALLOC_ERROR;
     }
-    if (sc1 == OK && sc2 == OK && _stricmp(polny1, polny2) == 0) {
-        *odinakovye = 1;
+    if (sc1 == OK && sc2 == OK && _stricmp(full1, full2) == 0) {
+        *equal = 1;
     }
-    free(polny1);
-    free(polny2);
+    free(full1);
+    free(full2);
 #else
     /* stat возвращает 0, если сведения о файле получены; иначе (файла нет) - не 0 */
-    struct stat sved1;
-    struct stat sved2;
-    if (stat(put1, &sved1) == 0 && stat(put2, &sved2) == 0 &&
-        sved1.st_dev == sved2.st_dev && sved1.st_ino == sved2.st_ino) {
-        *odinakovye = 1;
+    struct stat info1;
+    struct stat info2;
+    if (stat(path1, &info1) == 0 && stat(path2, &info2) == 0 &&
+        info1.st_dev == info2.st_dev && info1.st_ino == info2.st_ino) {
+        *equal = 1;
     }
 #endif
     return OK;
@@ -689,11 +689,11 @@ status_code same_file(const char *put1, const char *put2, int *odinakovye) {
 /* Записать сотрудников в открытый файл: по одному в строке, "id имя фамилия зарплата".
    Зарплату пишем ее текстом из входного файла - без округления.
    fprintf возвращает отрицательное число, если записать не получилось (например, диск полон) */
-status_code write_employees(FILE *out, const Employee *arr, const size_t kolvo) {
-    if (out == NULL || (arr == NULL && kolvo > 0)) {
+status_code write_employees(FILE *out, const Employee *arr, const size_t count) {
+    if (out == NULL || (arr == NULL && count > 0)) {
         return INVALID_ARGS;
     }
-    for (size_t i = 0; i < kolvo; i++) {
+    for (size_t i = 0; i < count; i++) {
         if (fprintf(out, "%lld %s %s %s\n", arr[i].id, arr[i].name, arr[i].surname,
                     arr[i].salary_text) < 0) {
             return WRITE_ERROR;
@@ -720,8 +720,8 @@ int main(int argc, char *argv[]) {
 
     /* sc - статус последней вызванной функции, одна переменная на весь main */
     status_code sc = OK;
-    napravlenie napr = VOZRASTANIE;
-    if (parse_flag(argv[2], &napr) != OK) {
+    sort_order order = ASCENDING;
+    if (parse_flag(argv[2], &order) != OK) {
         /* здесь возможен только INVALID_FLAG: "-x", "a", "-ad", "" */
         fprintf(stderr, "Error: wrong flag '%s', use -a, /a, -d or /d\n", argv[2]);
         return 1;
@@ -730,8 +730,8 @@ int main(int argc, char *argv[]) {
     /* 2) Входной и выходной файл не должны быть одним файлом: выходной файл открывается
        на запись ("w"), и fopen сразу стирает его содержимое - входные данные пропали бы.
        same_file ловит и разные записи одного пути: "in.txt" и "./in.txt" */
-    int odinakovye = 0;
-    sc = same_file(in_path, out_path, &odinakovye);
+    int equal = 0;
+    sc = same_file(in_path, out_path, &equal);
     if (sc == ALLOC_ERROR) {
         /* на Windows same_file выделяет память под полные пути */
         fprintf(stderr, "Error: not enough memory\n");
@@ -741,7 +741,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error: internal error\n");   /* INVALID_ARGS: NULL-ов здесь не бывает */
         return 1;
     }
-    if (odinakovye) {
+    if (equal) {
         fprintf(stderr, "Error: input and output must be different files\n");
         return 1;
     }
@@ -753,9 +753,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     Employee *arr = NULL;
-    size_t kolvo = 0;
-    size_t nomer_stroki = 0;
-    sc = read_employees(in, EPS, &arr, &kolvo, &nomer_stroki);
+    size_t count = 0;
+    size_t line_number = 0;
+    sc = read_employees(in, EPS, &arr, &count, &line_number);
     fclose(in);
     if (sc != OK) {
         /* read_employees при ошибке уже все освободил. Каждая ошибка в строке -
@@ -764,32 +764,32 @@ int main(int argc, char *argv[]) {
             case BAD_LINE:
                 /* не 4 слова: нет зарплаты, имя из двух слов, лишнее слово */
                 fprintf(stderr, "Error: line %zu: a line must be: id name surname salary\n",
-                        nomer_stroki);
+                        line_number);
                 break;
             case BAD_ID:
                 /* id отрицательный, дробный, не число, больше LLONG_MAX */
                 fprintf(stderr, "Error: line %zu: id must be a whole number from 0 to %lld\n",
-                        nomer_stroki, LLONG_MAX);
+                        line_number, LLONG_MAX);
                 break;
             case BAD_NAME:
                 /* в имени цифры, дефис, русские буквы */
                 fprintf(stderr, "Error: line %zu: name must have only latin letters\n",
-                        nomer_stroki);
+                        line_number);
                 break;
             case BAD_SURNAME:
                 /* то же для фамилии */
                 fprintf(stderr, "Error: line %zu: surname must have only latin letters\n",
-                        nomer_stroki);
+                        line_number);
                 break;
             case BAD_SALARY:
                 /* отрицательная, с запятой, "1e3", не число */
                 fprintf(stderr, "Error: line %zu: salary must be a number like 1500 or 1500.75 "
-                                "(not negative)\n", nomer_stroki);
+                                "(not negative)\n", line_number);
                 break;
             case SALARY_TOO_BIG:
                 /* salary / EPS не помещается в long long; граница ~9.22e+12 при EPS = 1e-6 */
                 fprintf(stderr, "Error: line %zu: salary is too big, it must be less than %.3g\n",
-                        nomer_stroki, (double)LLONG_MAX * EPS);
+                        line_number, (double)LLONG_MAX * EPS);
                 break;
             case ALLOC_ERROR:
                 fprintf(stderr, "Error: not enough memory\n");
@@ -804,11 +804,11 @@ int main(int argc, char *argv[]) {
     }
 
     /* 4) Сортировка - отдельно от чтения и записи (работа с данными, а не с файлами) */
-    sc = sort_employees(arr, kolvo, napr);
+    sc = sort_employees(arr, count, order);
     if (sc != OK) {
-        /* INVALID_ARGS быть не может: arr и kolvo получены из read_employees */
+        /* INVALID_ARGS быть не может: arr и count получены из read_employees */
         fprintf(stderr, "Error: internal error\n");
-        free_employees(arr, kolvo);
+        free_employees(arr, count);
         return 1;
     }
 
@@ -817,22 +817,22 @@ int main(int argc, char *argv[]) {
     FILE *out = fopen(out_path, "w");
     if (out == NULL) {
         fprintf(stderr, "Error: can not create file '%s'\n", out_path);
-        free_employees(arr, kolvo);
+        free_employees(arr, count);
         return 1;
     }
-    sc = write_employees(out, arr, kolvo);
+    sc = write_employees(out, arr, count);
     /* fclose тоже может не суметь записать (данные копятся в буфере и
        дописываются при закрытии) - поэтому его результат тоже проверяем */
     if (fclose(out) != 0 && sc == OK) {
         sc = WRITE_ERROR;
     }
-    free_employees(arr, kolvo);
+    free_employees(arr, count);
     if (sc != OK) {
         /* WRITE_ERROR - диск полон, нет прав; INVALID_ARGS быть не может */
         fprintf(stderr, "Error: can not write to file '%s'\n", out_path);
         return 1;
     }
 
-    printf("Done: %zu employees are written to %s\n", kolvo, out_path);
+    printf("Done: %zu employees are written to %s\n", count, out_path);
     return 0;
 }
