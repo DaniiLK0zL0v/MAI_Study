@@ -1,0 +1,682 @@
+# Тесты для задания 5 (программа lab2_task5)
+#
+# Как запустить:  Linux:   bash run_tests.sh 5              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 5   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: "a b"
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Аргументы программы: <флаг> <значение> [основание]  - флаг без %: Ro Zr Cv CV to TO mi mu md mf.
+# Программа печатает результат через overfprintf и через oversprintf (одно ядро) и что они вернули.
+# Правильные ответы проверены на Python: римские числа, цекендорфово представление (обратным
+# переводом), системы счисления, дампы памяти (struct.pack, порядок байт little-endian).
+# Стандартные флаги (демонстрация) сверены со стандартной snprintf на 200000 случайных спецификаторов.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab2_task5
+
+# ============================================================
+# Демонстрация (без аргументов): стандартные и новые флаги, ошибки
+# ============================================================
+
+name: демонстрация - все примеры
+args:
+out: Standard flags:
+out:   %d %5d %-5d|: 42    42 42   |  (returned 31)
+out:   %+d % d %05d: +7  7 -0007  (returned 27)
+out:   %x %X %#o %#x: ff FF 010 0xff  (returned 31)
+out:   %.2f %e %g %10.3f|: 3.14 1.234500e+03 0.0001      2.500|  (returned 58)
+out:   %s %.3s %8s|: hello hel       hi|  (returned 35)
+out:   %c%c%c: abc  (returned 13)
+out:   %lld %llu %hhd %hu: -9000000000 18000000000000000000 44 4464  (returned 62)
+out:   %zu %td %jd: 123 -5 77  (returned 24)
+out:   %*d %-*d| %.*f:     42 7   | 3.142  (returned 36)
+out:   %n: abc  -> %n stored 9  (returned 9)
+out:   100%  (returned 6)
+out:
+out: New flags:
+out:   %Ro: 1 = I, 4 = IV, 9 = IX, 14 = XIV, 1994 = MCMXCIV, 3999 = MMMCMXCIX  (returned 72)
+out:   %Ro: -14 = -XIV, 0 = N  (returned 24)
+out:   %Zr: 0 = 01, 1 = 11, 2 = 011, 3 = 0011, 4 = 1011, 10 = 010011, 100 = 00101000011  (returned 82)
+out:   %Zr: UINT_MAX = 00100100100010000000100010100010101000010001011  (returned 65)
+out:   %Cv %CV: 255 in 16 = ff / FF, -10 in 2 = -1010, 35 in 36 = z  (returned 62)
+out:   %Cv: INT_MIN in 16 = -80000000, 0 in 7 = 0, base 1 -> 10: 123  (returned 63)
+out:   %to %TO: "ff" 16 = 255, "FF" 16 = 255, "-101" 2 = -5, "zz" 36 = 1295  (returned 70)
+out:   %to: "123" base 99 -> 10: 123, "-80000000" 16 = -2147483648  (returned 61)
+out:   %mi: 1 = 00000001 00000000 00000000 00000000  (returned 46)
+out:   %mi: -1 = 11111111 11111111 11111111 11111111  (returned 47)
+out:   %mu: 258 = 00000010 00000001 00000000 00000000  (returned 48)
+out:   %md: 1.0 = 00000000 00000000 00000000 00000000 00000000 00000000 11110000 00111111  (returned 84)
+out:   %mf: 1.0f = 00000000 00000000 10000000 00111111  (returned 49)
+out:   %mf: -2.5f = 00000000 00000000 00100000 11000000  (returned 50)
+out:   mixed: 12 is XII, in 2 = 1100, done  (returned 37)
+out:
+out: oversprintf (the same core, output goes to a string):
+out:   "year MMXXIV, 010011, BEEF, 2147483647, [  2.3]"  (returned 46)
+out:   "00000000 00000001 00000000 00000000 | 50%"  (returned 41)
+out:
+out: Errors (the function returns -1, the text before the error is already written):
+out:   %Ro with 4000: "x = "  (returned -1)
+out:   %to with "FF" (big letters): "x = "  (returned -1)
+out:   %to with "19" in base 8: "x = "  (returned -1)
+out:   %to with "80000000" in 16 (more than INT_MAX): "x = "  (returned -1)
+out:   %to with empty string: "x = "  (returned -1)
+out:   unknown %y: "x = "  (returned -1)
+out:   wrong length %Lc: "x = "  (returned -1)
+out:   % at the end: "x = "  (returned -1)
+out:   %5%: "x = "  (returned -1)
+out:   %5n: "x = "  (returned -1)
+out:   %s with NULL: "x = "  (returned -1)
+out:   overfprintf(NULL, ...): returned -1
+out:   oversprintf(NULL, ...): returned -1
+code: 0
+
+# ============================================================
+# %Ro - римские цифры
+# ============================================================
+
+name: 1
+args: Ro 1
+out: overfprintf: I
+out: oversprintf: I
+out: returned: 1 and 1
+code: 0
+
+name: 4 = IV
+args: Ro 4
+out: overfprintf: IV
+out: oversprintf: IV
+out: returned: 2 and 2
+code: 0
+
+name: 9 = IX
+args: Ro 9
+out: overfprintf: IX
+out: oversprintf: IX
+out: returned: 2 and 2
+code: 0
+
+name: 14 = XIV
+args: Ro 14
+out: overfprintf: XIV
+out: oversprintf: XIV
+out: returned: 3 and 3
+code: 0
+
+name: 40 = XL
+args: Ro 40
+out: overfprintf: XL
+out: oversprintf: XL
+out: returned: 2 and 2
+code: 0
+
+name: 90 = XC
+args: Ro 90
+out: overfprintf: XC
+out: oversprintf: XC
+out: returned: 2 and 2
+code: 0
+
+name: 400 = CD
+args: Ro 400
+out: overfprintf: CD
+out: oversprintf: CD
+out: returned: 2 and 2
+code: 0
+
+name: 1994 = MCMXCIV
+args: Ro 1994
+out: overfprintf: MCMXCIV
+out: oversprintf: MCMXCIV
+out: returned: 7 and 7
+code: 0
+
+name: 2024 = MMXXIV
+args: Ro 2024
+out: overfprintf: MMXXIV
+out: oversprintf: MMXXIV
+out: returned: 6 and 6
+code: 0
+
+name: 3888 - самая длинная запись
+args: Ro 3888
+out: overfprintf: MMMDCCCLXXXVIII
+out: oversprintf: MMMDCCCLXXXVIII
+out: returned: 15 and 15
+code: 0
+
+name: 3999 - самое большое
+args: Ro 3999
+out: overfprintf: MMMCMXCIX
+out: oversprintf: MMMCMXCIX
+out: returned: 9 and 9
+code: 0
+
+name: отрицательное -14
+args: Ro -14
+out: overfprintf: -XIV
+out: oversprintf: -XIV
+out: returned: 4 and 4
+code: 0
+
+name: -3999
+args: Ro -3999
+out: overfprintf: -MMMCMXCIX
+out: oversprintf: -MMMCMXCIX
+out: returned: 10 and 10
+code: 0
+
+name: 0 = N (nulla)
+args: Ro 0
+out: overfprintf: N
+out: oversprintf: N
+out: returned: 1 and 1
+code: 0
+
+name: 4000 - римскими не записать
+args: Ro 4000
+out: overfprintf:
+out: oversprintf:
+out: returned: -1 and -1
+err: Error: the value can not be printed with %Ro
+code: 1
+
+name: -4000
+args: Ro -4000
+out: overfprintf:
+out: oversprintf:
+out: returned: -1 and -1
+err: Error: the value can not be printed with %Ro
+code: 1
+
+name: INT_MAX
+args: Ro 2147483647
+out: overfprintf:
+out: oversprintf:
+out: returned: -1 and -1
+err: Error: the value can not be printed with %Ro
+code: 1
+
+# ============================================================
+# %Zr - цекендорфово представление
+# ============================================================
+
+name: 0
+args: Zr 0
+out: overfprintf: 01
+out: oversprintf: 01
+out: returned: 2 and 2
+code: 0
+
+name: 1 = 11
+args: Zr 1
+out: overfprintf: 11
+out: oversprintf: 11
+out: returned: 2 and 2
+code: 0
+
+name: 2 = 011
+args: Zr 2
+out: overfprintf: 011
+out: oversprintf: 011
+out: returned: 3 and 3
+code: 0
+
+name: 3 = 0011
+args: Zr 3
+out: overfprintf: 0011
+out: oversprintf: 0011
+out: returned: 4 and 4
+code: 0
+
+name: 4 = 3 + 1
+args: Zr 4
+out: overfprintf: 1011
+out: oversprintf: 1011
+out: returned: 4 and 4
+code: 0
+
+name: 10 = 8 + 2
+args: Zr 10
+out: overfprintf: 010011
+out: oversprintf: 010011
+out: returned: 6 and 6
+code: 0
+
+name: 12 = 8 + 3 + 1
+args: Zr 12
+out: overfprintf: 101011
+out: oversprintf: 101011
+out: returned: 6 and 6
+code: 0
+
+name: 100 = 89 + 8 + 3
+args: Zr 100
+out: overfprintf: 00101000011
+out: oversprintf: 00101000011
+out: returned: 11 and 11
+code: 0
+
+name: число Фибоначчи 832040
+args: Zr 832040
+out: overfprintf: 000000000000000000000000000011
+out: oversprintf: 000000000000000000000000000011
+out: returned: 30 and 30
+code: 0
+
+name: UINT_MAX
+args: Zr 4294967295
+out: overfprintf: 00100100100010000000100010100010101000010001011
+out: oversprintf: 00100100100010000000100010100010101000010001011
+out: returned: 47 and 47
+code: 0
+
+# ============================================================
+# %Cv, %CV - число в системе с основанием
+# ============================================================
+
+name: 255 в 16, маленькие буквы
+args: Cv 255 16
+out: overfprintf: ff
+out: oversprintf: ff
+out: returned: 2 and 2
+code: 0
+
+name: 255 в 16, большие
+args: CV 255 16
+out: overfprintf: FF
+out: oversprintf: FF
+out: returned: 2 and 2
+code: 0
+
+name: -255 в 16
+args: Cv -255 16
+out: overfprintf: -ff
+out: oversprintf: -ff
+out: returned: 3 and 3
+code: 0
+
+name: 10 в 2
+args: Cv 10 2
+out: overfprintf: 1010
+out: oversprintf: 1010
+out: returned: 4 and 4
+code: 0
+
+name: 35 в 36 = z
+args: Cv 35 36
+out: overfprintf: z
+out: oversprintf: z
+out: returned: 1 and 1
+code: 0
+
+name: 0 в 7
+args: Cv 0 7
+out: overfprintf: 0
+out: oversprintf: 0
+out: returned: 1 and 1
+code: 0
+
+name: INT_MIN в 2
+args: Cv -2147483648 2
+out: overfprintf: -10000000000000000000000000000000
+out: oversprintf: -10000000000000000000000000000000
+out: returned: 33 and 33
+code: 0
+
+name: INT_MAX в 36
+args: CV 2147483647 36
+out: overfprintf: ZIK0ZJ
+out: oversprintf: ZIK0ZJ
+out: returned: 6 and 6
+code: 0
+
+name: основание 1 -> 10
+args: Cv 123 1
+out: overfprintf: 123
+out: oversprintf: 123
+out: returned: 3 and 3
+code: 0
+
+name: основание 37 -> 10
+args: CV 123 37
+out: overfprintf: 123
+out: oversprintf: 123
+out: returned: 3 and 3
+code: 0
+
+name: основание отрицательное -> 10
+args: Cv -77 -16
+out: overfprintf: -77
+out: oversprintf: -77
+out: returned: 3 and 3
+code: 0
+
+# ============================================================
+# %to, %TO - из системы с основанием в десятичную
+# ============================================================
+
+name: ff в 16
+args: to ff 16
+out: overfprintf: 255
+out: oversprintf: 255
+out: returned: 3 and 3
+code: 0
+
+name: FF в 16 (%TO)
+args: TO FF 16
+out: overfprintf: 255
+out: oversprintf: 255
+out: returned: 3 and 3
+code: 0
+
+name: -101 в 2
+args: to -101 2
+out: overfprintf: -5
+out: oversprintf: -5
+out: returned: 2 and 2
+code: 0
+
+name: zz в 36
+args: to zz 36
+out: overfprintf: 1295
+out: oversprintf: 1295
+out: returned: 4 and 4
+code: 0
+
+name: ZZ в 36 (%TO)
+args: TO ZZ 36
+out: overfprintf: 1295
+out: oversprintf: 1295
+out: returned: 4 and 4
+code: 0
+
+name: 7fffffff = INT_MAX
+args: to 7fffffff 16
+out: overfprintf: 2147483647
+out: oversprintf: 2147483647
+out: returned: 10 and 10
+code: 0
+
+name: -80000000 = INT_MIN
+args: TO -80000000 16
+out: overfprintf: -2147483648
+out: oversprintf: -2147483648
+out: returned: 11 and 11
+code: 0
+
+name: основание 99 -> 10
+args: to 123 99
+out: overfprintf: 123
+out: oversprintf: 123
+out: returned: 3 and 3
+code: 0
+
+name: ведущие нули
+args: to 000017 8
+out: overfprintf: 15
+out: oversprintf: 15
+out: returned: 2 and 2
+code: 0
+
+name: %to с большими буквами - ошибка
+args: to FF 16
+out: overfprintf:
+out: oversprintf:
+out: returned: -1 and -1
+err: Error: the value can not be printed with %to
+code: 1
+
+name: %TO с маленькими буквами - ошибка
+args: TO ff 16
+out: overfprintf:
+out: oversprintf:
+out: returned: -1 and -1
+err: Error: the value can not be printed with %TO
+code: 1
+
+name: цифра 9 в восьмеричной - ошибка
+args: to 19 8
+out: overfprintf:
+out: oversprintf:
+out: returned: -1 and -1
+err: Error: the value can not be printed with %to
+code: 1
+
+name: 80000000 в 16 больше INT_MAX - ошибка
+args: to 80000000 16
+out: overfprintf:
+out: oversprintf:
+out: returned: -1 and -1
+err: Error: the value can not be printed with %to
+code: 1
+
+name: -80000001 в 16 меньше INT_MIN - ошибка
+args: TO -80000001 16
+out: overfprintf:
+out: oversprintf:
+out: returned: -1 and -1
+err: Error: the value can not be printed with %TO
+code: 1
+
+name: пустая строка - ошибка
+args: to "" 10
+out: overfprintf:
+out: oversprintf:
+out: returned: -1 and -1
+err: Error: the value can not be printed with %to
+code: 1
+
+name: только минус - ошибка
+args: to - 10
+out: overfprintf:
+out: oversprintf:
+out: returned: -1 and -1
+err: Error: the value can not be printed with %to
+code: 1
+
+# ============================================================
+# %mi, %mu, %md, %mf - дамп памяти (байты по порядку адресов, little-endian)
+# ============================================================
+
+name: int 1
+args: mi 1
+out: overfprintf: 00000001 00000000 00000000 00000000
+out: oversprintf: 00000001 00000000 00000000 00000000
+out: returned: 35 and 35
+code: 0
+
+name: int -1
+args: mi -1
+out: overfprintf: 11111111 11111111 11111111 11111111
+out: oversprintf: 11111111 11111111 11111111 11111111
+out: returned: 35 and 35
+code: 0
+
+name: int -2
+args: mi -2
+out: overfprintf: 11111110 11111111 11111111 11111111
+out: oversprintf: 11111110 11111111 11111111 11111111
+out: returned: 35 and 35
+code: 0
+
+name: int INT_MIN
+args: mi -2147483648
+out: overfprintf: 00000000 00000000 00000000 10000000
+out: oversprintf: 00000000 00000000 00000000 10000000
+out: returned: 35 and 35
+code: 0
+
+name: int 258 = 0x102
+args: mi 258
+out: overfprintf: 00000010 00000001 00000000 00000000
+out: oversprintf: 00000010 00000001 00000000 00000000
+out: returned: 35 and 35
+code: 0
+
+name: unsigned 1
+args: mu 1
+out: overfprintf: 00000001 00000000 00000000 00000000
+out: oversprintf: 00000001 00000000 00000000 00000000
+out: returned: 35 and 35
+code: 0
+
+name: unsigned UINT_MAX
+args: mu 4294967295
+out: overfprintf: 11111111 11111111 11111111 11111111
+out: oversprintf: 11111111 11111111 11111111 11111111
+out: returned: 35 and 35
+code: 0
+
+name: unsigned 0x12345678
+args: mu 305419896
+out: overfprintf: 01111000 01010110 00110100 00010010
+out: oversprintf: 01111000 01010110 00110100 00010010
+out: returned: 35 and 35
+code: 0
+
+name: double 1.0
+args: md 1
+out: overfprintf: 00000000 00000000 00000000 00000000 00000000 00000000 11110000 00111111
+out: oversprintf: 00000000 00000000 00000000 00000000 00000000 00000000 11110000 00111111
+out: returned: 71 and 71
+code: 0
+
+name: double -0.0 - отличается от 0 только знаковым битом
+args: md -0
+out: overfprintf: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000
+out: oversprintf: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000
+out: returned: 71 and 71
+code: 0
+
+name: double 0.1
+args: md 0.1
+out: overfprintf: 10011010 10011001 10011001 10011001 10011001 10011001 10111001 00111111
+out: oversprintf: 10011010 10011001 10011001 10011001 10011001 10011001 10111001 00111111
+out: returned: 71 and 71
+code: 0
+
+name: double inf
+args: md inf
+out: overfprintf: 00000000 00000000 00000000 00000000 00000000 00000000 11110000 01111111
+out: oversprintf: 00000000 00000000 00000000 00000000 00000000 00000000 11110000 01111111
+out: returned: 71 and 71
+code: 0
+
+name: double -2.5
+args: md -2.5
+out: overfprintf: 00000000 00000000 00000000 00000000 00000000 00000000 00000100 11000000
+out: oversprintf: 00000000 00000000 00000000 00000000 00000000 00000000 00000100 11000000
+out: returned: 71 and 71
+code: 0
+
+name: float 1.0
+args: mf 1
+out: overfprintf: 00000000 00000000 10000000 00111111
+out: oversprintf: 00000000 00000000 10000000 00111111
+out: returned: 35 and 35
+code: 0
+
+name: float 0.1
+args: mf 0.1
+out: overfprintf: 11001101 11001100 11001100 00111101
+out: oversprintf: 11001101 11001100 11001100 00111101
+out: returned: 35 and 35
+code: 0
+
+name: float -2.5
+args: mf -2.5
+out: overfprintf: 00000000 00000000 00100000 11000000
+out: oversprintf: 00000000 00000000 00100000 11000000
+out: returned: 35 and 35
+code: 0
+
+name: float inf
+args: mf inf
+out: overfprintf: 00000000 00000000 10000000 01111111
+out: oversprintf: 00000000 00000000 10000000 01111111
+out: returned: 35 and 35
+code: 0
+
+name: float 1e40 - больше максимального float: ошибка
+args: mf 1e40
+err: Error: '1e40' is too big for float
+code: 1
+
+# ============================================================
+# Ошибки командной строки
+# ============================================================
+
+name: неизвестный флаг
+args: Xx 1
+err: Error: unknown flag 'Xx' (use Ro Zr Cv CV to TO mi mu md mf)
+code: 1
+
+name: флаг из трех букв
+args: Roo 1
+err: Error: unknown flag 'Roo' (use Ro Zr Cv CV to TO mi mu md mf)
+code: 1
+
+name: Ro: не число
+args: Ro abc
+err: Error: 'abc' must be a whole number (int)
+code: 1
+
+name: Ro: дробное
+args: Ro 1.5
+err: Error: '1.5' must be a whole number (int)
+code: 1
+
+name: Ro: больше INT_MAX
+args: Ro 2147483648
+err: Error: '2147483648' must be a whole number (int)
+code: 1
+
+name: Zr: отрицательное
+args: Zr -1
+err: Error: '-1' must be a whole number from 0 to 4294967295
+code: 1
+
+name: Zr: больше UINT_MAX
+args: Zr 4294967296
+err: Error: '4294967296' must be a whole number from 0 to 4294967295
+code: 1
+
+name: Cv: нет основания
+args: Cv 5
+err: Error: flag Cv needs a value and a base
+code: 1
+
+name: Ro: лишний аргумент
+args: Ro 1 2
+err: Error: flag Ro needs one value
+code: 1
+
+name: Cv: основание не число
+args: Cv 5 x
+err: Error: base 'x' must be a whole number (int)
+code: 1
+
+name: md: не число
+args: md 1.5x
+err: Error: '1.5x' is not a number
+code: 1
+
+name: мало аргументов
+args: Ro
+err: Usage: lab2_task5                        (demo)
+err:        lab2_task5 <flag> <value> [base]
+err: flags: Ro Zr Cv CV to TO mi mu md mf
+code: 1
+
+name: много аргументов
+args: Cv 1 2 3
+err: Usage: lab2_task5                        (demo)
+err:        lab2_task5 <flag> <value> [base]
+err: flags: Ro Zr Cv CV to TO mi mu md mf
+code: 1
