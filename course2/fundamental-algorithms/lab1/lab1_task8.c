@@ -17,6 +17,7 @@
 typedef enum {
     OK,
     INVALID_ARGS,      /* NULL вместо указателя */
+    BAD_PATH,          /* (Windows) из пути не получился полный путь - путь неправильный */
     INVALID_NUMBER,    /* в лексеме есть символ, который не цифра ни в какой системе */
     OVERFLOW_ERROR,    /* значение не помещается в long long */
     NO_MEMORY,
@@ -218,6 +219,34 @@ status_code process_file(FILE *in, FILE *out, long *propuscheno) {
     return (sc == END_OF_FILE) ? OK : sc;
 }
 
+#ifdef _WIN32
+/* Только для Windows: полный путь файла ("in.txt" -> "C:\...\lab1\in.txt") в динамической памяти.
+   _fullpath(буфер, путь, размер буфера) пишет полный путь в наш буфер; если буфер мал
+   или путь неправильный - возвращает NULL. Буфер начинаем с 260 байт (обычный предел
+   длины пути в Windows) и удваиваем; путь в Windows не длиннее 32767 символов, поэтому
+   на 65536 байтах останавливаемся: если и там NULL - путь неправильный (BAD_PATH).
+   _fullpath(NULL, ...) умеет выделить память сам, но так не делаем: эту память выделяет
+   библиотека Windows внутри себя, и программа Dr. Memory (проверка утечек) ее не видит -
+   считает ошибкой наш free. Со своим malloc все выделения видны и понятны */
+status_code full_path(const char *put, char **polny) {
+    if (put == NULL || polny == NULL) {
+        return INVALID_ARGS;
+    }
+    for (size_t razmer = 260; razmer <= 65536; razmer *= 2) {
+        char *buf = (char *)malloc(razmer);
+        if (buf == NULL) {
+            return NO_MEMORY;
+        }
+        if (_fullpath(buf, put, razmer) != NULL) {
+            *polny = buf;   /* освобождает вызывающий */
+            return OK;
+        }
+        free(buf);   /* не поместилось (или путь плохой) - пробуем буфер вдвое больше */
+    }
+    return BAD_PATH;
+}
+#endif
+
 /* Ведут ли два пути к одному и тому же файлу на диске: *odinakovye = 1 - да, 0 - нет.
    Сравнивать строки (strcmp) мало: "in.txt", "./in.txt", "../lab1/in.txt" и полный путь -
    разные строки, но один файл. Если выходной файл совпадет с входным, fopen(..., "w")
@@ -226,7 +255,7 @@ status_code process_file(FILE *in, FILE *out, long *propuscheno) {
    - Linux: stat заполняет struct stat сведениями о файле. st_dev - номер диска (устройства),
      st_ino - номер файла на этом диске (inode). Пара (st_dev, st_ino) у каждого файла своя,
      и неважно, каким путем к нему пришли (в том числе через ссылки ln и ln -s).
-   - Windows (сборка для себя): _fullpath превращает путь в полный ("C:\lab\in.txt"),
+   - Windows (сборка для себя): full_path превращает путь в полный ("C:\lab\in.txt"),
      сравниваем без учета больших и маленьких букв (в Windows IN.TXT и in.txt - один файл).
    Если какой-то путь не существует (stat не смог), это не один файл: например, выходного
    файла еще нет - его создаст fopen. Если не существует входной, fopen потом сообщит об ошибке */
@@ -236,15 +265,21 @@ status_code same_file(const char *put1, const char *put2, int *odinakovye) {
     }
     *odinakovye = 0;
 #ifdef _WIN32
-    /* _fullpath(NULL, ...) сам выделяет память под полный путь через malloc - потом free.
-       NULL в ответе - путь неправильный или нет памяти: тогда считаем, что файлы разные
-       (fopen дальше сам сообщит об ошибке, если путь плохой) */
-    char *polny1 = _fullpath(NULL, put1, 0);
-    char *polny2 = _fullpath(NULL, put2, 0);
-    if (polny1 != NULL && polny2 != NULL && _stricmp(polny1, polny2) == 0) {
+    /* full_path - полные пути в нашей памяти (потом free). Путь неправильный (BAD_PATH) -
+       считаем, что файлы разные: fopen дальше сам сообщит об ошибке */
+    char *polny1 = NULL;
+    char *polny2 = NULL;
+    status_code sc1 = full_path(put1, &polny1);
+    status_code sc2 = full_path(put2, &polny2);
+    if (sc1 == NO_MEMORY || sc2 == NO_MEMORY) {
+        free(polny1);   /* free(NULL) ничего не делает - можно не проверять */
+        free(polny2);
+        return NO_MEMORY;
+    }
+    if (sc1 == OK && sc2 == OK && _stricmp(polny1, polny2) == 0) {
         *odinakovye = 1;
     }
-    free(polny1);   /* free(NULL) ничего не делает - можно не проверять */
+    free(polny1);
     free(polny2);
 #else
     /* stat возвращает 0, если сведения о файле получены; иначе (файла нет) - не 0 */
@@ -266,8 +301,14 @@ int main(int argc, char *argv[]) {
     /* Входной и выходной файл должны быть разными: fopen с "w" стер бы входной
        до чтения. same_file ловит и разные записи одного пути: "in.txt" и "./in.txt" */
     int odinakovye = 0;
-    if (same_file(argv[1], argv[2], &odinakovye) != OK) {
-        fprintf(stderr, "Error: internal error\n");
+    status_code sc_put = same_file(argv[1], argv[2], &odinakovye);
+    if (sc_put == NO_MEMORY) {
+        /* на Windows same_file выделяет память под полные пути */
+        fprintf(stderr, "Error: not enough memory\n");
+        return 1;
+    }
+    if (sc_put != OK) {
+        fprintf(stderr, "Error: internal error\n");   /* INVALID_ARGS: NULL-ов здесь не бывает */
         return 1;
     }
     if (odinakovye) {
