@@ -140,13 +140,13 @@ status_code count_in_lines(FILE *in, FILE *out, const char_kind_t kakie) {
         return INVALID_ARGS;
     }
     int ch;
-    long kolvo = 0;
+    long long kolvo = 0;
     int est_simvoly = 0;   /* были ли символы после последнего '\n' */
 
     while ((ch = fgetc(in)) != EOF) {
         if (ch == '\n') {
             /* строка закончилась - пишем результат */
-            if (fprintf(out, "%ld\n", kolvo) < 0) {
+            if (fprintf(out, "%lld\n", kolvo) < 0) {
                 return WRITE_ERROR;
             }
             kolvo = 0;
@@ -167,7 +167,7 @@ status_code count_in_lines(FILE *in, FILE *out, const char_kind_t kakie) {
     }
     /* последняя строка без '\n' в конце файла */
     if (est_simvoly) {
-        if (fprintf(out, "%ld\n", kolvo) < 0) {
+        if (fprintf(out, "%lld\n", kolvo) < 0) {
             return WRITE_ERROR;
         }
     }

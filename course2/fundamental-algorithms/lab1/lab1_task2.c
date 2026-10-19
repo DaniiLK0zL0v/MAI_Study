@@ -16,11 +16,11 @@ typedef enum {
 
 /* Ограничения, чтобы программа не считала вечно.
    1L << 26 - это 2^26 (сдвиг единицы влево на 26 бит), около 67 миллионов */
-#define MAX_POW2_N   (1L << 26)    /* предел n для пределов с удвоением n */
-#define MAX_SERIES_N 500000000L    /* предел числа слагаемых знакочередующихся рядов */
+#define MAX_POW2_N   (1LL << 26)   /* предел n для пределов с удвоением n */
+#define MAX_SERIES_N 500000000LL   /* предел числа слагаемых знакочередующихся рядов */
 #define MAX_GAMMA_M  64            /* предел m для предела с биномами */
-#define MAX_BLOCKS   (1L << 14)    /* предел числа блоков в ряде для gamma */
-#define MAX_T        (1L << 24)    /* предел t для произведения по простым */
+#define MAX_BLOCKS   (1LL << 14)   /* предел числа блоков в ряде для gamma */
+#define MAX_T        (1LL << 24)   /* предел t для произведения по простым */
 #define MAX_ITER     200           /* предел шагов дихотомии: double больше ~60 делений не выдерживает */
 
 /* Строка -> double. Принимаем только конечное число без мусора */
@@ -186,7 +186,7 @@ status_code e_limit(const double eps, double *rez) {
         return INVALID_ARGS;
     }
     double prev = pow(1.0 + 1.0, 1.0);   /* n = 1 */
-    for (long n = 2; n <= MAX_POW2_N; n *= 2) {
+    for (long long n = 2; n <= MAX_POW2_N; n *= 2) {
         double cur = pow(1.0 + 1.0 / (double)n, (double)n);
         if (fabs(cur - prev) < eps) {
             *rez = cur;
@@ -206,7 +206,7 @@ status_code e_series(const double eps, double *rez) {
     }
     double slag = 1.0;   /* 1/0! */
     double summa = 0.0;
-    long n = 0;
+    long long n = 0;
     /* слагаемые быстро убывают; когда очередное меньше eps, оставшиеся уже не важны */
     while (slag >= eps) {
         summa += slag;
@@ -236,8 +236,8 @@ status_code pi_limit(const double eps, double *rez) {
        next_check - ближайшее n, при котором сравниваем */
     double a = 4.0;
     double prev = a;          /* значение при последней степени двойки */
-    long next_check = 2;
-    for (long n = 1; n < MAX_POW2_N; n++) {
+    long long next_check = 2;
+    for (long long n = 1; n < MAX_POW2_N; n++) {
         double dn = (double)n;
         a *= 4.0 * dn * (dn + 1) / ((2 * dn + 1) * (2 * dn + 1));
         /* теперь в a лежит a(n+1); при n+1 = 2, 4, 8 ... сравниваем с a(n/2) */
@@ -262,7 +262,7 @@ status_code pi_series(const double eps, double *rez) {
     }
     double summa = 0.0;
     double znak = 1.0;   /* (-1)^(n-1): +1, -1, +1 ... меняем знак на каждом шаге */
-    for (long n = 1; n <= MAX_SERIES_N; n++) {
+    for (long long n = 1; n <= MAX_SERIES_N; n++) {
         summa += znak * 4.0 / (double)(2 * n - 1);
         znak = -znak;
         /* следующее слагаемое (по модулю) меньше eps - значит, и ошибка меньше eps */
@@ -288,7 +288,7 @@ status_code ln2_limit(const double eps, double *rez) {
         return INVALID_ARGS;
     }
     double prev = 1.0 * (pow(2.0, 1.0) - 1);   /* n = 1 */
-    for (long n = 2; n <= MAX_POW2_N; n *= 2) {
+    for (long long n = 2; n <= MAX_POW2_N; n *= 2) {
         double dn = (double)n;
         double cur = dn * (pow(2.0, 1.0 / dn) - 1);
         if (fabs(cur - prev) < eps) {
@@ -308,7 +308,7 @@ status_code ln2_series(const double eps, double *rez) {
     }
     double summa = 0.0;
     double znak = 1.0;
-    for (long n = 1; n <= MAX_SERIES_N; n++) {
+    for (long long n = 1; n <= MAX_SERIES_N; n++) {
         summa += znak / (double)n;
         znak = -znak;
         if (1.0 / (double)(n + 1) < eps) {
@@ -423,13 +423,13 @@ status_code gamma_series(const double eps, double *rez) {
     const double pi = 3.14159265358979323846;
     double summa = -pi * pi / 6;
     double prev = 0.0;
-    long next_check = 1;
+    long long next_check = 1;
     /* n - номер блока: блок 1 - это k = 2, 3; блок 2 - k = 4..8; блок 3 - k = 9..15 ... */
-    for (long n = 1; n <= MAX_BLOCKS; n++) {
+    for (long long n = 1; n <= MAX_BLOCKS; n++) {
         double kv = (double)n * (double)n;   /* floor(sqrt k)^2 = n^2 для всего блока */
         double block = 0.0;
-        long start = (n == 1) ? 2 : n * n;   /* ряд начинается с k = 2 */
-        for (long k = start; k < (n + 1) * (n + 1); k++) {
+        long long start = (n == 1) ? 2 : n * n;   /* ряд начинается с k = 2 */
+        for (long long k = start; k < (n + 1) * (n + 1); k++) {
             block += 1.0 / kv - 1.0 / (double)k;
         }
         summa += block;
@@ -468,9 +468,9 @@ status_code mertens_limit(const double eps, double *predel) {
     double prev = 0.0;    /* значение в прошлой контрольной точке */
     int est_prev = 0;     /* 1 - прошлая точка уже была, есть с чем сравнивать */
     double cur = 0.0;
-    long next_check = 16;
+    long long next_check = 16;
     status_code sc = PRECISION_LIMIT;
-    for (long t = 2; t <= MAX_T; t++) {
+    for (long long t = 2; t <= MAX_T; t++) {
         if (!sostavnoe[t]) {
             proizv *= (double)(t - 1) / (double)t;
             /* вычеркиваем кратные t, начиная с t*t: меньшие кратные (2t, 3t ...)

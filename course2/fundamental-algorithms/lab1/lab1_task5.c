@@ -15,8 +15,8 @@ typedef enum {
     PRECISION_LIMIT    /* ответ есть, но заданная точность недостижима в double */
 } status_code;
 
-#define MAX_TERMS 100000000L       /* предел числа слагаемых ряда */
-#define MAX_PARTS (1L << 24)       /* предел числа отрезков для интеграла */
+#define MAX_TERMS 100000000LL      /* предел числа слагаемых ряда */
+#define MAX_PARTS (1LL << 24)      /* предел числа отрезков для интеграла */
 
 /* Строка -> double: конечное число без мусора */
 status_code parse_double(const char *str, double *chislo) {
@@ -51,7 +51,7 @@ status_code parse_double(const char *str, double *chislo) {
 
 /* otnoshenie = slag(n+1) / slag(n) для каждого ряда; кладем его в rez.
    n - номер слагаемого, он не может быть отрицательным */
-status_code ratio_a(const double x, const long n, double *rez) {
+status_code ratio_a(const double x, const long long n, double *rez) {
     if (rez == NULL || n < 0) {
         return INVALID_ARGS;
     }
@@ -62,7 +62,7 @@ status_code ratio_a(const double x, const long n, double *rez) {
     return OK;
 }
 
-status_code ratio_b(const double x, const long n, double *rez) {
+status_code ratio_b(const double x, const long long n, double *rez) {
     if (rez == NULL || n < 0) {
         return INVALID_ARGS;
     }
@@ -72,7 +72,7 @@ status_code ratio_b(const double x, const long n, double *rez) {
     return OK;
 }
 
-status_code ratio_c(const double x, const long n, double *rez) {
+status_code ratio_c(const double x, const long long n, double *rez) {
     if (rez == NULL || n < 0) {
         return INVALID_ARGS;
     }
@@ -82,7 +82,7 @@ status_code ratio_c(const double x, const long n, double *rez) {
     return OK;
 }
 
-status_code ratio_d(const double x, const long n, double *rez) {
+status_code ratio_d(const double x, const long long n, double *rez) {
     if (rez == NULL || n < 0) {
         return INVALID_ARGS;
     }
@@ -94,8 +94,8 @@ status_code ratio_d(const double x, const long n, double *rez) {
 
 /* Общая функция суммирования ряда.
    first - первое слагаемое, n0 - его номер, ratio - отношение соседних слагаемых */
-status_code sum_series(const double x, const double eps, const double first, const long n0,
-                       status_code (*ratio)(const double, const long, double *), double *summa) {
+status_code sum_series(const double x, const double eps, const double first, const long long n0,
+                       status_code (*ratio)(const double, const long long, double *), double *summa) {
     if (ratio == NULL || summa == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
@@ -107,7 +107,7 @@ status_code sum_series(const double x, const double eps, const double first, con
     /* На каждом шаге: если слагаемое уже меньше eps - стоп, ответ готов.
        Иначе прибавляем его к сумме и получаем следующее: slag * otnoshenie.
        MAX_TERMS - защита от вечного цикла */
-    for (long n = n0; n < n0 + MAX_TERMS; n++) {
+    for (long long n = n0; n < n0 + MAX_TERMS; n++) {
         if (fabs(slag) < eps) {
             *summa = s;
             /* при больших слагаемых погрешность округления ~ max_slag * DBL_EPSILON.
@@ -221,7 +221,7 @@ status_code f_d(const double x, double *rez) {
 }
 
 /* Интеграл f на [0, 1] при n частях */
-status_code midpoint(status_code (*f)(const double, double *), const long n, double *rez) {
+status_code midpoint(status_code (*f)(const double, double *), const long long n, double *rez) {
     if (f == NULL || rez == NULL || n <= 0) {
         return INVALID_ARGS;
     }
@@ -229,7 +229,7 @@ status_code midpoint(status_code (*f)(const double, double *), const long n, dou
        в его середине (i + 0.5) * h. Интеграл ~ сумма площадей = (сумма высот) * h */
     double h = 1.0 / (double)n;
     double s = 0.0;
-    for (long i = 0; i < n; i++) {
+    for (long long i = 0; i < n; i++) {
         double y = 0.0;
         status_code sc = f(((double)i + 0.5) * h, &y);
         if (sc != OK) {
@@ -252,7 +252,7 @@ status_code integral(status_code (*f)(const double, double *), const double eps,
     if (sc != OK) {
         return sc;
     }
-    for (long n = 2; n <= MAX_PARTS; n *= 2) {
+    for (long long n = 2; n <= MAX_PARTS; n *= 2) {
         double cur = 0.0;
         sc = midpoint(f, n, &cur);
         if (sc != OK) {

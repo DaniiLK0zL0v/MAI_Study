@@ -178,7 +178,7 @@ status_code analyze_number(const char *str, int *otric, size_t *nachalo, int *ba
 }
 
 /* Обработать весь файл: для каждой лексемы строка "число основание значение" */
-status_code process_file(FILE *in, FILE *out, long *propuscheno) {
+status_code process_file(FILE *in, FILE *out, long long *propuscheno) {
     if (in == NULL || out == NULL || propuscheno == NULL) {
         return INVALID_ARGS;
     }
@@ -330,7 +330,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    long propuscheno = 0;
+    long long propuscheno = 0;
     status_code sc = process_file(in, out, &propuscheno);
     fclose(in);
     if (fclose(out) != 0 && sc == OK) {
@@ -344,7 +344,7 @@ int main(int argc, char *argv[]) {
         case OK:
             printf("Done. Result is in '%s'\n", argv[2]);
             if (propuscheno > 0) {
-                printf("Skipped %ld words that are not numbers\n", propuscheno);
+                printf("Skipped %lld words that are not numbers\n", propuscheno);
             }
             return 0;
         case NO_MEMORY:

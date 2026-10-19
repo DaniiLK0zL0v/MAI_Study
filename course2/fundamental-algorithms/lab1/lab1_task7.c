@@ -181,7 +181,7 @@ status_code transform_tokens(FILE *in, FILE *out) {
     }
     /* nomer - номер текущей лексемы. ch - первый символ текущей лексемы:
        перед циклом пропускаем разделители в начале файла */
-    long nomer = 0;
+    long long nomer = 0;
     int ch = EOF;
     status_code sc = skip_razdeliteli(in, &ch);
     if (sc != OK) {
