@@ -1,0 +1,373 @@
+# Тесты для задания 9 (программа lab2_task9)
+#
+# Как запустить:  Linux:   bash run_tests.sh 9              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 9   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: "a b"
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Аргументы программы: <eps> <base> <x1> [x2 ...]  - числа x из (0; 1), основание от 2 до 36.
+# Правильные ответы проверены на Python точными дробями (fractions.Fraction):
+#   подходящие дроби цепной дроби точного значения x, первая с |x - p/q| < eps;
+#   p/q конечна, если q делится нацело на НОД(q, base), пока НОД > 1, и остается 1;
+#   цифры - деление столбиком в системе base.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab2_task9
+
+# ============================================================
+# Демонстрация (без аргументов): готовые вызовы check_fractions
+# ============================================================
+
+name: демонстрация - все примеры
+args:
+out: Is the number x from (0; 1) a finite fraction in base b?
+out: x is turned into p/q with |x - p/q| < eps, then p/q is finite
+out: if every prime factor of q divides b.
+out:
+out: Base 10, eps = 1e-12:
+out: 0.5 = 1/2 -> finite: 0.5
+out: 0.25 = 1/4 -> finite: 0.25
+out: 0.1 = 1/10 -> finite: 0.1
+out: 0.125 = 1/8 -> finite: 0.125
+out: 0.333333333333333 = 1/3 -> infinite (factor 3 of q has no common divisor with base 10)
+out: 0.142857142857143 = 1/7 -> infinite (factor 7 of q has no common divisor with base 10)
+out:
+out: Base 2, eps = 1e-12:
+out: 0.5 = 1/2 -> finite: 0.1
+out: 0.75 = 3/4 -> finite: 0.11
+out: 0.0625 = 1/16 -> finite: 0.0001
+out: 0.1 = 1/10 -> infinite (factor 5 of q has no common divisor with base 2)
+out:
+out: Base 3, eps = 1e-12:
+out: 0.333333333333333 = 1/3 -> finite: 0.1
+out: 0.222222222222222 = 2/9 -> finite: 0.02
+out: 0.5 = 1/2 -> infinite (factor 2 of q has no common divisor with base 3)
+out:
+out: Base 12, eps = 1e-12:
+out: 0.333333333333333 = 1/3 -> finite: 0.4
+out: 0.25 = 1/4 -> finite: 0.3
+out: 0.166666666666667 = 1/6 -> finite: 0.2
+out: 0.2 = 1/5 -> infinite (factor 5 of q has no common divisor with base 12)
+out:
+out: Base 16, eps = 1e-12:
+out: 0.6875 = 11/16 -> finite: 0.B
+out: 0.1 = 1/10 -> infinite (factor 5 of q has no common divisor with base 16)
+out:
+out: Base 10, eps = 1e-12:
+out: 0.33333 = 33333/100000 -> finite: 0.33333
+out:
+out: Base 10, eps = 0.001:
+out: 0.33333 = 1/3 -> infinite (factor 3 of q has no common divisor with base 10)
+out:
+out: Errors:
+out:
+out: Base 10, eps = 1e-12:
+out: 0.5 = 1/2 -> finite: 0.5
+out: Error: 1.5: the number is not in (0; 1)
+out: Error: -0.25: the number is not in (0; 1)
+out: Error: 0: the number is not in (0; 1)
+out: Error: 1: the number is not in (0; 1)
+out: Error: 1e-13: the number is not in (0; 1)
+out: Error: inf: the number is not in (0; 1)
+out: Error: nan: the number is not in (0; 1)
+out:
+out: Base 10, eps = 0:
+out: Error: eps must be greater than 0 and less than 1
+out:
+out: Base 1, eps = 1e-12:
+out: Error: base must be from 2 to 36
+out:
+out: Base 37, eps = 1e-12:
+out: Error: base must be from 2 to 36
+out:
+out: Base 10, eps = 1e-12:
+out: Error: count of numbers must be 1 or more
+code: 0
+
+# ============================================================
+# Обычные числа
+# ============================================================
+
+name: десятичная: 1/2, 1/4, 1/10, 1/8 конечны
+args: 1e-12 10 0.5 0.25 0.1 0.125
+out: 0.5 = 1/2 -> finite: 0.5
+out: 0.25 = 1/4 -> finite: 0.25
+out: 0.1 = 1/10 -> finite: 0.1
+out: 0.125 = 1/8 -> finite: 0.125
+code: 0
+
+name: десятичная: 1/3, 1/7, 1/12 бесконечны
+args: 1e-12 10 0.3333333333333333 0.14285714285714285 0.08333333333333333
+out: 0.333333333333333 = 1/3 -> infinite (factor 3 of q has no common divisor with base 10)
+out: 0.142857142857143 = 1/7 -> infinite (factor 7 of q has no common divisor with base 10)
+out: 0.0833333333333333 = 1/12 -> infinite (factor 3 of q has no common divisor with base 10)
+code: 0
+
+name: двоичная: конечны только знаменатели 2^k
+args: 1e-12 2 0.5 0.75 0.0625 0.1
+out: 0.5 = 1/2 -> finite: 0.1
+out: 0.75 = 3/4 -> finite: 0.11
+out: 0.0625 = 1/16 -> finite: 0.0001
+out: 0.1 = 1/10 -> infinite (factor 5 of q has no common divisor with base 2)
+code: 0
+
+name: двоичная: 1/1024 - десять цифр
+args: 1e-12 2 0.0009765625
+out: 0.0009765625 = 1/1024 -> finite: 0.0000000001
+code: 0
+
+name: двоичная: 1/15 - лишний множитель составной (15)
+args: 1e-12 2 0.06666666666666667
+out: 0.0666666666666667 = 1/15 -> infinite (factor 15 of q has no common divisor with base 2)
+code: 0
+
+name: троичная: 1/3 и 2/9 конечны, 1/2 - нет
+args: 1e-12 3 0.3333333333333333 0.2222222222222222 0.5
+out: 0.333333333333333 = 1/3 -> finite: 0.1
+out: 0.222222222222222 = 2/9 -> finite: 0.02
+out: 0.5 = 1/2 -> infinite (factor 2 of q has no common divisor with base 3)
+code: 0
+
+name: основание 6: 1/6, 1/9, 1/4 конечны
+args: 1e-12 6 0.16666666666666666 0.1111111111111111 0.25
+out: 0.166666666666667 = 1/6 -> finite: 0.1
+out: 0.111111111111111 = 1/9 -> finite: 0.04
+out: 0.25 = 1/4 -> finite: 0.13
+code: 0
+
+name: основание 7: 1/7 = 0.1, 1/2 бесконечна
+args: 1e-12 7 0.14285714285714285 0.5
+out: 0.142857142857143 = 1/7 -> finite: 0.1
+out: 0.5 = 1/2 -> infinite (factor 2 of q has no common divisor with base 7)
+code: 0
+
+name: основание 12: 1/3, 1/4 конечны, 1/5 - нет
+args: 1e-12 12 0.3333333333333333 0.25 0.2
+out: 0.333333333333333 = 1/3 -> finite: 0.4
+out: 0.25 = 1/4 -> finite: 0.3
+out: 0.2 = 1/5 -> infinite (factor 5 of q has no common divisor with base 12)
+code: 0
+
+name: основание 16: цифры-буквы, 11/16 = 0.B
+args: 1e-12 16 0.6875 0.1
+out: 0.6875 = 11/16 -> finite: 0.B
+out: 0.1 = 1/10 -> infinite (factor 5 of q has no common divisor with base 16)
+code: 0
+
+name: основание 36: 1/2 = 0.I, 1/32
+args: 1e-12 36 0.5 0.03125 0.25
+out: 0.5 = 1/2 -> finite: 0.I
+out: 0.03125 = 1/32 -> finite: 0.14I
+out: 0.25 = 1/4 -> finite: 0.9
+code: 0
+
+name: десятичные дроби до 5 знаков с eps = 1e-12
+args: 1e-12 10 0.12345 0.99999 0.00001 0.375
+out: 0.12345 = 2469/20000 -> finite: 0.12345
+out: 0.99999 = 99999/100000 -> finite: 0.99999
+out: 1e-05 = 1/100000 -> finite: 0.00001
+out: 0.375 = 3/8 -> finite: 0.375
+code: 0
+
+name: та же 0.12345 в двоичной - бесконечна
+args: 1e-12 2 0.12345
+out: 0.12345 = 2469/20000 -> infinite (factor 625 of q has no common divisor with base 2)
+code: 0
+
+name: маленькое число 1e-11 (больше eps)
+args: 1e-12 10 1e-11
+out: 1e-11 = 1/100000000000 -> finite: 0.00000000001
+code: 0
+
+name: запись чисел .5, 5e-1, 2.5E-1
+args: 1e-12 10 .5 5e-1 2.5E-1
+out: 0.5 = 1/2 -> finite: 0.5
+out: 0.5 = 1/2 -> finite: 0.5
+out: 0.25 = 1/4 -> finite: 0.25
+code: 0
+
+name: одно и то же число дважды
+args: 1e-12 10 0.2 0.2
+out: 0.2 = 1/5 -> finite: 0.2
+out: 0.2 = 1/5 -> finite: 0.2
+code: 0
+
+# ============================================================
+# Роль eps
+# ============================================================
+
+name: 0.33333 с eps = 1e-12 - это 33333/100000, конечна
+args: 1e-12 10 0.33333
+out: 0.33333 = 33333/100000 -> finite: 0.33333
+code: 0
+
+name: 0.33333 с eps = 1e-3 - это уже 1/3, бесконечна
+args: 1e-3 10 0.33333
+out: 0.33333 = 1/3 -> infinite (factor 3 of q has no common divisor with base 10)
+code: 0
+
+name: 0.333333 с eps = 1e-9 - eps велик: находится 333332/999997
+args: 1e-9 10 0.333333
+out: 0.333333 = 333332/999997 -> infinite (factor 999997 of q has no common divisor with base 10)
+code: 0
+
+name: 0.333333 с eps = 1e-13 - снова десятичная дробь
+args: 1e-13 10 0.333333
+out: 0.333333 = 333333/1000000 -> finite: 0.333333
+code: 0
+
+name: грубый eps = 0.1: 0.3 -> 1/3
+args: 0.1 10 0.3
+out: 0.3 = 1/3 -> infinite (factor 3 of q has no common divisor with base 10)
+code: 0
+
+name: eps = 1e-300: 0.1 все равно 1/10 (разность в double равна 0)
+args: 1e-300 10 0.1 0.7
+out: 0.1 = 1/10 -> finite: 0.1
+out: 0.7 = 7/10 -> finite: 0.7
+code: 0
+
+# ============================================================
+# Ошибки отдельных чисел: остальные числа все равно обработаны, код 1
+# ============================================================
+
+name: числа вне (0; 1)
+args: 1e-12 10 0.5 1.5 -0.25 0 1 -0
+out: 0.5 = 1/2 -> finite: 0.5
+err: Error: 1.5: the number is not in (0; 1)
+err: Error: -0.25: the number is not in (0; 1)
+err: Error: 0: the number is not in (0; 1)
+err: Error: 1: the number is not in (0; 1)
+err: Error: -0: the number is not in (0; 1)
+code: 1
+
+name: почти 0 и почти 1 (с учетом eps)
+args: 1e-12 10 1e-13 0.999999999999 0.5
+out: 0.5 = 1/2 -> finite: 0.5
+err: Error: 1e-13: the number is not in (0; 1)
+err: Error: 0.999999999999: the number is not in (0; 1)
+code: 1
+
+name: inf и nan
+args: 1e-12 10 inf nan -inf
+err: Error: inf: the number is not in (0; 1)
+err: Error: nan: the number is not in (0; 1)
+err: Error: -inf: the number is not in (0; 1)
+code: 1
+
+name: слишком маленькое число: знаменатель 10^20 не помещается в long long
+args: 1e-25 10 1e-20 0.5
+out: 0.5 = 1/2 -> finite: 0.5
+err: Error: 1e-20: can not find p/q, q would be too big
+code: 1
+
+name: не числа
+args: 1e-12 10 abc 0.5x " 0.5" "" 0.5
+out: 0.5 = 1/2 -> finite: 0.5
+err: Error: 'abc' is not a number
+err: Error: '0.5x' is not a number
+err: Error: ' 0.5' is not a number
+err: Error: '' is not a number
+code: 1
+
+name: 2 > 1 в конце списка
+args: 1e-12 10 0.5 2
+out: 0.5 = 1/2 -> finite: 0.5
+err: Error: 2: the number is not in (0; 1)
+code: 1
+
+# ============================================================
+# Ошибки eps и основания: ни одно число не обрабатывается
+# ============================================================
+
+name: eps = 0
+args: 0 10 0.5
+err: Error: eps '0' must be a number greater than 0 and less than 1
+code: 1
+
+name: eps < 0
+args: -1e-9 10 0.5
+err: Error: eps '-1e-9' must be a number greater than 0 and less than 1
+code: 1
+
+name: eps = 1
+args: 1 10 0.5
+err: Error: eps '1' must be a number greater than 0 and less than 1
+code: 1
+
+name: eps не число
+args: abc 10 0.5
+err: Error: eps 'abc' must be a number greater than 0 and less than 1
+code: 1
+
+name: eps = nan
+args: nan 10 0.5
+err: Error: eps 'nan' must be a number greater than 0 and less than 1
+code: 1
+
+name: eps = inf
+args: inf 10 0.5
+err: Error: eps 'inf' must be a number greater than 0 and less than 1
+code: 1
+
+name: основание 1
+args: 1e-12 1 0.5
+err: Error: base '1' must be a number from 2 to 36
+code: 1
+
+name: основание 0
+args: 1e-12 0 0.5
+err: Error: base '0' must be a number from 2 to 36
+code: 1
+
+name: основание 37
+args: 1e-12 37 0.5
+err: Error: base '37' must be a number from 2 to 36
+code: 1
+
+name: основание отрицательное
+args: 1e-12 -2 0.5
+err: Error: base '-2' must be a number from 2 to 36
+code: 1
+
+name: основание дробное
+args: 1e-12 2.5 0.5
+err: Error: base '2.5' must be a number from 2 to 36
+code: 1
+
+name: основание буквами
+args: 1e-12 ten 0.5
+err: Error: base 'ten' must be a number from 2 to 36
+code: 1
+
+name: огромное основание
+args: 1e-12 100000000000000000000 0.5
+err: Error: base '100000000000000000000' must be a number from 2 to 36
+code: 1
+
+name: основание пустое
+args: 1e-12 "" 0.5
+err: Error: base '' must be a number from 2 to 36
+code: 1
+
+# ============================================================
+# Мало аргументов
+# ============================================================
+
+name: только eps
+args: 1e-12
+err: Usage: lab2_task9                          (demo)
+err:        lab2_task9 <eps> <base> <x1> [x2 ...]
+code: 1
+
+name: eps и основание, чисел нет
+args: 1e-12 10
+err: Usage: lab2_task9                          (demo)
+err:        lab2_task9 <eps> <base> <x1> [x2 ...]
+code: 1
