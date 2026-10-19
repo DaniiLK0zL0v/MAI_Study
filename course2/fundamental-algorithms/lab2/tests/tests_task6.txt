@@ -1,0 +1,368 @@
+# Тесты для задания 6 (программа lab2_task6)
+#
+# Как запустить:  Linux:   bash run_tests.sh 6              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 6   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел
+#   input: строка стандартного ввода (несколько строк input - несколько строк ввода)
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Аргументы программы: <флаг> [основание]  - флаг без %: Ro, Zr, Cv, CV; значения читаются из
+# стандартного ввода через overfscanf(stdin, ...), пока читаются.
+# Демонстрации нужен файл tests/data/task6_input.txt (программа запускается из папки лабораторной).
+# Проверка: значения записаны так, как их печатает задание 5 (эталон на Python), и прочитаны обратно;
+# стандартные флаги сверены со стандартными sscanf/fscanf на 100000 случайных форматов и строк.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab2_task6
+
+# ============================================================
+# Демонстрация (без аргументов): oversscanf на строках, overfscanf на файле
+# ============================================================
+
+name: демонстрация - все примеры
+args:
+out: oversscanf, new flags:
+out:   "MCMXCIV" %Ro -> 1994  (returned 1)
+out:   "  XIV -XL N" %Ro %Ro %Ro -> 14 -40 0  (returned 3)
+out:   "MMMCMXCIX" %Ro -> 3999  (returned 1)
+out:   "010011" %Zr -> 10  (returned 1)
+out:   "11 011 0011 1011" %Zr %Zr %Zr -> 1 2 3  (returned 3)
+out:   same with %*Zr %*Zr %*Zr %Zr -> 4  (returned 1)
+out:   "01" %Zr -> 0  (returned 1)
+out:   UINT_MAX in Zeckendorf %Zr -> 4294967295  (returned 1)
+out:   "ff" %Cv 16 -> 255  (returned 1)
+out:   "FF" %CV 16 -> 255  (returned 1)
+out:   "-1010 zz" %Cv 2, %Cv 36 -> -10 1295  (returned 2)
+out:   "123" %Cv base 99 -> 10: 123  (returned 1)
+out:   "ffz" %Cv 16 -> 255 (stops before z)  (returned 1)
+out:
+out: oversscanf, new and standard flags together:
+out:   year %Ro: %d %lf %15s -> 2024 42 3.5 "hello"  (returned 4)
+out:   %Ro,%i%n on "XII,0x1F rest" -> 12 31, %n = 8  (returned 2)
+out:   %15[a-z]%*d %Ro on "abc123 XX" -> "abc" 20  (returned 2)
+out:   " %2c%Ro" on "  xyMCM" -> "xy" 1900  (returned 2)
+out:   %lld %hu %d%% -> -9000000000 65535 50  (returned 3)
+out:
+out: Stops and EOF:
+out:   "XIV abc" %Ro %Ro -> 14 -1  (returned 1: abc is not Roman)
+out:   "xiv" %Ro -> -1  (returned 0: small letters are not Roman)
+out:   "FF" %Cv 16 -> -1  (returned 0: %Cv needs small letters)
+out:   "80000000" %Cv 16 -> -1  (returned 0: more than INT_MAX)
+out:   "0100" %Zr -> 777  (returned 0: no 1 at the end)
+out:   "" %Ro -> -1  (returned -1 = EOF)
+out:   "   " %d -> returned -1 = EOF
+out:   "12" %d %Ro -> 12  (returned 1: input ended after one value)
+out:   wrong format %y -> returned -1
+out:   oversscanf(NULL, ...) -> returned -1
+out:
+out: overfscanf from tests/data/task6_input.txt:
+out:   %31s %Ro %Zr %Cv 16 %CV 36 -> "Daniil" 2026 10 255 1295  (returned 5)
+out:   %31s %Ro -> "Anna" 14
+out:   %31s %Ro -> "Boris" 1994
+out:   last call returned -1 (EOF = end of file)
+code: 0
+
+# ============================================================
+# %Ro - римские числа
+# ============================================================
+
+name: одно число
+args: Ro
+input: MCMXCIV
+out: %Ro: 1994
+out: values read: 1
+code: 0
+
+name: несколько чисел через пробелы и строки
+args: Ro
+input: I IV IX XIV
+input: XL  XC
+input: CD CM MMXXIV
+out: %Ro: 1
+out: %Ro: 4
+out: %Ro: 9
+out: %Ro: 14
+out: %Ro: 40
+out: %Ro: 90
+out: %Ro: 400
+out: %Ro: 900
+out: %Ro: 2024
+out: values read: 9
+code: 0
+
+name: 3999 и 3888 - самые длинные
+args: Ro
+input: MMMCMXCIX MMMDCCCLXXXVIII
+out: %Ro: 3999
+out: %Ro: 3888
+out: values read: 2
+code: 0
+
+name: отрицательные и N = 0
+args: Ro
+input: -XIV N -MMMCMXCIX
+out: %Ro: -14
+out: %Ro: 0
+out: %Ro: -3999
+out: values read: 3
+code: 0
+
+name: пустой ввод - ничего не прочитано
+args: Ro
+out: values read: 0
+code: 0
+
+name: маленькие буквы не римские - остановка
+args: Ro
+input: XIV xiv
+out: %Ro: 14
+out: values read: 1
+err: Error: the input does not match %Ro
+code: 1
+
+name: чужое слово после чисел - остановка
+args: Ro
+input: X V abc I
+out: %Ro: 10
+out: %Ro: 5
+out: values read: 2
+err: Error: the input does not match %Ro
+code: 1
+
+name: 3000 букв M - 3000000: проверки ввода по условию не требуется
+args: Ro
+input: MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+out: %Ro: 3000000
+out: values read: 1
+code: 0
+
+# ============================================================
+# %Zr - цекендорфово представление
+# ============================================================
+
+name: 10 = 8 + 2
+args: Zr
+input: 010011
+out: %Zr: 10
+out: values read: 1
+code: 0
+
+name: малые числа
+args: Zr
+input: 11 011 0011 1011 00011 10011 01011
+out: %Zr: 1
+out: %Zr: 2
+out: %Zr: 3
+out: %Zr: 4
+out: %Zr: 5
+out: %Zr: 6
+out: %Zr: 7
+out: values read: 7
+code: 0
+
+name: 0 записывается как 01
+args: Zr
+input: 01 11 01
+out: %Zr: 0
+out: %Zr: 1
+out: %Zr: 0
+out: values read: 3
+code: 0
+
+name: 100 = 89 + 8 + 3
+args: Zr
+input: 00101000011
+out: %Zr: 100
+out: values read: 1
+code: 0
+
+name: UINT_MAX
+args: Zr
+input: 00100100100010000000100010100010101000010001011
+out: %Zr: 4294967295
+out: values read: 1
+code: 0
+
+name: коды без пробелов между ними: конец - две единицы
+args: Zr
+input: 0100111101011
+out: %Zr: 10
+out: %Zr: 1
+out: %Zr: 7
+out: values read: 3
+code: 0
+
+name: нет единицы в конце - остановка
+args: Zr
+input: 11 0100
+out: %Zr: 1
+out: values read: 1
+err: Error: the input does not match %Zr
+code: 1
+
+name: больше UINT_MAX - остановка
+args: Zr
+input: 000000000000000000000000000000000000000000000000000000011
+out: values read: 0
+err: Error: the input does not match %Zr
+code: 1
+
+name: не цифры 0/1 - остановка
+args: Zr
+input: 011 abc
+out: %Zr: 2
+out: values read: 1
+err: Error: the input does not match %Zr
+code: 1
+
+# ============================================================
+# %Cv, %CV - число в системе с основанием
+# ============================================================
+
+name: 16, маленькие буквы
+args: Cv 16
+input: ff -ff 7fffffff -80000000 0
+out: %Cv: 255
+out: %Cv: -255
+out: %Cv: 2147483647
+out: %Cv: -2147483648
+out: %Cv: 0
+out: values read: 5
+code: 0
+
+name: 16, большие буквы
+args: CV 16
+input: FF BEEF
+out: %CV: 255
+out: %CV: 48879
+out: values read: 2
+code: 0
+
+name: 2
+args: Cv 2
+input: 1010 -1010 0
+out: %Cv: 10
+out: %Cv: -10
+out: %Cv: 0
+out: values read: 3
+code: 0
+
+name: 36
+args: CV 36
+input: Z ZZ 10
+out: %CV: 35
+out: %CV: 1295
+out: %CV: 36
+out: values read: 3
+code: 0
+
+name: основание 1 -> 10
+args: Cv 1
+input: 123 -45
+out: %Cv: 123
+out: %Cv: -45
+out: values read: 2
+code: 0
+
+name: основание 99 -> 10
+args: CV 99
+input: 789
+out: %CV: 789
+out: values read: 1
+code: 0
+
+name: основание отрицательное -> 10
+args: Cv -16
+input: 16
+out: %Cv: 16
+out: values read: 1
+code: 0
+
+name: %Cv и большие буквы - остановка
+args: Cv 16
+input: ff FF
+out: %Cv: 255
+out: values read: 1
+err: Error: the input does not match %Cv
+code: 1
+
+name: %CV и маленькие буквы - остановка
+args: CV 16
+input: ff
+out: values read: 0
+err: Error: the input does not match %CV
+code: 1
+
+name: цифра не этой системы: 8 в восьмеричной - остановка на ней
+args: Cv 8
+input: 17 8
+out: %Cv: 15
+out: values read: 1
+err: Error: the input does not match %Cv
+code: 1
+
+name: больше INT_MAX - остановка
+args: Cv 16
+input: 80000000
+out: values read: 0
+err: Error: the input does not match %Cv
+code: 1
+
+name: число и сразу буква не этой системы: 12g в 16 - читается 12, потом остановка
+args: Cv 16
+input: 12g
+out: %Cv: 18
+out: values read: 1
+err: Error: the input does not match %Cv
+code: 1
+
+# ============================================================
+# Ошибки командной строки
+# ============================================================
+
+name: неизвестный флаг
+args: Xx
+err: Usage: lab2_task6                 (demo)
+err:        lab2_task6 Ro | Zr         (values from standard input)
+err:        lab2_task6 Cv | CV <base>
+code: 1
+
+name: флаг задания 5, которого нет в задании 6
+args: to
+err: Usage: lab2_task6                 (demo)
+err:        lab2_task6 Ro | Zr         (values from standard input)
+err:        lab2_task6 Cv | CV <base>
+code: 1
+
+name: Cv без основания
+args: Cv
+err: Error: flag Cv needs a base
+code: 1
+
+name: Ro с основанием
+args: Ro 10
+err: Error: flag Ro does not need a base
+code: 1
+
+name: основание не число
+args: Cv abc
+err: Error: base 'abc' must be a whole number (int)
+code: 1
+
+name: основание больше INT_MAX
+args: Cv 99999999999
+err: Error: base '99999999999' must be a whole number (int)
+code: 1
+
+name: много аргументов
+args: Cv 16 1
+err: Usage: lab2_task6                 (demo)
+err:        lab2_task6 Ro | Zr         (values from standard input)
+err:        lab2_task6 Cv | CV <base>
+code: 1
