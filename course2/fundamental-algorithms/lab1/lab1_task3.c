@@ -34,8 +34,8 @@ typedef struct {
 } roots;
 
 /* Строка -> double: конечное число без мусора */
-status_code parse_double(const char *str, double *chislo) {
-    if (str == NULL || chislo == NULL) {
+status_code parse_double(const char *str, double *number) {
+    if (str == NULL || number == NULL) {
         return INVALID_ARGS;
     }
     /* strtod сам пропускает пробелы в начале, а нам " 7" не подходит */
@@ -55,22 +55,22 @@ status_code parse_double(const char *str, double *chislo) {
     if (isinf(val) || isnan(val)) {
         return OUT_OF_RANGE;
     }
-    *chislo = val;
+    *number = val;
     return OK;
 }
 
 /* Строка -> long long. Знак + или - (можно без него), потом только цифры.
    Разбираем сами, переполнение проверяем до умножения.
    long long, а не long: long на Windows 4 байта, на Linux 8 - результаты различались бы */
-status_code parse_long_long(const char *str, long long *chislo) {
-    if (str == NULL || chislo == NULL) {
+status_code parse_long_long(const char *str, long long *number) {
+    if (str == NULL || number == NULL) {
         return INVALID_ARGS;
     }
-    /* i - откуда начинаются цифры, otric - был ли минус (1 - да) */
+    /* i - откуда начинаются цифры, negative - был ли минус (1 - да) */
     size_t i = 0;
-    int otric = 0;
+    int negative = 0;
     if (str[0] == '-' || str[0] == '+') {
-        otric = (str[0] == '-');
+        negative = (str[0] == '-');
         i = 1;
     }
     /* пустая строка или один знак - не число */
@@ -85,32 +85,32 @@ status_code parse_long_long(const char *str, long long *chislo) {
     }
 
     /* Число собираем без знака (модуль), знак ставим в конце.
-       predel - самый большой модуль, который влезет в long long:
+       limit - самый большой модуль, который влезет в long long:
        LLONG_MAX для положительных, LLONG_MAX + 1 для отрицательных (модуль LLONG_MIN).
        LLONG_MAX + 1 в long long не влезает, поэтому копим в unsigned long long */
-    unsigned long long predel = otric ? (unsigned long long)LLONG_MAX + 1 : (unsigned long long)LLONG_MAX;
-    unsigned long long modul = 0;
-    /* "123" -> 1 -> 12 -> 123: каждый раз modul * 10 + цифра */
+    unsigned long long limit = negative ? (unsigned long long)LLONG_MAX + 1 : (unsigned long long)LLONG_MAX;
+    unsigned long long magnitude = 0;
+    /* "123" -> 1 -> 12 -> 123: каждый раз magnitude * 10 + цифра */
     for (; str[i] != '\0'; i++) {
-        unsigned long long cifra = (unsigned long long)(str[i] - '0');   /* '7' - '0' = 7 */
+        unsigned long long digit = (unsigned long long)(str[i] - '0');   /* '7' - '0' = 7 */
         /* проверяем ДО умножения, иначе переполнение уже случится и его не заметить.
-           modul * 10 + cifra > predel  <=>  modul > (predel - cifra) / 10 */
-        if (modul > (predel - cifra) / 10) {
+           magnitude * 10 + digit > limit  <=>  magnitude > (limit - digit) / 10 */
+        if (magnitude > (limit - digit) / 10) {
             return OUT_OF_RANGE;
         }
-        modul = modul * 10 + cifra;
+        magnitude = magnitude * 10 + digit;
     }
 
     /* Ставим знак: без минуса - модуль и есть ответ.
-       Минус и модуль ровно predel - это LLONG_MIN: -(long long)modul не сработает,
-       потому что modul сначала переводится в long long, а туда он не влезает.
+       Минус и модуль ровно limit - это LLONG_MIN: -(long long)magnitude не сработает,
+       потому что magnitude сначала переводится в long long, а туда он не влезает.
        Иначе модуль влезает в long long, переводим и меняем знак */
-    if (!otric) {
-        *chislo = (long long)modul;
-    } else if (modul == predel) {
-        *chislo = LLONG_MIN;   /* -(LLONG_MAX + 1) в long long не посчитать */
+    if (!negative) {
+        *number = (long long)magnitude;
+    } else if (magnitude == limit) {
+        *number = LLONG_MIN;   /* -(LLONG_MAX + 1) в long long не посчитать */
     } else {
-        *chislo = -(long long)modul;
+        *number = -(long long)magnitude;
     }
     return OK;
 }
@@ -135,98 +135,98 @@ status_code parse_flag(const char *arg, char *flag) {
    Все сравнения вещественных - с точностью eps: |u - v| < eps значит u = v.
    Обычное == для double не годится: из-за округления 0.1 + 0.2 != 0.3 */
 status_code solve_quadratic(const double a, const double b, const double c,
-                            const double eps, roots *otvet) {
-    if (otvet == NULL || eps <= 0) {
+                            const double eps, roots *answer) {
+    if (answer == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
     /* обнуляем все поля, чтобы в неиспользуемых не лежал мусор */
-    otvet->x1 = otvet->x2 = otvet->re = otvet->im = 0.0;
+    answer->x1 = answer->x2 = answer->re = answer->im = 0.0;
 
     /* a = 0 - уравнение линейное: b*x + c = 0 */
     if (fabs(a) < eps) {
         /* b = 0 тоже: остается c = 0. Верно при любом x, если c = 0, и никогда - иначе */
         if (fabs(b) < eps) {
-            otvet->type = (fabs(c) < eps) ? ROOTS_INFINITE : ROOTS_NONE;
+            answer->type = (fabs(c) < eps) ? ROOTS_INFINITE : ROOTS_NONE;
         } else {
-            otvet->type = ROOTS_ONE;
-            otvet->x1 = -c / b;
+            answer->type = ROOTS_ONE;
+            answer->x1 = -c / b;
         }
     } else {
         /* обычное квадратное уравнение: число корней по знаку дискриминанта */
         double d = b * b - 4 * a * c;   /* дискриминант */
         if (fabs(d) < eps) {
-            otvet->type = ROOTS_ONE;
-            otvet->x1 = -b / (2 * a);
+            answer->type = ROOTS_ONE;
+            answer->x1 = -b / (2 * a);
         } else if (d > 0) {             /* |d| >= eps уже знаем, так что d > 0 значит d >= eps */
-            double koren = sqrt(d);
-            otvet->type = ROOTS_TWO;
-            otvet->x1 = (-b + koren) / (2 * a);
-            otvet->x2 = (-b - koren) / (2 * a);
+            double sqrt_d = sqrt(d);
+            answer->type = ROOTS_TWO;
+            answer->x1 = (-b + sqrt_d) / (2 * a);
+            answer->x2 = (-b - sqrt_d) / (2 * a);
         } else {
             /* d < 0: корни комплексные, x = -b/(2a) +- sqrt(-d)/(2a) * i.
                fabs(a) - чтобы мнимая часть была положительной, знак +- печатаем сами */
-            otvet->type = ROOTS_COMPLEX;
-            otvet->re = -b / (2 * a);
-            otvet->im = sqrt(-d) / (2 * fabs(a));
+            answer->type = ROOTS_COMPLEX;
+            answer->re = -b / (2 * a);
+            answer->im = sqrt(-d) / (2 * fabs(a));
         }
     }
 
     /* число меньше eps по модулю - это 0. Заодно убираем "-0" (printf печатает его как "-0") */
-    if (fabs(otvet->x1) < eps) {
-        otvet->x1 = 0.0;
+    if (fabs(answer->x1) < eps) {
+        answer->x1 = 0.0;
     }
-    if (fabs(otvet->x2) < eps) {
-        otvet->x2 = 0.0;
+    if (fabs(answer->x2) < eps) {
+        answer->x2 = 0.0;
     }
-    if (fabs(otvet->re) < eps) {
-        otvet->re = 0.0;
+    if (fabs(answer->re) < eps) {
+        answer->re = 0.0;
     }
     return OK;
 }
 
 /* -q: все уникальные перестановки трех коэффициентов.
-   perest - массив [6][3] для ответа, kolvo - сколько уникальных получилось */
-status_code unique_permutations(const double koef[3], const double eps,
-                                double perest[6][3], int *kolvo) {
-    if (koef == NULL || perest == NULL || kolvo == NULL || eps <= 0) {
+   perms - массив [6][3] для ответа, count - сколько уникальных получилось */
+status_code unique_permutations(const double coefs[3], const double eps,
+                                double perms[6][3], int *count) {
+    if (coefs == NULL || perms == NULL || count == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
     /* все 6 способов расставить индексы 0, 1, 2.
-       Например {1, 2, 0}: a = koef[1], b = koef[2], c = koef[0] */
-    const int poryadok[6][3] = {
+       Например {1, 2, 0}: a = coefs[1], b = coefs[2], c = coefs[0] */
+    const int order[6][3] = {
         {0, 1, 2}, {0, 2, 1}, {1, 0, 2}, {1, 2, 0}, {2, 0, 1}, {2, 1, 0}
     };
 
-    *kolvo = 0;
+    *count = 0;
     for (int i = 0; i < 6; i++) {
-        double a = koef[poryadok[i][0]];
-        double b = koef[poryadok[i][1]];
-        double c = koef[poryadok[i][2]];
+        double a = coefs[order[i][0]];
+        double b = coefs[order[i][1]];
+        double c = coefs[order[i][2]];
 
         /* Проверяем, не было ли уже такой же тройки (с точностью eps).
            Повторы бывают, когда коэффициенты совпадают: у 1 1 2 всего 3 разные перестановки */
-        int uzhe_bylo = 0;
-        for (int j = 0; j < *kolvo; j++) {
-            if (fabs(perest[j][0] - a) < eps && fabs(perest[j][1] - b) < eps &&
-                fabs(perest[j][2] - c) < eps) {
-                uzhe_bylo = 1;
+        int seen = 0;
+        for (int j = 0; j < *count; j++) {
+            if (fabs(perms[j][0] - a) < eps && fabs(perms[j][1] - b) < eps &&
+                fabs(perms[j][2] - c) < eps) {
+                seen = 1;
                 break;
             }
         }
         /* новая тройка - дописываем в конец ответа */
-        if (!uzhe_bylo) {
-            perest[*kolvo][0] = a;
-            perest[*kolvo][1] = b;
-            perest[*kolvo][2] = c;
-            (*kolvo)++;
+        if (!seen) {
+            perms[*count][0] = a;
+            perms[*count][1] = b;
+            perms[*count][2] = c;
+            (*count)++;
         }
     }
     return OK;
 }
 
-/* -m: кратно ли a числу b (оба не 0). rez = 1 - да, 0 - нет */
-status_code is_multiple(const long long a, const long long b, int *rez) {
-    if (rez == NULL) {
+/* -m: кратно ли a числу b (оба не 0). result = 1 - да, 0 - нет */
+status_code is_multiple(const long long a, const long long b, int *result) {
+    if (result == NULL) {
         return INVALID_ARGS;
     }
     if (a == 0 || b == 0) {
@@ -234,24 +234,24 @@ status_code is_multiple(const long long a, const long long b, int *rez) {
     }
     /* LLONG_MIN % -1 в C - неопределенное поведение (может упасть), а на +-1 делится все */
     if (b == 1 || b == -1) {
-        *rez = 1;
+        *result = 1;
         return OK;
     }
     /* остаток 0 - делится нацело. Сравнение дает 1 или 0 - его и кладем в ответ */
-    *rez = (a % b == 0);
+    *result = (a % b == 0);
     return OK;
 }
 
 /* -t: могут ли a, b, c быть сторонами прямоугольного треугольника.
-   rez = 1 - да, 0 - нет */
+   result = 1 - да, 0 - нет */
 status_code is_right_triangle(const double a, const double b, const double c,
-                              const double eps, int *rez) {
-    if (rez == NULL || eps <= 0) {
+                              const double eps, int *result) {
+    if (result == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
     /* стороны должны быть положительными (больше 0 с точностью eps) */
     if (a < eps || b < eps || c < eps) {
-        *rez = 0;
+        *result = 0;
         return OK;
     }
 
@@ -259,17 +259,17 @@ status_code is_right_triangle(const double a, const double b, const double c,
        проверяем все три варианта, так не нужно искать самую длинную.
        Результат || - 1 или 0, его и кладем в ответ */
     double aa = a * a, bb = b * b, cc = c * c;
-    *rez = fabs(aa + bb - cc) < eps || fabs(aa + cc - bb) < eps || fabs(bb + cc - aa) < eps;
+    *result = fabs(aa + bb - cc) < eps || fabs(aa + cc - bb) < eps || fabs(bb + cc - aa) < eps;
     return OK;
 }
 
 /* Печать корней одного уравнения. %g - печать double без лишних нулей: 2.5, а не 2.500000 */
-status_code print_roots(const double a, const double b, const double c, const roots *otvet) {
-    if (otvet == NULL) {
+status_code print_roots(const double a, const double b, const double c, const roots *answer) {
+    if (answer == NULL) {
         return INVALID_ARGS;
     }
     printf("%g*x^2 + %g*x + %g = 0:  ", a, b, c);
-    switch (otvet->type) {
+    switch (answer->type) {
         case ROOTS_NONE:
             printf("no roots\n");
             break;
@@ -277,13 +277,13 @@ status_code print_roots(const double a, const double b, const double c, const ro
             printf("any x is a root\n");
             break;
         case ROOTS_ONE:
-            printf("x = %g\n", otvet->x1);
+            printf("x = %g\n", answer->x1);
             break;
         case ROOTS_TWO:
-            printf("x1 = %g, x2 = %g\n", otvet->x1, otvet->x2);
+            printf("x1 = %g, x2 = %g\n", answer->x1, answer->x2);
             break;
         case ROOTS_COMPLEX:
-            printf("x1 = %g + %gi, x2 = %g - %gi\n", otvet->re, otvet->im, otvet->re, otvet->im);
+            printf("x1 = %g + %gi, x2 = %g - %gi\n", answer->re, answer->im, answer->re, answer->im);
             break;
         default:
             return INVALID_ARGS;   /* в type мусор */
@@ -307,9 +307,9 @@ int main(int argc, char *argv[]) {
 
     /* число аргументов зависит от флага: -m - два числа, -q и -t - четыре.
        В argc еще входят имя программы и сам флаг, отсюда 4 и 6 */
-    int nuzhno = (flag == 'm') ? 4 : 6;
-    if (argc != nuzhno) {
-        fprintf(stderr, "Error: flag -%c needs %d numbers\n", flag, nuzhno - 2);
+    int needed = (flag == 'm') ? 4 : 6;
+    if (argc != needed) {
+        fprintf(stderr, "Error: flag -%c needs %d numbers\n", flag, needed - 2);
         return 1;
     }
 
@@ -319,11 +319,11 @@ int main(int argc, char *argv[]) {
 
     if (flag == 'm') {
         /* читаем два целых: argv[2] в a, argv[3] в b.
-           kuda - адрес переменной, куда положить очередное число */
+           target - адрес переменной, куда положить очередное число */
         long long a = 0, b = 0;
         for (int i = 2; i <= 3; i++) {
-            long long *kuda = (i == 2) ? &a : &b;
-            status_code sc = parse_long_long(argv[i], kuda);
+            long long *target = (i == 2) ? &a : &b;
+            status_code sc = parse_long_long(argv[i], target);
             if (sc == INVALID_NUMBER) {
                 fprintf(stderr, "Error: '%s' is not an integer\n", argv[i]);
                 return 1;
@@ -333,8 +333,8 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        int rez = 0;
-        status_code sc = is_multiple(a, b, &rez);
+        int result = 0;
+        status_code sc = is_multiple(a, b, &result);
         if (sc == ZERO_NUMBER) {
             fprintf(stderr, "Error: numbers must not be 0\n");
             return 1;
@@ -342,15 +342,15 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Error: internal error\n");
             return 1;
         }
-        printf("%lld %s a multiple of %lld\n", a, rez ? "is" : "is not", b);
+        printf("%lld %s a multiple of %lld\n", a, result ? "is" : "is not", b);
         return 0;
     }
 
     /* для -q и -t: eps и три вещественных числа.
-       chisla[0] - eps, chisla[1..3] - три числа (argv[2..5]) */
-    double chisla[4];
+       numbers[0] - eps, numbers[1..3] - три числа (argv[2..5]) */
+    double numbers[4];
     for (int i = 0; i < 4; i++) {
-        status_code sc = parse_double(argv[i + 2], &chisla[i]);
+        status_code sc = parse_double(argv[i + 2], &numbers[i]);
         if (sc == INVALID_NUMBER) {
             fprintf(stderr, "Error: '%s' is not a number\n", argv[i + 2]);
             return 1;
@@ -359,29 +359,29 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
-    double eps = chisla[0];
+    double eps = numbers[0];
     if (eps <= 0) {
         fprintf(stderr, "Error: eps must be more than 0\n");
         return 1;
     }
 
     if (flag == 'q') {
-        /* &chisla[1] - адрес второго элемента: функция видит chisla[1..3]
+        /* &numbers[1] - адрес второго элемента: функция видит numbers[1..3]
            как массив из трех коэффициентов */
-        double perest[6][3];
-        int kolvo = 0;
-        status_code sc = unique_permutations(&chisla[1], eps, perest, &kolvo);
+        double perms[6][3];
+        int count = 0;
+        status_code sc = unique_permutations(&numbers[1], eps, perms, &count);
         if (sc != OK) {
             fprintf(stderr, "Error: internal error\n");
             return 1;
         }
         /* для каждой перестановки: решить уравнение и, если все хорошо, напечатать.
            Обе ошибки обрабатываем одним if после */
-        for (int i = 0; i < kolvo; i++) {
-            roots otvet;
-            sc = solve_quadratic(perest[i][0], perest[i][1], perest[i][2], eps, &otvet);
+        for (int i = 0; i < count; i++) {
+            roots answer;
+            sc = solve_quadratic(perms[i][0], perms[i][1], perms[i][2], eps, &answer);
             if (sc == OK) {
-                sc = print_roots(perest[i][0], perest[i][1], perest[i][2], &otvet);
+                sc = print_roots(perms[i][0], perms[i][1], perms[i][2], &answer);
             }
             if (sc != OK) {
                 fprintf(stderr, "Error: internal error\n");
@@ -389,14 +389,14 @@ int main(int argc, char *argv[]) {
             }
         }
     } else {
-        int rez = 0;
-        status_code sc = is_right_triangle(chisla[1], chisla[2], chisla[3], eps, &rez);
+        int result = 0;
+        status_code sc = is_right_triangle(numbers[1], numbers[2], numbers[3], eps, &result);
         if (sc != OK) {
             fprintf(stderr, "Error: internal error\n");
             return 1;
         }
-        printf("%g, %g, %g %s sides of a right triangle\n", chisla[1], chisla[2], chisla[3],
-               rez ? "can be" : "can not be");
+        printf("%g, %g, %g %s sides of a right triangle\n", numbers[1], numbers[2], numbers[3],
+               result ? "can be" : "can not be");
     }
     return 0;
 }

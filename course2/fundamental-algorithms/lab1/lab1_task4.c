@@ -50,31 +50,31 @@ status_code char_kind(const int ch, char_kind_t *kind) {
 }
 
 /* Флаг: '-' или '/', потом необязательная 'n', потом буква d, i, s или a.
-   deystvie - буква действия, s_n - была ли 'n' (1 - да) */
-status_code parse_flag(const char *arg, char *deystvie, int *s_n) {
-    if (arg == NULL || deystvie == NULL || s_n == NULL) {
+   action - буква действия, s_n - была ли 'n' (1 - да) */
+status_code parse_flag(const char *arg, char *action, int *s_n) {
+    if (arg == NULL || action == NULL || s_n == NULL) {
         return INVALID_ARGS;
     }
     if (arg[0] != '-' && arg[0] != '/') {
         return INVALID_FLAG;
     }
 
-    /* bukva - адрес символа после '-' или '/'. Если там 'n' - запоминаем это
-       и сдвигаем bukva на следующий символ (bukva++ - адрес следующего символа) */
-    const char *bukva = &arg[1];
+    /* letter - адрес символа после '-' или '/'. Если там 'n' - запоминаем это
+       и сдвигаем letter на следующий символ (letter++ - адрес следующего символа) */
+    const char *letter = &arg[1];
     *s_n = 0;
-    if (bukva[0] == 'n') {
+    if (letter[0] == 'n') {
         *s_n = 1;
-        bukva++;   /* пропускаем 'n' */
+        letter++;   /* пропускаем 'n' */
     }
     /* после буквы действия строка должна закончиться */
-    if (bukva[0] == '\0' || bukva[1] != '\0') {
+    if (letter[0] == '\0' || letter[1] != '\0') {
         return INVALID_FLAG;
     }
-    if (bukva[0] != 'd' && bukva[0] != 'i' && bukva[0] != 's' && bukva[0] != 'a') {
+    if (letter[0] != 'd' && letter[0] != 'i' && letter[0] != 's' && letter[0] != 'a') {
         return INVALID_FLAG;
     }
-    *deystvie = bukva[0];
+    *action = letter[0];
     return OK;
 }
 
@@ -86,27 +86,27 @@ status_code make_out_name(const char *in_path, char **out_path) {
     }
 
     /* ищем, где начинается имя файла: после последнего '/' или '\' */
-    size_t dlina = strlen(in_path);
-    size_t nachalo_imeni = 0;
-    for (size_t i = 0; i < dlina; i++) {
+    size_t length = strlen(in_path);
+    size_t name_start = 0;
+    for (size_t i = 0; i < length; i++) {
         if (in_path[i] == '/' || in_path[i] == '\\') {
-            nachalo_imeni = i + 1;
+            name_start = i + 1;
         }
     }
 
     /* +4 на "out_", +1 на '\0' */
     /* Пример: "dir/in.txt" - последний '/' под индексом 3, имя начинается с индекса 4.
-       Новое имя собираем из трех кусков: папка (первые nachalo_imeni символов),
+       Новое имя собираем из трех кусков: папка (первые name_start символов),
        "out_" и имя файла. memcpy копирует ровно n байт, strcpy - строку вместе с '\0' */
-    char *rez = malloc(dlina + 4 + 1);
-    if (rez == NULL) {
+    char *result = malloc(length + 4 + 1);
+    if (result == NULL) {
         return NO_MEMORY;
     }
-    memcpy(rez, in_path, nachalo_imeni);                     /* папка */
-    memcpy(rez + nachalo_imeni, "out_", 4);                  /* префикс */
-    strcpy(rez + nachalo_imeni + 4, in_path + nachalo_imeni); /* имя с '\0' */
+    memcpy(result, in_path, name_start);                     /* папка */
+    memcpy(result + name_start, "out_", 4);                  /* префикс */
+    strcpy(result + name_start + 4, in_path + name_start); /* имя с '\0' */
 
-    *out_path = rez;
+    *out_path = result;
     return OK;
 }
 
@@ -132,42 +132,42 @@ status_code remove_digits(FILE *in, FILE *out) {
     return ferror(in) ? READ_ERROR : OK;
 }
 
-/* -i и -s: для каждой строки записать количество символов вида kakie.
-   -i: kakie = KIND_LATIN (латинские буквы),
-   -s: kakie = KIND_OTHER (не буква, не цифра и не пробел) */
-status_code count_in_lines(FILE *in, FILE *out, const char_kind_t kakie) {
-    if (in == NULL || out == NULL || (kakie != KIND_LATIN && kakie != KIND_OTHER)) {
+/* -i и -s: для каждой строки записать количество символов вида which_kind.
+   -i: which_kind = KIND_LATIN (латинские буквы),
+   -s: which_kind = KIND_OTHER (не буква, не цифра и не пробел) */
+status_code count_in_lines(FILE *in, FILE *out, const char_kind_t which_kind) {
+    if (in == NULL || out == NULL || (which_kind != KIND_LATIN && which_kind != KIND_OTHER)) {
         return INVALID_ARGS;
     }
     int ch;
-    long long kolvo = 0;
-    int est_simvoly = 0;   /* были ли символы после последнего '\n' */
+    long long count = 0;
+    int has_chars = 0;   /* были ли символы после последнего '\n' */
 
     while ((ch = fgetc(in)) != EOF) {
         if (ch == '\n') {
             /* строка закончилась - пишем результат */
-            if (fprintf(out, "%lld\n", kolvo) < 0) {
+            if (fprintf(out, "%lld\n", count) < 0) {
                 return WRITE_ERROR;
             }
-            kolvo = 0;
-            est_simvoly = 0;
+            count = 0;
+            has_chars = 0;
             continue;
         }
-        est_simvoly = 1;
+        has_chars = 1;
         char_kind_t kind;
         if (char_kind(ch, &kind) != OK) {
             return INVALID_ARGS;
         }
-        if (kind == kakie) {
-            kolvo++;
+        if (kind == which_kind) {
+            count++;
         }
     }
     if (ferror(in)) {
         return READ_ERROR;
     }
     /* последняя строка без '\n' в конце файла */
-    if (est_simvoly) {
-        if (fprintf(out, "%lld\n", kolvo) < 0) {
+    if (has_chars) {
+        if (fprintf(out, "%lld\n", count) < 0) {
             return WRITE_ERROR;
         }
     }
@@ -186,17 +186,17 @@ status_code replace_with_hex(FILE *in, FILE *out) {
         if (char_kind(ch, &kind) != OK) {
             return INVALID_ARGS;
         }
-        /* zapisano - что вернула функция записи; меньше 0 - ошибка.
+        /* written - что вернула функция записи; меньше 0 - ошибка.
            fputc при ошибке вернет EOF (-1), fprintf - отрицательное число */
-        int zapisano;
+        int written;
         if (kind == KIND_DIGIT || ch == '\n') {
-            zapisano = fputc(ch, out);
+            written = fputc(ch, out);
         } else {
             /* fgetc возвращает байт как unsigned char, поэтому ch от 0 до 255.
                %02X - всегда 2 цифры: табуляция (код 9) -> "09", а не "9" */
-            zapisano = fprintf(out, "%02X", (unsigned int)ch);
+            written = fprintf(out, "%02X", (unsigned int)ch);
         }
-        if (zapisano < 0) {
+        if (written < 0) {
             return WRITE_ERROR;
         }
     }
@@ -212,17 +212,17 @@ status_code replace_with_hex(FILE *in, FILE *out) {
    _fullpath(NULL, ...) умеет выделить память сам, но так не делаем: эту память выделяет
    библиотека Windows внутри себя, и программа Dr. Memory (проверка утечек) ее не видит -
    считает ошибкой наш free. Со своим malloc все выделения видны и понятны */
-status_code full_path(const char *put, char **polny) {
-    if (put == NULL || polny == NULL) {
+status_code full_path(const char *path, char **full) {
+    if (path == NULL || full == NULL) {
         return INVALID_ARGS;
     }
-    for (size_t razmer = 260; razmer <= 65536; razmer *= 2) {
-        char *buf = (char *)malloc(razmer);
+    for (size_t size = 260; size <= 65536; size *= 2) {
+        char *buf = (char *)malloc(size);
         if (buf == NULL) {
             return NO_MEMORY;
         }
-        if (_fullpath(buf, put, razmer) != NULL) {
-            *polny = buf;   /* освобождает вызывающий */
+        if (_fullpath(buf, path, size) != NULL) {
+            *full = buf;   /* освобождает вызывающий */
             return OK;
         }
         free(buf);   /* не поместилось (или путь плохой) - пробуем буфер вдвое больше */
@@ -231,7 +231,7 @@ status_code full_path(const char *put, char **polny) {
 }
 #endif
 
-/* Ведут ли два пути к одному и тому же файлу на диске: *odinakovye = 1 - да, 0 - нет.
+/* Ведут ли два пути к одному и тому же файлу на диске: *equal = 1 - да, 0 - нет.
    Сравнивать строки (strcmp) мало: "in.txt", "./in.txt", "../lab1/in.txt" и полный путь -
    разные строки, но один файл. Если выходной файл совпадет с входным, fopen(..., "w")
    сотрет его раньше, чем мы успеем прочитать.
@@ -243,35 +243,35 @@ status_code full_path(const char *put, char **polny) {
      сравниваем без учета больших и маленьких букв (в Windows IN.TXT и in.txt - один файл).
    Если какой-то путь не существует (stat не смог), это не один файл: например, выходного
    файла еще нет - его создаст fopen. Если не существует входной, fopen потом сообщит об ошибке */
-status_code same_file(const char *put1, const char *put2, int *odinakovye) {
-    if (put1 == NULL || put2 == NULL || odinakovye == NULL) {
+status_code same_file(const char *path1, const char *path2, int *equal) {
+    if (path1 == NULL || path2 == NULL || equal == NULL) {
         return INVALID_ARGS;
     }
-    *odinakovye = 0;
+    *equal = 0;
 #ifdef _WIN32
     /* full_path - полные пути в нашей памяти (потом free). Путь неправильный (BAD_PATH) -
        считаем, что файлы разные: fopen дальше сам сообщит об ошибке */
-    char *polny1 = NULL;
-    char *polny2 = NULL;
-    status_code sc1 = full_path(put1, &polny1);
-    status_code sc2 = full_path(put2, &polny2);
+    char *full1 = NULL;
+    char *full2 = NULL;
+    status_code sc1 = full_path(path1, &full1);
+    status_code sc2 = full_path(path2, &full2);
     if (sc1 == NO_MEMORY || sc2 == NO_MEMORY) {
-        free(polny1);   /* free(NULL) ничего не делает - можно не проверять */
-        free(polny2);
+        free(full1);   /* free(NULL) ничего не делает - можно не проверять */
+        free(full2);
         return NO_MEMORY;
     }
-    if (sc1 == OK && sc2 == OK && _stricmp(polny1, polny2) == 0) {
-        *odinakovye = 1;
+    if (sc1 == OK && sc2 == OK && _stricmp(full1, full2) == 0) {
+        *equal = 1;
     }
-    free(polny1);
-    free(polny2);
+    free(full1);
+    free(full2);
 #else
     /* stat возвращает 0, если сведения о файле получены; иначе (файла нет) - не 0 */
-    struct stat sved1;
-    struct stat sved2;
-    if (stat(put1, &sved1) == 0 && stat(put2, &sved2) == 0 &&
-        sved1.st_dev == sved2.st_dev && sved1.st_ino == sved2.st_ino) {
-        *odinakovye = 1;
+    struct stat info1;
+    struct stat info2;
+    if (stat(path1, &info1) == 0 && stat(path2, &info2) == 0 &&
+        info1.st_dev == info2.st_dev && info1.st_ino == info2.st_ino) {
+        *equal = 1;
     }
 #endif
     return OK;
@@ -284,10 +284,10 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    /* deystvie - буква действия (d, i, s, a), s_n - была ли 'n' во флаге */
-    char deystvie = '\0';
+    /* action - буква действия (d, i, s, a), s_n - была ли 'n' во флаге */
+    char action = '\0';
     int s_n = 0;
-    if (parse_flag(argv[1], &deystvie, &s_n) != OK) {
+    if (parse_flag(argv[1], &action, &s_n) != OK) {
         fprintf(stderr, "Error: wrong flag '%s'\n", argv[1]);
         return 1;
     }
@@ -317,20 +317,20 @@ int main(int argc, char *argv[]) {
 
     /* если писать в тот же файл, он сотрется раньше, чем мы его прочитаем.
        same_file ловит и разные записи одного пути: "in.txt" и "./in.txt" */
-    int odinakovye = 0;
-    status_code sc_put = same_file(argv[2], out_name, &odinakovye);
-    if (sc_put == NO_MEMORY) {
+    int equal = 0;
+    status_code sc_path = same_file(argv[2], out_name, &equal);
+    if (sc_path == NO_MEMORY) {
         /* на Windows same_file выделяет память под полные пути */
         fprintf(stderr, "Error: not enough memory\n");
         free(out_path);
         return 1;
     }
-    if (sc_put != OK) {
+    if (sc_path != OK) {
         fprintf(stderr, "Error: internal error\n");   /* INVALID_ARGS: NULL-ов здесь не бывает */
         free(out_path);
         return 1;
     }
-    if (odinakovye) {
+    if (equal) {
         fprintf(stderr, "Error: input and output must be different files\n");
         free(out_path);
         return 1;
@@ -356,7 +356,7 @@ int main(int argc, char *argv[]) {
     status_code sc = OK;
     /* по букве действия вызываем нужную функцию; -i и -s - одна и та же функция,
        отличается только вид символов, которые считаем */
-    switch (deystvie) {
+    switch (action) {
         case 'd':
             sc = remove_digits(in, out);
             break;
@@ -380,28 +380,28 @@ int main(int argc, char *argv[]) {
         sc = WRITE_ERROR;
     }
 
-    /* по статусу печатаем итог; kod - код возврата программы (0 - успех, 1 - ошибка).
+    /* по статусу печатаем итог; exit_code - код возврата программы (0 - успех, 1 - ошибка).
        default ("internal error") - запасная ветка для статусов, которые здесь появиться
        не могут: INVALID_ARGS и INVALID_FLAG (main передает открытые файлы, флаг уже проверен).
        Пользователь это сообщение не увидит; если увидел - ошибка в самом коде программы */
-    int kod = 0;
+    int exit_code = 0;
     switch (sc) {
         case OK:
             printf("Done. Result is in '%s'\n", out_name);
             break;
         case READ_ERROR:
             fprintf(stderr, "Error: can not read file '%s'\n", argv[2]);
-            kod = 1;
+            exit_code = 1;
             break;
         case WRITE_ERROR:
             fprintf(stderr, "Error: can not write file '%s'\n", out_name);
-            kod = 1;
+            exit_code = 1;
             break;
         default:
             fprintf(stderr, "Error: internal error\n");
-            kod = 1;
+            exit_code = 1;
             break;
     }
     free(out_path);
-    return kod;
+    return exit_code;
 }

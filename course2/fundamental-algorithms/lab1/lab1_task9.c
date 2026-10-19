@@ -16,15 +16,15 @@ typedef enum {
 
 /* Строка -> int. Знак + или - (можно без него), потом только цифры.
    Разбираем сами, переполнение проверяем до умножения */
-status_code parse_int(const char *str, int *chislo) {
-    if (str == NULL || chislo == NULL) {
+status_code parse_int(const char *str, int *number) {
+    if (str == NULL || number == NULL) {
         return INVALID_ARGS;
     }
-    /* i - откуда начинаются цифры, otric - был ли минус (1 - да) */
+    /* i - откуда начинаются цифры, negative - был ли минус (1 - да) */
     size_t i = 0;
-    int otric = 0;
+    int negative = 0;
     if (str[0] == '-' || str[0] == '+') {
-        otric = (str[0] == '-');
+        negative = (str[0] == '-');
         i = 1;
     }
     if (str[i] == '\0') {
@@ -39,16 +39,16 @@ status_code parse_int(const char *str, int *chislo) {
 
     /* модуль копим в long long: для int это с запасом.
        Модуль INT_MIN на 1 больше INT_MAX */
-    long long predel = otric ? (long long)INT_MAX + 1 : (long long)INT_MAX;
-    long long modul = 0;
+    long long limit = negative ? (long long)INT_MAX + 1 : (long long)INT_MAX;
+    long long magnitude = 0;
     for (; str[i] != '\0'; i++) {
-        modul = modul * 10 + (str[i] - '0');
-        if (modul > predel) {
+        magnitude = magnitude * 10 + (str[i] - '0');
+        if (magnitude > limit) {
             return OUT_OF_RANGE;   /* проверяем после каждой цифры - long long не переполнится */
         }
     }
     /* модуль <= INT_MAX + 1, со знаком минус это >= INT_MIN - в int помещается */
-    *chislo = (int)(otric ? -modul : modul);
+    *number = (int)(negative ? -magnitude : magnitude);
     return OK;
 }
 
@@ -76,25 +76,25 @@ status_code gen_init(generator *gen, const unsigned long long seed) {
 
 /* Следующее число от 0 до 2^32 - 1. Берем старшие 32 бита:
    у младших битов такого генератора маленький период */
-status_code gen_next(generator *gen, unsigned long long *rez) {
-    if (gen == NULL || rez == NULL) {
+status_code gen_next(generator *gen, unsigned long long *result) {
+    if (gen == NULL || result == NULL) {
         return INVALID_ARGS;
     }
     gen->state = gen->state * GEN_A + GEN_C;
     /* >> 32 - сдвиг вправо на 32 бита: остаются старшие 32 бита из 64 */
-    *rez = gen->state >> 32;
+    *result = gen->state >> 32;
     return OK;
 }
 
 /* Случайное целое в [a, b].
    Склеиваем два 32-битных числа в одно 64-битное: длина диапазона до 2^32,
-   и остаток r % dlina почти не дает перекоса (с одним 32-битным числом
+   и остаток r % length почти не дает перекоса (с одним 32-битным числом
    при огромном диапазоне некоторые значения выпадали бы вдвое чаще) */
-status_code random_in_range(generator *gen, const int a, const int b, int *rez) {
-    if (gen == NULL || rez == NULL || a > b) {
+status_code random_in_range(generator *gen, const int a, const int b, int *result) {
+    if (gen == NULL || result == NULL || a > b) {
         return INVALID_ARGS;
     }
-    unsigned long long dlina = (unsigned long long)((long long)b - a + 1);   /* до 2^32 */
+    unsigned long long length = (unsigned long long)((long long)b - a + 1);   /* до 2^32 */
     unsigned long long hi = 0, lo = 0;
     status_code sc = gen_next(gen, &hi);
     if (sc == OK) {
@@ -104,9 +104,9 @@ status_code random_in_range(generator *gen, const int a, const int b, int *rez) 
         return sc;
     }
     /* hi << 32 сдвигает hi в старшую половину, | вписывает lo в младшую.
-       r % dlina - число от 0 до dlina - 1, прибавляем a - получаем число от a до b */
+       r % length - число от 0 до length - 1, прибавляем a - получаем число от a до b */
     unsigned long long r = (hi << 32) | lo;
-    *rez = (int)((long long)a + (long long)(r % dlina));
+    *result = (int)((long long)a + (long long)(r % length));
     return OK;
 }
 
@@ -203,8 +203,8 @@ status_code build_c(const int *a, const size_t n_a, const int *b, const size_t n
     if (b_sorted == NULL) {
         return NO_MEMORY;
     }
-    int *rez = malloc(n_a * sizeof(int));
-    if (rez == NULL) {
+    int *result = malloc(n_a * sizeof(int));
+    if (result == NULL) {
         free(b_sorted);
         return NO_MEMORY;
     }
@@ -217,20 +217,20 @@ status_code build_c(const int *a, const size_t n_a, const int *b, const size_t n
     qsort(b_sorted, n_b, sizeof(int), compare_ints);
 
     for (size_t i = 0; i < n_a; i++) {
-        int blizh = 0;
-        status_code sc = find_nearest(b_sorted, n_b, a[i], &blizh);
+        int closest = 0;
+        status_code sc = find_nearest(b_sorted, n_b, a[i], &closest);
         if (sc != OK) {
             free(b_sorted);
-            free(rez);
+            free(result);
             return sc;
         }
-        rez[i] = a[i] + blizh;   /* |a[i]| <= 1000 и |blizh| <= 1000 - переполнения нет */
+        result[i] = a[i] + closest;   /* |a[i]| <= 1000 и |closest| <= 1000 - переполнения нет */
     }
 
     /* отсортированная копия больше не нужна. Адрес готового массива C
        записываем в переменную вызывающего кода через указатель c */
     free(b_sorted);
-    *c = rez;
+    *c = result;
     return OK;
 }
 
@@ -252,11 +252,11 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Example: lab1_task9 -50 50\n");
         return 1;
     }
-    /* читаем два числа: argv[1] в a, argv[2] в b. kuda - адрес, куда положить очередное */
+    /* читаем два числа: argv[1] в a, argv[2] в b. target - адрес, куда положить очередное */
     int a = 0, b = 0;
     for (int i = 1; i <= 2; i++) {
-        int *kuda = (i == 1) ? &a : &b;
-        status_code sc = parse_int(argv[i], kuda);
+        int *target = (i == 1) ? &a : &b;
+        status_code sc = parse_int(argv[i], target);
         if (sc == INVALID_NUMBER) {
             fprintf(stderr, "Error: '%s' is not an integer\n", argv[i]);
             return 1;
@@ -276,9 +276,9 @@ int main(int argc, char *argv[]) {
        не могут: INVALID_ARGS (main передает правильные адреса и a <= b уже проверено).
        Пользователь это сообщение не увидит; если увидел - ошибка в самом коде программы */
 
-    time_t seychas = time(NULL);
+    time_t now = time(NULL);
     generator gen;
-    if (gen_init(&gen, (seychas == (time_t)-1) ? 1ULL : (unsigned long long)seychas) != OK) {
+    if (gen_init(&gen, (now == (time_t)-1) ? 1ULL : (unsigned long long)now) != OK) {
         fprintf(stderr, "Error: internal error\n");
         return 1;
     }

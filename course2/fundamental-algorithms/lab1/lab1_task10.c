@@ -24,9 +24,9 @@ status_code read_line(FILE *in, char **line) {
     if (in == NULL || line == NULL) {
         return INVALID_ARGS;
     }
-    size_t razmer = START_SIZE;   /* сколько байт выделено */
-    size_t dlina = 0;             /* сколько символов уже прочитали */
-    char *buf = (char *)malloc(razmer);
+    size_t size = START_SIZE;   /* сколько байт выделено */
+    size_t length = 0;             /* сколько символов уже прочитали */
+    char *buf = (char *)malloc(size);
     if (buf == NULL) {
         return ALLOC_ERROR;
     }
@@ -40,36 +40,36 @@ status_code read_line(FILE *in, char **line) {
         return END_OF_INPUT;
     }
     while (ch != EOF && ch != '\n') {
-        /* Место нужно под этот символ и под '\0' в конце: если dlina + 1 == razmer,
+        /* Место нужно под этот символ и под '\0' в конце: если length + 1 == size,
            после записи для '\0' места не останется - увеличиваем заранее.
            Вдвое, а не на 1 байт: тогда realloc вызывается редко (16, 32, 64, ...),
            и чтение длинной строки остается быстрым */
-        if (dlina + 1 >= razmer) {
-            /* razmer * 2 не должен "перескочить" через SIZE_MAX */
-            if (razmer > SIZE_MAX / 2) {
+        if (length + 1 >= size) {
+            /* size * 2 не должен "перескочить" через SIZE_MAX */
+            if (size > SIZE_MAX / 2) {
                 free(buf);
                 return ALLOC_ERROR;
             }
             /* Результат realloc кладем во временную переменную: если realloc вернет NULL,
                старый блок остается живым, и его надо освободить. Написали бы
                buf = realloc(buf, ...) - при ошибке потеряли бы адрес старого блока (утечка) */
-            char *bolshe = (char *)realloc(buf, razmer * 2);
-            if (bolshe == NULL) {
+            char *bigger = (char *)realloc(buf, size * 2);
+            if (bigger == NULL) {
                 free(buf);
                 return ALLOC_ERROR;
             }
-            buf = bolshe;
-            razmer *= 2;
+            buf = bigger;
+            size *= 2;
         }
-        buf[dlina] = (char)ch;
-        dlina++;
+        buf[length] = (char)ch;
+        length++;
         ch = fgetc(in);
     }
-    buf[dlina] = '\0';
+    buf[length] = '\0';
 
     /* в Windows-файлах строка кончается на "\r\n" - '\r' тоже убираем */
-    if (dlina > 0 && buf[dlina - 1] == '\r') {
-        buf[dlina - 1] = '\0';
+    if (length > 0 && buf[length - 1] == '\r') {
+        buf[length - 1] = '\0';
     }
     *line = buf;
     return OK;
@@ -94,114 +94,114 @@ status_code digit_value(const char ch, int *val) {
 
 /* Строка в системе base -> long long (можно со знаком '-').
    Модуль копим в unsigned long long и ограничиваем LLONG_MAX - так проще проверять переполнение */
-status_code parse_in_base(const char *str, const int base, long long *chislo) {
-    if (str == NULL || chislo == NULL || base < 2 || base > 36) {
+status_code parse_in_base(const char *str, const int base, long long *number) {
+    if (str == NULL || number == NULL || base < 2 || base > 36) {
         return INVALID_ARGS;
     }
-    /* i - откуда начинаются цифры, otric - был ли минус */
+    /* i - откуда начинаются цифры, negative - был ли минус */
     size_t i = 0;
-    int otric = 0;
+    int negative = 0;
     if (str[0] == '-') {
-        otric = 1;
+        negative = 1;
         i = 1;
     }
     if (str[i] == '\0') {
         return INVALID_NUMBER;
     }
-    /* число собираем слева направо: modul = modul * base + цифра.
+    /* число собираем слева направо: magnitude = magnitude * base + цифра.
        Каждая цифра должна быть меньше основания: '8' в base 8 - ошибка */
-    unsigned long long modul = 0;
+    unsigned long long magnitude = 0;
     for (; str[i] != '\0'; i++) {
         int d = 0;
         if (digit_value(str[i], &d) != OK || d >= base) {
             return INVALID_NUMBER;
         }
-        /* modul * base + d > LLONG_MAX ? */
-        if (modul > ((unsigned long long)LLONG_MAX - (unsigned long long)d) / (unsigned long long)base) {
+        /* magnitude * base + d > LLONG_MAX ? */
+        if (magnitude > ((unsigned long long)LLONG_MAX - (unsigned long long)d) / (unsigned long long)base) {
             return OVERFLOW_ERROR;
         }
-        modul = modul * (unsigned long long)base + (unsigned long long)d;
+        magnitude = magnitude * (unsigned long long)base + (unsigned long long)d;
     }
-    /* modul <= LLONG_MAX, поэтому и (long long)modul, и минус от него помещаются */
-    *chislo = otric ? -(long long)modul : (long long)modul;
+    /* magnitude <= LLONG_MAX, поэтому и (long long)magnitude, и минус от него помещаются */
+    *number = negative ? -(long long)magnitude : (long long)magnitude;
     return OK;
 }
 
 /* Число -> строка в системе base (без ведущих нулей, со знаком).
    Строка создается в динамической памяти ровно нужного размера:
-   *rez - ее адрес, освобождает вызывающий */
-status_code to_base(const long long chislo, const int base, char **rez) {
-    if (rez == NULL || base < 2 || base > 36) {
+   *result - ее адрес, освобождает вызывающий */
+status_code to_base(const long long number, const int base, char **result) {
+    if (result == NULL || base < 2 || base > 36) {
         return INVALID_ARGS;
     }
-    const char cifry[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     /* модуль через unsigned: для LLONG_MIN обычный -x переполнился бы */
-    unsigned long long modul = (chislo < 0) ? 0ULL - (unsigned long long)chislo
-                                            : (unsigned long long)chislo;
+    unsigned long long magnitude = (number < 0) ? 0ULL - (unsigned long long)number
+                                            : (unsigned long long)number;
 
     /* 1) Сколько цифр у числа: делим копию модуля на base, пока не станет 0.
           do-while, а не while: у нуля тоже одна цифра "0" */
     size_t cnt = 0;
-    unsigned long long val = modul;
+    unsigned long long val = magnitude;
     do {
         val /= (unsigned long long)base;
         cnt++;
     } while (val > 0);
 
     /* 2) Память: цифры + минус (если число отрицательное) + '\0' */
-    size_t nuzhno = cnt + (chislo < 0 ? 1 : 0) + 1;
-    char *str = (char *)malloc(nuzhno);
+    size_t needed = cnt + (number < 0 ? 1 : 0) + 1;
+    char *str = (char *)malloc(needed);
     if (str == NULL) {
         return ALLOC_ERROR;
     }
 
-    /* 3) Цифры. Остаток от деления на base - очередная цифра с конца, cifry[ostatok] - ее символ.
-          Поэтому пишем их сразу с конца строки, от места nuzhno - 2 влево - разворачивать не нужно.
+    /* 3) Цифры. Остаток от деления на base - очередная цифра с конца, digits[остаток] - ее символ.
+          Поэтому пишем их сразу с конца строки, от места needed - 2 влево - разворачивать не нужно.
           Пример 10 в base 2: 10 % 2 = 0, 5 % 2 = 1, 2 % 2 = 0, 1 % 2 = 1 -> справа налево "1010" */
-    str[nuzhno - 1] = '\0';
-    size_t pos = nuzhno - 1;   /* место, левее которого пишем следующую цифру */
-    val = modul;
+    str[needed - 1] = '\0';
+    size_t pos = needed - 1;   /* место, левее которого пишем следующую цифру */
+    val = magnitude;
     do {
         pos--;
-        str[pos] = cifry[val % (unsigned long long)base];
+        str[pos] = digits[val % (unsigned long long)base];
         val /= (unsigned long long)base;
     } while (val > 0);
     /* после цифр слева осталось ровно одно место - под минус (если он нужен) */
-    if (chislo < 0) {
+    if (number < 0) {
         str[0] = '-';
     }
 
-    *rez = str;
+    *result = str;
     return OK;
 }
 
 /* Модуль как unsigned (без переполнения на LLONG_MIN) */
-status_code abs_ull(const long long x, unsigned long long *modul) {
-    if (modul == NULL) {
+status_code abs_ull(const long long x, unsigned long long *magnitude) {
+    if (magnitude == NULL) {
         return INVALID_ARGS;
     }
-    *modul = (x < 0) ? 0ULL - (unsigned long long)x : (unsigned long long)x;
+    *magnitude = (x < 0) ? 0ULL - (unsigned long long)x : (unsigned long long)x;
     return OK;
 }
 
 /* Добавить x к сумме с проверкой переполнения */
-status_code add_checked(long long *summa, const long long x) {
-    if (summa == NULL) {
+status_code add_checked(long long *sum, const long long x) {
+    if (sum == NULL) {
         return INVALID_ARGS;
     }
     /* Проверка ДО сложения, иначе переполнение уже случится:
-       summa + x > LLONG_MAX  <=>  summa > LLONG_MAX - x  (для x > 0),
-       summa + x < LLONG_MIN  <=>  summa < LLONG_MIN - x  (для x < 0).
+       sum + x > LLONG_MAX  <=>  sum > LLONG_MAX - x  (для x > 0),
+       sum + x < LLONG_MIN  <=>  sum < LLONG_MIN - x  (для x < 0).
        Сами LLONG_MAX - x и LLONG_MIN - x не переполняются при таком знаке x */
-    if ((x > 0 && *summa > LLONG_MAX - x) || (x < 0 && *summa < LLONG_MIN - x)) {
+    if ((x > 0 && *sum > LLONG_MAX - x) || (x < 0 && *sum < LLONG_MIN - x)) {
         return OVERFLOW_ERROR;
     }
-    *summa += x;
+    *sum += x;
     return OK;
 }
 
 /* Напечатать число в системе base и в 9, 18, 27, 36 */
-status_code print_in_bases(const char *name, const long long chislo, const int base) {
+status_code print_in_bases(const char *name, const long long number, const int base) {
     if (name == NULL || base < 2 || base > 36) {
         return INVALID_ARGS;
     }
@@ -213,7 +213,7 @@ status_code print_in_bases(const char *name, const long long chislo, const int b
         int b = (i == 0) ? base : bases[i];
         /* to_base выделяет строку через malloc - напечатали и сразу освободили */
         char *str = NULL;
-        status_code sc = to_base(chislo, b, &str);
+        status_code sc = to_base(number, b, &str);
         if (sc != OK) {
             return sc;
         }
@@ -256,10 +256,10 @@ int main(int argc, char *argv[]) {
            это число, и оно от 2 до 36. Строка больше не нужна - освобождаем сразу,
            до проверки результата, чтобы не забыть ни в одной ветке */
         long long b = 0;
-        int horoshee = (parse_in_base(line, 10, &b) == OK && b >= 2 && b <= 36);
+        int is_valid = (parse_in_base(line, 10, &b) == OK && b >= 2 && b <= 36);
         free(line);
         line = NULL;
-        if (horoshee) {
+        if (is_valid) {
             base = (int)b;
             break;
         }
@@ -268,10 +268,10 @@ int main(int argc, char *argv[]) {
 
     /* 2) числа до строки "Stop" */
     printf("Enter numbers in base %d (letters A-Z, capital), \"Stop\" to finish:\n", base);
-    /* summa - сумма всех чисел, max_chislo - число с самым большим модулем, kolvo - сколько ввели */
-    long long summa = 0;
-    long long max_chislo = 0;
-    int kolvo = 0;
+    /* sum - сумма всех чисел, max_number - число с самым большим модулем, count - сколько ввели */
+    long long sum = 0;
+    long long max_number = 0;
+    int count = 0;
 
     while (1) {
         status_code sc = read_line(stdin, &line);
@@ -306,31 +306,31 @@ int main(int argc, char *argv[]) {
         free(line);
         line = NULL;
 
-        if (add_checked(&summa, x) != OK) {
+        if (add_checked(&sum, x) != OK) {
             fprintf(stderr, "Error: the sum is too big\n");
             return 1;
         }
         /* первое число или модуль больше текущего максимума */
         /* модули сравниваем как unsigned: |LLONG_MIN| в long long не помещается */
-        unsigned long long modul_x = 0, modul_max = 0;
-        if (abs_ull(x, &modul_x) != OK || abs_ull(max_chislo, &modul_max) != OK) {
+        unsigned long long magnitude_x = 0, magnitude_max = 0;
+        if (abs_ull(x, &magnitude_x) != OK || abs_ull(max_number, &magnitude_max) != OK) {
             fprintf(stderr, "Error: internal error\n");
             return 1;
         }
-        if (kolvo == 0 || modul_x > modul_max) {
-            max_chislo = x;
+        if (count == 0 || magnitude_x > magnitude_max) {
+            max_number = x;
         }
-        kolvo++;
+        count++;
     }
 
-    if (kolvo == 0) {
+    if (count == 0) {
         printf("No numbers were entered\n");
         return 0;
     }
     /* print_in_bases может вернуть ALLOC_ERROR (строку для перевода не выделили) */
-    status_code sc = print_in_bases("Max by absolute value", max_chislo, base);
+    status_code sc = print_in_bases("Max by absolute value", max_number, base);
     if (sc == OK) {
-        sc = print_in_bases("Sum", summa, base);
+        sc = print_in_bases("Sum", sum, base);
     }
     if (sc == ALLOC_ERROR) {
         fprintf(stderr, "Error: not enough memory\n");

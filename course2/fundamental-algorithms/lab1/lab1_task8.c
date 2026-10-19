@@ -31,12 +31,12 @@ typedef enum {
    Пример: "1F" - самая большая цифра F = 15, основание 16, значение 31 */
 
 /* Разделители: пробел, табуляция, перевод строки (и '\r' из Windows-файлов).
-   ch - то, что вернул fgetc: байт от 0 до 255 или EOF. rez = 1 - разделитель */
-status_code is_razdelitel(const int ch, int *rez) {
-    if (rez == NULL || (ch < 0 && ch != EOF) || ch > UCHAR_MAX) {
+   ch - то, что вернул fgetc: байт от 0 до 255 или EOF. result = 1 - разделитель */
+status_code is_separator(const int ch, int *result) {
+    if (result == NULL || (ch < 0 && ch != EOF) || ch > UCHAR_MAX) {
         return INVALID_ARGS;
     }
-    *rez = (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r');
+    *result = (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r');
     return OK;
 }
 
@@ -61,18 +61,18 @@ status_code digit_value(const char ch, int *val) {
 }
 
 /* Прочитать одну лексему в динамический буфер.
-   buf и razmer - буфер и его размер; если лексема длиннее - буфер увеличиваем (realloc).
+   buf и size - буфер и его размер; если лексема длиннее - буфер увеличиваем (realloc).
    Буфер живет между вызовами, освобождает его main */
-status_code read_token(FILE *in, char **buf, size_t *razmer) {
-    if (in == NULL || buf == NULL || razmer == NULL) {
+status_code read_token(FILE *in, char **buf, size_t *size) {
+    if (in == NULL || buf == NULL || size == NULL) {
         return INVALID_ARGS;
     }
     /* пропускаем разделители (EOF - не разделитель, на нем цикл тоже кончится) */
     int ch = EOF;
-    int razd = 1;
-    while (razd) {
+    int sep = 1;
+    while (sep) {
         ch = fgetc(in);
-        if (is_razdelitel(ch, &razd) != OK) {
+        if (is_separator(ch, &sep) != OK) {
             return INVALID_ARGS;
         }
     }
@@ -80,15 +80,15 @@ status_code read_token(FILE *in, char **buf, size_t *razmer) {
         return ferror(in) ? READ_ERROR : END_OF_FILE;
     }
 
-    /* *buf и *razmer меняем через указатели: если буфер увеличится,
+    /* *buf и *size меняем через указатели: если буфер увеличится,
        новый адрес и размер должны попасть обратно в вызывающий код */
     /* копируем символы до разделителя или конца файла */
-    size_t dlina = 0;
+    size_t length = 0;
     while (ch != EOF) {
-        if (is_razdelitel(ch, &razd) != OK) {
+        if (is_separator(ch, &sep) != OK) {
             return INVALID_ARGS;
         }
-        if (razd) {
+        if (sep) {
             break;
         }
         /* +1 - место под '\0' */
@@ -96,37 +96,37 @@ status_code read_token(FILE *in, char **buf, size_t *razmer) {
            realloc выделяет новый кусок, копирует туда старое содержимое и
            возвращает новый адрес. Пишем результат во временный tmp: если realloc
            вернет NULL, в *buf останется старый адрес и память не потеряется */
-        if (dlina + 1 >= *razmer) {
-            size_t new_razmer = (*razmer == 0) ? 16 : *razmer * 2;
-            char *tmp = realloc(*buf, new_razmer);
+        if (length + 1 >= *size) {
+            size_t new_size = (*size == 0) ? 16 : *size * 2;
+            char *tmp = realloc(*buf, new_size);
             if (tmp == NULL) {
                 return NO_MEMORY;   /* старый буфер не потерян - его освободит main */
             }
             *buf = tmp;
-            *razmer = new_razmer;
+            *size = new_size;
         }
-        /* (*buf)[dlina] - символ номер dlina в буфере; скобки нужны,
+        /* (*buf)[length] - символ номер length в буфере; скобки нужны,
            потому что buf - адрес указателя, а не сам буфер */
-        (*buf)[dlina] = (char)ch;
-        dlina++;
+        (*buf)[length] = (char)ch;
+        length++;
         ch = fgetc(in);
     }
-    (*buf)[dlina] = '\0';
+    (*buf)[length] = '\0';
     return ferror(in) ? READ_ERROR : OK;
 }
 
 /* Разобрать число: знак, минимальное основание, значение в 10-й системе.
-   nachalo - с какого символа идут значащие цифры (после знака и ведущих нулей) */
-status_code analyze_number(const char *str, int *otric, size_t *nachalo, int *base,
-                           long long *znachenie) {
-    if (str == NULL || otric == NULL || nachalo == NULL || base == NULL || znachenie == NULL) {
+   start - с какого символа идут значащие цифры (после знака и ведущих нулей) */
+status_code analyze_number(const char *str, int *negative, size_t *start, int *base,
+                           long long *value) {
+    if (str == NULL || negative == NULL || start == NULL || base == NULL || value == NULL) {
         return INVALID_ARGS;
     }
     /* i - откуда начинаются цифры: после знака, если он есть */
     size_t i = 0;
-    *otric = 0;
+    *negative = 0;
     if (str[0] == '-' || str[0] == '+') {
-        *otric = (str[0] == '-');
+        *negative = (str[0] == '-');
         i = 1;
     }
     if (str[i] == '\0') {
@@ -134,26 +134,26 @@ status_code analyze_number(const char *str, int *otric, size_t *nachalo, int *ba
     }
 
     /* 1) проверяем символы и ищем самую большую цифру */
-    int max_cifra = 0;
+    int max_digit = 0;
     for (size_t j = i; str[j] != '\0'; j++) {
         int d = 0;
         if (digit_value(str[j], &d) != OK) {
             return INVALID_NUMBER;
         }
-        if (d > max_cifra) {
-            max_cifra = d;
+        if (d > max_digit) {
+            max_digit = d;
         }
     }
     /* минимальное основание = самая большая цифра + 1, но не меньше 2 */
-    *base = (max_cifra + 1 < 2) ? 2 : max_cifra + 1;
+    *base = (max_digit + 1 < 2) ? 2 : max_digit + 1;
 
     /* 2) пропускаем ведущие нули (но число "000" - это "0") */
     while (str[i] == '0' && str[i + 1] != '\0') {
         i++;
     }
-    *nachalo = i;
+    *start = i;
     if (str[i] == '0') {
-        *otric = 0;   /* "-0" это просто 0 */
+        *negative = 0;   /* "-0" это просто 0 */
     }
 
     /* 3) значение по схеме Горнера с проверкой переполнения */
@@ -173,43 +173,43 @@ status_code analyze_number(const char *str, int *otric, size_t *nachalo, int *ba
         val = val * *base + d;
     }
     /* -val не переполнится: val <= LLONG_MAX, а -LLONG_MAX в long long помещается */
-    *znachenie = *otric ? -val : val;
+    *value = *negative ? -val : val;
     return OK;
 }
 
 /* Обработать весь файл: для каждой лексемы строка "число основание значение" */
-status_code process_file(FILE *in, FILE *out, long long *propuscheno) {
-    if (in == NULL || out == NULL || propuscheno == NULL) {
+status_code process_file(FILE *in, FILE *out, long long *skipped) {
+    if (in == NULL || out == NULL || skipped == NULL) {
         return INVALID_ARGS;
     }
     /* buf - буфер под лексему, один на весь файл: read_token сам увеличивает его
        при необходимости. Начинаем с пустого (NULL, размер 0) */
     char *buf = NULL;
-    size_t razmer = 0;
+    size_t size = 0;
     status_code sc;
-    *propuscheno = 0;
+    *skipped = 0;
 
     /* читаем лексемы, пока read_token возвращает OK. Цикл кончится на END_OF_FILE
        (лексем больше нет - это нормально) или на ошибке */
-    while ((sc = read_token(in, &buf, &razmer)) == OK) {
-        int otric = 0, base = 0;
-        size_t nachalo = 0;
+    while ((sc = read_token(in, &buf, &size)) == OK) {
+        int negative = 0, base = 0;
+        size_t start = 0;
         long long val = 0;
-        status_code res = analyze_number(buf, &otric, &nachalo, &base, &val);
+        status_code res = analyze_number(buf, &negative, &start, &base, &val);
 
-        /* Печатаем: знак, число без ведущих нулей (buf + nachalo - адрес символа
-           с номером nachalo, то есть строка с этого места), основание, значение.
-           Слишком большое - вместо значения too_big. zapisano < 0 - ошибка записи */
-        int zapisano = 0;
+        /* Печатаем: знак, число без ведущих нулей (buf + start - адрес символа
+           с номером start, то есть строка с этого места), основание, значение.
+           Слишком большое - вместо значения too_big. written < 0 - ошибка записи */
+        int written = 0;
         if (res == OK) {
-            zapisano = fprintf(out, "%s%s %d %lld\n", otric ? "-" : "", buf + nachalo, base, val);
+            written = fprintf(out, "%s%s %d %lld\n", negative ? "-" : "", buf + start, base, val);
         } else if (res == OVERFLOW_ERROR) {
-            zapisano = fprintf(out, "%s%s %d too_big\n", otric ? "-" : "", buf + nachalo, base);
+            written = fprintf(out, "%s%s %d too_big\n", negative ? "-" : "", buf + start, base);
         } else {
-            (*propuscheno)++;   /* не число - пропускаем */
+            (*skipped)++;   /* не число - пропускаем */
             continue;
         }
-        if (zapisano < 0) {
+        if (written < 0) {
             sc = WRITE_ERROR;
             break;
         }
@@ -228,17 +228,17 @@ status_code process_file(FILE *in, FILE *out, long long *propuscheno) {
    _fullpath(NULL, ...) умеет выделить память сам, но так не делаем: эту память выделяет
    библиотека Windows внутри себя, и программа Dr. Memory (проверка утечек) ее не видит -
    считает ошибкой наш free. Со своим malloc все выделения видны и понятны */
-status_code full_path(const char *put, char **polny) {
-    if (put == NULL || polny == NULL) {
+status_code full_path(const char *path, char **full) {
+    if (path == NULL || full == NULL) {
         return INVALID_ARGS;
     }
-    for (size_t razmer = 260; razmer <= 65536; razmer *= 2) {
-        char *buf = (char *)malloc(razmer);
+    for (size_t size = 260; size <= 65536; size *= 2) {
+        char *buf = (char *)malloc(size);
         if (buf == NULL) {
             return NO_MEMORY;
         }
-        if (_fullpath(buf, put, razmer) != NULL) {
-            *polny = buf;   /* освобождает вызывающий */
+        if (_fullpath(buf, path, size) != NULL) {
+            *full = buf;   /* освобождает вызывающий */
             return OK;
         }
         free(buf);   /* не поместилось (или путь плохой) - пробуем буфер вдвое больше */
@@ -247,7 +247,7 @@ status_code full_path(const char *put, char **polny) {
 }
 #endif
 
-/* Ведут ли два пути к одному и тому же файлу на диске: *odinakovye = 1 - да, 0 - нет.
+/* Ведут ли два пути к одному и тому же файлу на диске: *equal = 1 - да, 0 - нет.
    Сравнивать строки (strcmp) мало: "in.txt", "./in.txt", "../lab1/in.txt" и полный путь -
    разные строки, но один файл. Если выходной файл совпадет с входным, fopen(..., "w")
    сотрет его раньше, чем мы успеем прочитать.
@@ -259,35 +259,35 @@ status_code full_path(const char *put, char **polny) {
      сравниваем без учета больших и маленьких букв (в Windows IN.TXT и in.txt - один файл).
    Если какой-то путь не существует (stat не смог), это не один файл: например, выходного
    файла еще нет - его создаст fopen. Если не существует входной, fopen потом сообщит об ошибке */
-status_code same_file(const char *put1, const char *put2, int *odinakovye) {
-    if (put1 == NULL || put2 == NULL || odinakovye == NULL) {
+status_code same_file(const char *path1, const char *path2, int *equal) {
+    if (path1 == NULL || path2 == NULL || equal == NULL) {
         return INVALID_ARGS;
     }
-    *odinakovye = 0;
+    *equal = 0;
 #ifdef _WIN32
     /* full_path - полные пути в нашей памяти (потом free). Путь неправильный (BAD_PATH) -
        считаем, что файлы разные: fopen дальше сам сообщит об ошибке */
-    char *polny1 = NULL;
-    char *polny2 = NULL;
-    status_code sc1 = full_path(put1, &polny1);
-    status_code sc2 = full_path(put2, &polny2);
+    char *full1 = NULL;
+    char *full2 = NULL;
+    status_code sc1 = full_path(path1, &full1);
+    status_code sc2 = full_path(path2, &full2);
     if (sc1 == NO_MEMORY || sc2 == NO_MEMORY) {
-        free(polny1);   /* free(NULL) ничего не делает - можно не проверять */
-        free(polny2);
+        free(full1);   /* free(NULL) ничего не делает - можно не проверять */
+        free(full2);
         return NO_MEMORY;
     }
-    if (sc1 == OK && sc2 == OK && _stricmp(polny1, polny2) == 0) {
-        *odinakovye = 1;
+    if (sc1 == OK && sc2 == OK && _stricmp(full1, full2) == 0) {
+        *equal = 1;
     }
-    free(polny1);
-    free(polny2);
+    free(full1);
+    free(full2);
 #else
     /* stat возвращает 0, если сведения о файле получены; иначе (файла нет) - не 0 */
-    struct stat sved1;
-    struct stat sved2;
-    if (stat(put1, &sved1) == 0 && stat(put2, &sved2) == 0 &&
-        sved1.st_dev == sved2.st_dev && sved1.st_ino == sved2.st_ino) {
-        *odinakovye = 1;
+    struct stat info1;
+    struct stat info2;
+    if (stat(path1, &info1) == 0 && stat(path2, &info2) == 0 &&
+        info1.st_dev == info2.st_dev && info1.st_ino == info2.st_ino) {
+        *equal = 1;
     }
 #endif
     return OK;
@@ -300,18 +300,18 @@ int main(int argc, char *argv[]) {
     }
     /* Входной и выходной файл должны быть разными: fopen с "w" стер бы входной
        до чтения. same_file ловит и разные записи одного пути: "in.txt" и "./in.txt" */
-    int odinakovye = 0;
-    status_code sc_put = same_file(argv[1], argv[2], &odinakovye);
-    if (sc_put == NO_MEMORY) {
+    int equal = 0;
+    status_code sc_path = same_file(argv[1], argv[2], &equal);
+    if (sc_path == NO_MEMORY) {
         /* на Windows same_file выделяет память под полные пути */
         fprintf(stderr, "Error: not enough memory\n");
         return 1;
     }
-    if (sc_put != OK) {
+    if (sc_path != OK) {
         fprintf(stderr, "Error: internal error\n");   /* INVALID_ARGS: NULL-ов здесь не бывает */
         return 1;
     }
-    if (odinakovye) {
+    if (equal) {
         fprintf(stderr, "Error: input and output must be different files\n");
         return 1;
     }
@@ -330,8 +330,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    long long propuscheno = 0;
-    status_code sc = process_file(in, out, &propuscheno);
+    long long skipped = 0;
+    status_code sc = process_file(in, out, &skipped);
     fclose(in);
     if (fclose(out) != 0 && sc == OK) {
         sc = WRITE_ERROR;
@@ -343,8 +343,8 @@ int main(int argc, char *argv[]) {
     switch (sc) {
         case OK:
             printf("Done. Result is in '%s'\n", argv[2]);
-            if (propuscheno > 0) {
-                printf("Skipped %lld words that are not numbers\n", propuscheno);
+            if (skipped > 0) {
+                printf("Skipped %lld words that are not numbers\n", skipped);
             }
             return 0;
         case NO_MEMORY:

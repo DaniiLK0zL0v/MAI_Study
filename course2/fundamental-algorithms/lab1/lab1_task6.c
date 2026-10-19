@@ -22,8 +22,8 @@ typedef enum {
 #define MAX_ITER 200   /* предел шагов дихотомии: double больше ~60 делений не выдерживает */
 
 /* ================= 1. Выпуклый многоугольник =================
-   is_convex(&rez, eps, n, x1, y1, x2, y2, ..., xn, yn)
-   Все координаты передавать как double (1.0, а не 1!). rez = 1 - выпуклый.
+   is_convex(&result, eps, n, x1, y1, x2, y2, ..., xn, yn)
+   Все координаты передавать как double (1.0, а не 1!). result = 1 - выпуклый.
    Идея: в выпуклом многоугольнике все повороты на вершинах в одну сторону
    (векторные произведения соседних ребер одного знака),
    а сумма углов поворота ровно 2*pi (иначе это "звезда" с самопересечением). */
@@ -33,11 +33,11 @@ typedef struct {
 } point;
 
 /* Поворот в вершине b на пути a -> b -> c.
-   ok = 1, если поворот в ту же сторону, что и раньше (znak), иначе 0.
-   Угол поворота добавляет в summa_uglov */
+   ok = 1, если поворот в ту же сторону, что и раньше (sign), иначе 0.
+   Угол поворота добавляет в angle_sum */
 status_code check_turn(const point a, const point b, const point c, const double eps,
-                       int *znak, double *summa_uglov, int *ok) {
-    if (znak == NULL || summa_uglov == NULL || ok == NULL || eps <= 0) {
+                       int *sign, double *angle_sum, int *ok) {
+    if (sign == NULL || angle_sum == NULL || ok == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
     /* ребра как векторы: из координат конца вычитаем координаты начала */
@@ -52,20 +52,20 @@ status_code check_turn(const point a, const point b, const point c, const double
         return OK;   /* vect = 0 с точностью eps: три точки на одной прямой - многоугольник вырожденный */
     }
     /* |vect| >= eps, так что vect > 0 значит vect >= eps */
-    int tek_znak = (vect > 0) ? 1 : -1;
-    if (*znak == 0) {
-        *znak = tek_znak;   /* первый поворот задает направление */
-    } else if (tek_znak != *znak) {
+    int cur_sign = (vect > 0) ? 1 : -1;
+    if (*sign == 0) {
+        *sign = cur_sign;   /* первый поворот задает направление */
+    } else if (cur_sign != *sign) {
         return OK;
     }
     /* atan2(vect, scal) - угол между ребрами от -pi до pi; знак показывает сторону поворота */
-    *summa_uglov += atan2(vect, scal);   /* угол поворота со знаком */
+    *angle_sum += atan2(vect, scal);   /* угол поворота со знаком */
     *ok = 1;
     return OK;
 }
 
-status_code is_convex(int *rez, const double eps, const int n, ...) {
-    if (rez == NULL || eps <= 0 || n < 3) {
+status_code is_convex(int *result, const double eps, const int n, ...) {
+    if (result == NULL || eps <= 0 || n < 3) {
         return INVALID_ARGS;
     }
 
@@ -80,41 +80,41 @@ status_code is_convex(int *rez, const double eps, const int n, ...) {
 
     /* храним только первые две вершины (понадобятся в конце, круг замыкается)
        и две последние прочитанные - массив на все вершины не нужен */
-    point first, second, pred2, pred1;
+    point first, second, prev2, prev1;
     first.x = va_arg(args, double);
     first.y = va_arg(args, double);
     second.x = va_arg(args, double);
     second.y = va_arg(args, double);
-    pred2 = first;
-    pred1 = second;
+    prev2 = first;
+    prev1 = second;
 
-    int znak = 0;              /* знак поворотов: +1 или -1, 0 - еще не знаем */
-    double summa_uglov = 0.0;
-    int vypukly = 1;
+    int sign = 0;              /* знак поворотов: +1 или -1, 0 - еще не знаем */
+    double angle_sum = 0.0;
+    int convex = 1;
     status_code sc = OK;
 
-    /* Читаем вершины с третьей по последнюю. Для каждой новой вершины tek
-       проверяем поворот в предыдущей: путь pred2 -> pred1 -> tek.
-       Потом сдвигаем окно: pred2 = pred1, pred1 = tek */
+    /* Читаем вершины с третьей по последнюю. Для каждой новой вершины cur
+       проверяем поворот в предыдущей: путь prev2 -> prev1 -> cur.
+       Потом сдвигаем окно: prev2 = prev1, prev1 = cur */
     for (int i = 2; i < n; i++) {
-        point tek;
-        tek.x = va_arg(args, double);
-        tek.y = va_arg(args, double);
+        point cur;
+        cur.x = va_arg(args, double);
+        cur.y = va_arg(args, double);
         /* если ответ уже ясен, дальше просто проходим по аргументам */
-        if (vypukly && sc == OK) {
-            sc = check_turn(pred2, pred1, tek, eps, &znak, &summa_uglov, &vypukly);
+        if (convex && sc == OK) {
+            sc = check_turn(prev2, prev1, cur, eps, &sign, &angle_sum, &convex);
         }
-        pred2 = pred1;
-        pred1 = tek;
+        prev2 = prev1;
+        prev1 = cur;
     }
     va_end(args);
 
     /* два последних поворота: в предпоследней и последней вершине */
-    if (vypukly && sc == OK) {
-        sc = check_turn(pred2, pred1, first, eps, &znak, &summa_uglov, &vypukly);
+    if (convex && sc == OK) {
+        sc = check_turn(prev2, prev1, first, eps, &sign, &angle_sum, &convex);
     }
-    if (vypukly && sc == OK) {
-        sc = check_turn(pred1, first, second, eps, &znak, &summa_uglov, &vypukly);
+    if (convex && sc == OK) {
+        sc = check_turn(prev1, first, second, eps, &sign, &angle_sum, &convex);
     }
     if (sc != OK) {
         return sc;
@@ -122,17 +122,17 @@ status_code is_convex(int *rez, const double eps, const int n, ...) {
 
     /* у выпуклого многоугольника сумма поворотов ровно +-2*pi,
        у "звезды" - 4*pi и больше. Сравниваем с точностью eps */
-    /* *rez = 1, если и все повороты в одну сторону, и сумма поворотов 2*pi; иначе 0 */
+    /* *result = 1, если и все повороты в одну сторону, и сумма поворотов 2*pi; иначе 0 */
     const double pi = 3.14159265358979323846;
-    *rez = vypukly && fabs(fabs(summa_uglov) - 2 * pi) < eps;
+    *result = convex && fabs(fabs(angle_sum) - 2 * pi) < eps;
     return OK;
 }
 
 /* ================= 2. Значение многочлена =================
-   polynomial(&rez, x, n, a_n, a_(n-1), ..., a_0) - коэффициенты от старшего.
+   polynomial(&result, x, n, a_n, a_(n-1), ..., a_0) - коэффициенты от старшего.
    Схема Горнера: ((a_n * x + a_(n-1)) * x + ...) * x + a_0 */
-status_code polynomial(double *rez, const double x, const int n, ...) {
-    if (rez == NULL || n < 0) {
+status_code polynomial(double *result, const double x, const int n, ...) {
+    if (result == NULL || n < 0) {
         return INVALID_ARGS;
     }
     va_list args;
@@ -149,7 +149,7 @@ status_code polynomial(double *rez, const double x, const int n, ...) {
     if (isinf(s) || isnan(s)) {
         return OVERFLOW_ERROR;
     }
-    *rez = s;
+    *result = s;
     return OK;
 }
 
@@ -179,8 +179,8 @@ status_code digit_value(const char ch, int *val) {
 }
 
 /* Строка в системе base -> число. Ограничение: n <= 2^32 - 1, чтобы n^2 влез в unsigned long long */
-status_code parse_in_base(const char *str, const int base, unsigned long long *chislo) {
-    if (str == NULL || chislo == NULL) {
+status_code parse_in_base(const char *str, const int base, unsigned long long *number) {
+    if (str == NULL || number == NULL) {
         return INVALID_ARGS;
     }
     if (base < 2 || base > 36) {
@@ -203,41 +203,41 @@ status_code parse_in_base(const char *str, const int base, unsigned long long *c
             return OVERFLOW_ERROR;
         }
     }
-    *chislo = val;
+    *number = val;
     return OK;
 }
 
-/* Проверка одного числа. rez = 1 - число Капрекара */
-status_code check_kaprekar(const unsigned long long n, const int base, int *rez) {
-    if (rez == NULL || base < 2 || base > 36) {
+/* Проверка одного числа. result = 1 - число Капрекара */
+status_code check_kaprekar(const unsigned long long n, const int base, int *result) {
+    if (result == NULL || base < 2 || base > 36) {
         return INVALID_ARGS;
     }
-    *rez = 0;
+    *result = 0;
     if (n == 0) {
         return OK;   /* 0^2 = 0, правая часть не может быть ненулевой */
     }
-    unsigned long long kvadrat = n * n;   /* n <= 2^32 - 1, переполнения нет */
-    unsigned long long delitel = (unsigned long long)base;   /* base^p - где режем */
+    unsigned long long square = n * n;   /* n <= 2^32 - 1, переполнения нет */
+    unsigned long long divisor = (unsigned long long)base;   /* base^p - где режем */
 
     /* Разрезать число в системе base после p цифр справа - это деление на base^p:
        частное - левая часть, остаток - правая. Пример (base 10): 2025 / 100 = 20, 2025 % 100 = 25 */
     /* режем после 1, 2, 3 ... цифр справа, пока левая часть не 0 */
-    while (delitel <= kvadrat) {
-        unsigned long long levaya = kvadrat / delitel;
-        unsigned long long pravaya = kvadrat % delitel;
-        if (pravaya > 0 && levaya + pravaya == n) {
-            *rez = 1;
+    while (divisor <= square) {
+        unsigned long long left_part = square / divisor;
+        unsigned long long right_part = square % divisor;
+        if (right_part > 0 && left_part + right_part == n) {
+            *result = 1;
             return OK;
         }
-        /* следующий разрез; проверка, чтобы delitel * base не переполнился */
-        if (delitel > kvadrat / (unsigned long long)base) {
+        /* следующий разрез; проверка, чтобы divisor * base не переполнился */
+        if (divisor > square / (unsigned long long)base) {
             break;
         }
-        delitel *= (unsigned long long)base;
+        divisor *= (unsigned long long)base;
     }
     /* разрез, когда левая часть пустая (= 0): тогда n^2 = n, это только n = 1 */
-    if (kvadrat == n) {
-        *rez = 1;
+    if (square == n) {
+        *result = 1;
     }
     return OK;
 }
@@ -285,26 +285,26 @@ status_code find_kaprekar(const char **found, const int max_found, int *found_co
 }
 
 /* ================= 4. Среднее геометрическое =================
-   geom_mean(&rez, eps, x1, x2, ..., xn, n) - нельзя! Количество обязано стоять
+   geom_mean(&result, eps, x1, x2, ..., xn, n) - нельзя! Количество обязано стоять
    ПЕРЕД "...", поэтому по заданию оно - последний ОБЯЗАТЕЛЬНЫЙ параметр:
-   geom_mean(&rez, eps, n, x1, x2, ..., xn).
+   geom_mean(&result, eps, n, x1, x2, ..., xn).
    eps нужен, потому что числа сравниваются с нулем (а вещественные сравниваем только через eps).
    Считаем через логарифмы: (x1*...*xn)^(1/n) = exp((ln x1 + ... + ln xn) / n),
    так произведение не переполнится. */
-status_code geom_mean(double *rez, const double eps, const int n, ...) {
-    if (rez == NULL || eps <= 0 || n <= 0) {
+status_code geom_mean(double *result, const double eps, const int n, ...) {
+    if (result == NULL || eps <= 0 || n <= 0) {
         return INVALID_ARGS;
     }
     va_list args;
     va_start(args, n);
-    /* sum_log - сумма логарифмов, est_nol - встретился ли 0 (тогда ответ 0) */
+    /* sum_log - сумма логарифмов, has_zero - встретился ли 0 (тогда ответ 0) */
     double sum_log = 0.0;
-    int est_nol = 0;
+    int has_zero = 0;
     status_code sc = OK;
     for (int i = 0; i < n; i++) {
         double x = va_arg(args, double);
         if (fabs(x) < eps) {
-            est_nol = 1;   /* x = 0 с точностью eps: ln 0 не существует, но ответ тогда просто 0 */
+            has_zero = 1;   /* x = 0 с точностью eps: ln 0 не существует, но ответ тогда просто 0 */
         } else if (x < 0) {
             sc = NEGATIVE_NUMBER;   /* |x| >= eps, так что x < 0 значит x <= -eps */
             break;
@@ -317,7 +317,7 @@ status_code geom_mean(double *rez, const double eps, const int n, ...) {
     if (sc != OK) {
         return sc;
     }
-    *rez = est_nol ? 0.0 : exp(sum_log / n);
+    *result = has_zero ? 0.0 : exp(sum_log / n);
     return OK;
 }
 
@@ -329,12 +329,12 @@ status_code geom_mean(double *rez, const double eps, const int n, ...) {
    остаток бывает -1 - тогда делим на a. Так не нужно считать -n
    (для LLONG_MIN это было бы переполнение).
    eps нужен для проверки a = 0 (вещественные сравниваем только через eps). */
-status_code fast_pow(const double a, const long long n, const double eps, double *rez) {
-    if (rez == NULL || eps <= 0) {
+status_code fast_pow(const double a, const long long n, const double eps, double *result) {
+    if (result == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
     if (n == 0) {
-        *rez = 1.0;   /* в том числе 0^0 = 1 по договоренности */
+        *result = 1.0;   /* в том числе 0^0 = 1 по договоренности */
         return OK;
     }
     if (fabs(a) < eps && n < 0) {
@@ -343,13 +343,13 @@ status_code fast_pow(const double a, const long long n, const double eps, double
 
     /* Пример: 2^10 = (2^5)^2, 2^5 = (2^2)^2 * 2, 2^2 = (2^1)^2, 2^1 = (2^0)^2 * 2, 2^0 = 1.
        Функция вызывает сама себя с n / 2, пока не дойдет до n = 0 */
-    double polovina = 0.0;
-    status_code sc = fast_pow(a, n / 2, eps, &polovina);   /* рекурсивный вызов */
+    double half = 0.0;
+    status_code sc = fast_pow(a, n / 2, eps, &half);   /* рекурсивный вызов */
     if (sc != OK) {
         return sc;
     }
 
-    double r = polovina * polovina;
+    double r = half * half;
     if (n % 2 == 1) {
         r *= a;
     } else if (n % 2 == -1) {
@@ -358,7 +358,7 @@ status_code fast_pow(const double a, const long long n, const double eps, double
     if (isinf(r)) {
         return OVERFLOW_ERROR;
     }
-    *rez = r;
+    *result = r;
     return OK;
 }
 
@@ -390,8 +390,8 @@ status_code dichotomy(double a, double b, const double eps,
 
     /* каждый шаг делит отрезок пополам. Число шагов ограничено: когда концы
        стали соседними double, середина уже не делит отрезок и цикл бы не кончился */
-    for (int shag = 0; b - a > eps; shag++) {
-        if (shag >= MAX_ITER) {
+    for (int iter = 0; b - a > eps; iter++) {
+        if (iter >= MAX_ITER) {
             *root = a + (b - a) / 2;
             return PRECISION_LIMIT;
         }
@@ -415,37 +415,37 @@ status_code dichotomy(double a, double b, const double eps,
     return OK;
 }
 
-/* Уравнения для демонстрации дихотомии: значение в rez */
-status_code eq1(const double x, double *rez) {   /* корень sqrt 2 */
-    if (rez == NULL) {
+/* Уравнения для демонстрации дихотомии: значение в result */
+status_code eq1(const double x, double *result) {   /* корень sqrt 2 */
+    if (result == NULL) {
         return INVALID_ARGS;
     }
-    *rez = x * x - 2;
+    *result = x * x - 2;
     return OK;
 }
 
-status_code eq2(const double x, double *rez) {   /* ~0.739 */
-    if (rez == NULL) {
+status_code eq2(const double x, double *result) {   /* ~0.739 */
+    if (result == NULL) {
         return INVALID_ARGS;
     }
-    *rez = cos(x) - x;
+    *result = cos(x) - x;
     return OK;
 }
 
-status_code eq3(const double x, double *rez) {   /* ~1.521 */
-    if (rez == NULL) {
+status_code eq3(const double x, double *result) {   /* ~1.521 */
+    if (result == NULL) {
         return INVALID_ARGS;
     }
-    *rez = x * x * x - x - 2;
+    *result = x * x * x - x - 2;
     return OK;
 }
 
-status_code eq4(const double x, double *rez) {   /* ~0.619 и ~1.512 */
-    if (rez == NULL) {
+status_code eq4(const double x, double *result) {   /* ~0.619 и ~1.512 */
+    if (result == NULL) {
         return INVALID_ARGS;
     }
-    *rez = exp(x) - 3 * x;
-    if (isinf(*rez)) {
+    *result = exp(x) - 3 * x;
+    if (isinf(*result)) {
         return OVERFLOW_ERROR;   /* x слишком большой */
     }
     return OK;
@@ -464,27 +464,27 @@ status_code eq4(const double x, double *rez) {   /* ~0.619 и ~1.512 */
    Числа передаем как 0.0, 2.0 (не 0, 2): va_arg читает double, а int прочитался бы неверно */
 status_code demo_convex(void) {
     printf("1. Convex polygon\n");
-    int rez = 0;
+    int result = 0;
 
-    if (is_convex(&rez, 1e-9, 4, 0.0, 0.0, 2.0, 0.0, 2.0, 2.0, 0.0, 2.0) != OK) {
+    if (is_convex(&result, 1e-9, 4, 0.0, 0.0, 2.0, 0.0, 2.0, 2.0, 0.0, 2.0) != OK) {
         return DEMO_FAILED;
     }
-    printf("   square (0,0) (2,0) (2,2) (0,2): %s\n", rez ? "convex" : "not convex");
-    if (is_convex(&rez, 1e-9, 4, 0.0, 0.0, 2.0, 0.0, 1.0, 0.5, 1.0, 2.0) != OK) {
+    printf("   square (0,0) (2,0) (2,2) (0,2): %s\n", result ? "convex" : "not convex");
+    if (is_convex(&result, 1e-9, 4, 0.0, 0.0, 2.0, 0.0, 1.0, 0.5, 1.0, 2.0) != OK) {
         return DEMO_FAILED;
     }
-    printf("   (0,0) (2,0) (1,0.5) (1,2):       %s\n", rez ? "convex" : "not convex");
-    if (is_convex(&rez, 1e-9, 3, 0.0, 0.0, 1.0, 1.0, 2.0, 2.0) != OK) {
+    printf("   (0,0) (2,0) (1,0.5) (1,2):       %s\n", result ? "convex" : "not convex");
+    if (is_convex(&result, 1e-9, 3, 0.0, 0.0, 1.0, 1.0, 2.0, 2.0) != OK) {
         return DEMO_FAILED;
     }
-    printf("   (0,0) (1,1) (2,2) on one line:   %s\n", rez ? "convex" : "not convex");
+    printf("   (0,0) (1,1) (2,2) on one line:   %s\n", result ? "convex" : "not convex");
     /* пятиконечная звезда: все повороты в одну сторону, но фигура не выпуклая */
-    if (is_convex(&rez, 1e-9, 5, 0.0, 1.0, 0.588, -0.809, -0.951, 0.309,
+    if (is_convex(&result, 1e-9, 5, 0.0, 1.0, 0.588, -0.809, -0.951, 0.309,
                   0.951, 0.309, -0.588, -0.809) != OK) {
         return DEMO_FAILED;
     }
-    printf("   star (5 points):                 %s\n", rez ? "convex" : "not convex");
-    if (is_convex(&rez, 1e-9, 2, 0.0, 0.0, 1.0, 1.0) != INVALID_ARGS) {
+    printf("   star (5 points):                 %s\n", result ? "convex" : "not convex");
+    if (is_convex(&result, 1e-9, 2, 0.0, 0.0, 1.0, 1.0) != INVALID_ARGS) {
         return DEMO_FAILED;
     }
     printf("   2 points:                        error, need at least 3\n");
@@ -493,20 +493,20 @@ status_code demo_convex(void) {
 
 status_code demo_polynomial(void) {
     printf("\n2. Polynomial\n");
-    double rez = 0.0;
-    if (polynomial(&rez, 2.0, 2, 1.0, -3.0, 2.0) != OK) {
+    double result = 0.0;
+    if (polynomial(&result, 2.0, 2, 1.0, -3.0, 2.0) != OK) {
         return DEMO_FAILED;
     }
-    printf("   x^2 - 3x + 2 at x = 2:     %g\n", rez);
-    if (polynomial(&rez, 3.0, 3, 2.0, 0.0, 0.0, -1.0) != OK) {
+    printf("   x^2 - 3x + 2 at x = 2:     %g\n", result);
+    if (polynomial(&result, 3.0, 3, 2.0, 0.0, 0.0, -1.0) != OK) {
         return DEMO_FAILED;
     }
-    printf("   2x^3 - 1 at x = 3:         %g\n", rez);
-    if (polynomial(&rez, -1.5, 0, 7.0) != OK) {
+    printf("   2x^3 - 1 at x = 3:         %g\n", result);
+    if (polynomial(&result, -1.5, 0, 7.0) != OK) {
         return DEMO_FAILED;
     }
-    printf("   7 (degree 0) at x = -1.5:  %g\n", rez);
-    if (polynomial(&rez, 1e200, 2, 1.0, 0.0, 0.0) != OVERFLOW_ERROR) {
+    printf("   7 (degree 0) at x = -1.5:  %g\n", result);
+    if (polynomial(&result, 1e200, 2, 1.0, 0.0, 0.0) != OVERFLOW_ERROR) {
         return DEMO_FAILED;
     }
     printf("   x^2 at x = 1e200:          overflow\n");
@@ -516,29 +516,29 @@ status_code demo_polynomial(void) {
 status_code demo_kaprekar(void) {
     printf("\n3. Kaprekar numbers\n");
     const char *found[20];
-    int kolvo = 0;
+    int kaprekar_count = 0;
 
-    if (find_kaprekar(found, 20, &kolvo, 10, 9,
+    if (find_kaprekar(found, 20, &kaprekar_count, 10, 9,
                       "1", "9", "10", "45", "55", "99", "100", "297", "703") != OK) {
         return DEMO_FAILED;
     }
     /* в found лежат указатели на найденные строки - печатаем их через %s */
     printf("   base 10, from 1 9 10 45 55 99 100 297 703:\n   ");
-    for (int i = 0; i < kolvo; i++) {
+    for (int i = 0; i < kaprekar_count; i++) {
         printf("%s ", found[i]);
     }
     printf("\n");
 
-    if (find_kaprekar(found, 20, &kolvo, 16, 8, "1", "6", "a", "F", "10", "33", "ff", "100") != OK) {
+    if (find_kaprekar(found, 20, &kaprekar_count, 16, 8, "1", "6", "a", "F", "10", "33", "ff", "100") != OK) {
         return DEMO_FAILED;
     }
     printf("   base 16, from 1 6 a F 10 33 ff 100:\n   ");
-    for (int i = 0; i < kolvo; i++) {
+    for (int i = 0; i < kaprekar_count; i++) {
         printf("%s ", found[i]);
     }
     printf("\n");
 
-    if (find_kaprekar(found, 20, &kolvo, 10, 2, "45", "4z") != INVALID_NUMBER) {
+    if (find_kaprekar(found, 20, &kaprekar_count, 10, 2, "45", "4z") != INVALID_NUMBER) {
         return DEMO_FAILED;
     }
     printf("   base 10, \"4z\": error, not a number in this base\n");
@@ -547,24 +547,24 @@ status_code demo_kaprekar(void) {
 
 status_code demo_geom_mean(void) {
     printf("\n4. Geometric mean (eps 1e-9)\n");
-    double rez = 0.0;
-    if (geom_mean(&rez, 1e-9, 2, 4.0, 9.0) != OK) {
+    double result = 0.0;
+    if (geom_mean(&result, 1e-9, 2, 4.0, 9.0) != OK) {
         return DEMO_FAILED;
     }
-    printf("   4, 9:          %g\n", rez);
-    if (geom_mean(&rez, 1e-9, 3, 1.0, 10.0, 100.0) != OK) {
+    printf("   4, 9:          %g\n", result);
+    if (geom_mean(&result, 1e-9, 3, 1.0, 10.0, 100.0) != OK) {
         return DEMO_FAILED;
     }
-    printf("   1, 10, 100:    %g\n", rez);
-    if (geom_mean(&rez, 1e-9, 3, 1e200, 1e200, 1e200) != OK) {
+    printf("   1, 10, 100:    %g\n", result);
+    if (geom_mean(&result, 1e-9, 3, 1e200, 1e200, 1e200) != OK) {
         return DEMO_FAILED;
     }
-    printf("   1e200 x 3:     %g (no overflow thanks to logarithms)\n", rez);
-    if (geom_mean(&rez, 1e-9, 3, 5.0, 0.0, 7.0) != OK) {
+    printf("   1e200 x 3:     %g (no overflow thanks to logarithms)\n", result);
+    if (geom_mean(&result, 1e-9, 3, 5.0, 0.0, 7.0) != OK) {
         return DEMO_FAILED;
     }
-    printf("   5, 0, 7:       %g\n", rez);
-    if (geom_mean(&rez, 1e-9, 2, -4.0, 9.0) != NEGATIVE_NUMBER) {
+    printf("   5, 0, 7:       %g\n", result);
+    if (geom_mean(&result, 1e-9, 2, -4.0, 9.0) != NEGATIVE_NUMBER) {
         return DEMO_FAILED;
     }
     printf("   -4, 9:         error, negative number\n");
@@ -573,16 +573,16 @@ status_code demo_geom_mean(void) {
 
 status_code demo_pow(void) {
     printf("\n5. Fast power (eps 1e-9)\n");
-    /* пары (основание, показатель) из двух массивов: osn[i] ^ pok[i].
+    /* пары (основание, показатель) из двух массивов: bases[i] ^ exponents[i].
        0^-1 - деление на ноль, 10^400 - не влезает в double */
-    const double osn[6] = {2.0, 2.0, 1.5, 0.0, -3.0, 10.0};
-    const long long pok[6] = {10, -3, 0, -1, 3, 400};
+    const double bases[6] = {2.0, 2.0, 1.5, 0.0, -3.0, 10.0};
+    const long long exponents[6] = {10, -3, 0, -1, 3, 400};
     for (int i = 0; i < 6; i++) {
-        double rez = 0.0;
-        status_code sc = fast_pow(osn[i], pok[i], 1e-9, &rez);
-        printf("   %g ^ %lld = ", osn[i], pok[i]);
+        double result = 0.0;
+        status_code sc = fast_pow(bases[i], exponents[i], 1e-9, &result);
+        printf("   %g ^ %lld = ", bases[i], exponents[i]);
         if (sc == OK) {
-            printf("%g\n", rez);
+            printf("%g\n", result);
         } else if (sc == DIVISION_BY_ZERO) {
             printf("error, division by zero\n");
         } else if (sc == OVERFLOW_ERROR) {

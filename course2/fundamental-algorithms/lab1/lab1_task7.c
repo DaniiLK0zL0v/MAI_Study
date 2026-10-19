@@ -28,12 +28,12 @@ typedef enum {
    ch везде int, а не char: fgetc возвращает байт 0..255 или EOF (-1), в char их не различить */
 
 /* Разделители лексем: пробел, табуляция, перевод строки (и '\r' из Windows-файлов).
-   ch - то, что вернул fgetc: байт от 0 до 255 или EOF. rez = 1 - разделитель */
-status_code is_razdelitel(const int ch, int *rez) {
-    if (rez == NULL || (ch < 0 && ch != EOF) || ch > UCHAR_MAX) {
+   ch - то, что вернул fgetc: байт от 0 до 255 или EOF. result = 1 - разделитель */
+status_code is_separator(const int ch, int *result) {
+    if (result == NULL || (ch < 0 && ch != EOF) || ch > UCHAR_MAX) {
         return INVALID_ARGS;
     }
-    *rez = (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r');
+    *result = (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r');
     return OK;
 }
 
@@ -54,16 +54,16 @@ status_code parse_flag(const char *arg, char *flag) {
 }
 
 /* Пропустить разделители. В ch кладем первый символ лексемы или EOF */
-status_code skip_razdeliteli(FILE *in, int *ch) {
+status_code skip_separators(FILE *in, int *ch) {
     if (in == NULL || ch == NULL) {
         return INVALID_ARGS;
     }
     /* читаем символы, пока они разделители; первый не-разделитель остается в *ch.
-       razd = 1 в начале - чтобы цикл выполнился хотя бы раз */
-    int razd = 1;
-    while (razd) {   /* EOF - не разделитель, на нем цикл тоже кончится */
+       sep = 1 в начале - чтобы цикл выполнился хотя бы раз */
+    int sep = 1;
+    while (sep) {   /* EOF - не разделитель, на нем цикл тоже кончится */
         *ch = fgetc(in);
-        status_code sc = is_razdelitel(*ch, &razd);
+        status_code sc = is_separator(*ch, &sep);
         if (sc != OK) {
             return sc;
         }
@@ -72,25 +72,25 @@ status_code skip_razdeliteli(FILE *in, int *ch) {
 }
 
 /* Записать символ в системе счисления base (код символа), например 'A' в base 8 -> "101" */
-status_code write_code(FILE *out, const unsigned int kod, const unsigned int base) {
+status_code write_code(FILE *out, const unsigned int char_code, const unsigned int base) {
     if (out == NULL || base < 2 || base > 16) {
         return INVALID_ARGS;
     }
     /* Перевод в систему base: остаток от деления на base - очередная цифра с конца.
        Пример: 65 ('A') в base 8: 65 % 8 = 1, 65 / 8 = 8; 8 % 8 = 0, 8 / 8 = 1; 1 % 8 = 1 -> "101".
-       "0123456789ABCDEF"[ostatok] - символ цифры (строку можно индексировать, как массив).
+       "0123456789ABCDEF"[остаток] - символ цифры (строку можно индексировать, как массив).
        do-while, а не while: у кода 0 тоже должна быть одна цифра "0" */
-    char cifry[16];   /* код <= 255, в base 2 это максимум 8 цифр */
+    char digits[16];   /* код <= 255, в base 2 это максимум 8 цифр */
     int cnt = 0;
-    unsigned int val = kod;
+    unsigned int val = char_code;
     do {
-        cifry[cnt] = "0123456789ABCDEF"[val % base];
+        digits[cnt] = "0123456789ABCDEF"[val % base];
         val /= base;
         cnt++;
     } while (val > 0);
     /* цифры получились с конца - пишем задом наперед */
     for (int i = cnt - 1; i >= 0; i--) {
-        if (fputc(cifry[i], out) == EOF) {
+        if (fputc(digits[i], out) == EOF) {
             return WRITE_ERROR;
         }
     }
@@ -99,37 +99,37 @@ status_code write_code(FILE *out, const unsigned int kod, const unsigned int bas
 
 /* Скопировать одну лексему из in в out.
    Перед лексемой (кроме самой первой) пишем один пробел.
-   est - была ли лексема (0 - файл закончился) */
-status_code copy_token(FILE *in, FILE *out, int *pervaya, int *est) {
-    if (in == NULL || out == NULL || pervaya == NULL || est == NULL) {
+   has_token - была ли лексема (0 - файл закончился) */
+status_code copy_token(FILE *in, FILE *out, int *first_token, int *has_token) {
+    if (in == NULL || out == NULL || first_token == NULL || has_token == NULL) {
         return INVALID_ARGS;
     }
     int ch = EOF;
-    status_code sc = skip_razdeliteli(in, &ch);
+    status_code sc = skip_separators(in, &ch);
     if (sc != OK) {
         return sc;
     }
     if (ch == EOF) {
-        *est = 0;
+        *has_token = 0;
         return OK;
     }
-    *est = 1;
-    /* pervaya - общий флаг для всего выходного файла (передается адресом и
+    *has_token = 1;
+    /* first_token - общий флаг для всего выходного файла (передается адресом и
        меняется здесь), так пробелы стоят только МЕЖДУ лексемами. Пробел
        пишется, только если лексема не первая: при ложной левой части && правая не выполняется */
-    if (!*pervaya && fputc(' ', out) == EOF) {
+    if (!*first_token && fputc(' ', out) == EOF) {
         return WRITE_ERROR;
     }
-    *pervaya = 0;
+    *first_token = 0;
 
     /* пишем символы, пока не встретим разделитель или конец файла */
     while (ch != EOF) {
-        int razd = 0;
-        sc = is_razdelitel(ch, &razd);
+        int sep = 0;
+        sc = is_separator(ch, &sep);
         if (sc != OK) {
             return sc;
         }
-        if (razd) {
+        if (sep) {
             break;
         }
         if (fputc(ch, out) == EOF) {
@@ -146,22 +146,22 @@ status_code merge_tokens(FILE *f1, FILE *f2, FILE *out) {
     if (f1 == NULL || f2 == NULL || out == NULL) {
         return INVALID_ARGS;
     }
-    int pervaya = 1;
-    int est1 = 1, est2 = 1;   /* остались ли лексемы в файлах */
+    int first_token = 1;
+    int has_token1 = 1, has_token2 = 1;   /* остались ли лексемы в файлах */
     status_code sc;
 
     /* Пока хоть в одном файле есть лексемы: берем по одной из каждого по очереди.
-       Когда copy_token дошел до конца файла, он ставит est = 0, и этот файл
+       Когда copy_token дошел до конца файла, он ставит has_token = 0, и этот файл
        дальше пропускается - так остаток другого файла дописывается подряд */
-    while (est1 || est2) {
-        if (est1) {
-            sc = copy_token(f1, out, &pervaya, &est1);
+    while (has_token1 || has_token2) {
+        if (has_token1) {
+            sc = copy_token(f1, out, &first_token, &has_token1);
             if (sc != OK) {
                 return sc;
             }
         }
-        if (est2) {
-            sc = copy_token(f2, out, &pervaya, &est2);
+        if (has_token2) {
+            sc = copy_token(f2, out, &first_token, &has_token2);
             if (sc != OK) {
                 return sc;
             }
@@ -179,43 +179,43 @@ status_code transform_tokens(FILE *in, FILE *out) {
     if (in == NULL || out == NULL) {
         return INVALID_ARGS;
     }
-    /* nomer - номер текущей лексемы. ch - первый символ текущей лексемы:
+    /* token_number - номер текущей лексемы. ch - первый символ текущей лексемы:
        перед циклом пропускаем разделители в начале файла */
-    long long nomer = 0;
+    long long token_number = 0;
     int ch = EOF;
-    status_code sc = skip_razdeliteli(in, &ch);
+    status_code sc = skip_separators(in, &ch);
     if (sc != OK) {
         return sc;
     }
 
     while (ch != EOF) {
-        nomer++;
-        if (nomer > 1 && fputc(' ', out) == EOF) {
+        token_number++;
+        if (token_number > 1 && fputc(' ', out) == EOF) {
             return WRITE_ERROR;
         }
-        /* по номеру решаем, что делать с лексемой: strochnye - переводить ли
+        /* по номеру решаем, что делать с лексемой: to_lower - переводить ли
            заглавные в строчные, base - в какой системе писать коды символов.
            10-я делится и на 2, и на 5: ее проверяем первой */
-        int strochnye = (nomer % 2 == 0);                    /* и для 10-й тоже */
+        int to_lower = (token_number % 2 == 0);                    /* и для 10-й тоже */
         unsigned int base = 0;                               /* 0 - писать сам символ */
-        if (nomer % 10 == 0) {
+        if (token_number % 10 == 0) {
             base = 4;
-        } else if (nomer % 5 == 0) {
+        } else if (token_number % 5 == 0) {
             base = 8;
         }
 
         /* обрабатываем символы лексемы по одному, до разделителя или конца файла */
         while (ch != EOF) {
-            int razd = 0;
-            sc = is_razdelitel(ch, &razd);
+            int sep = 0;
+            sc = is_separator(ch, &sep);
             if (sc != OK) {
                 return sc;
             }
-            if (razd) {
+            if (sep) {
                 break;
             }
             /* заглавная латинская -> строчная: сдвиг на одинаковое расстояние в таблице кодов */
-            if (strochnye && ch >= 'A' && ch <= 'Z') {
+            if (to_lower && ch >= 'A' && ch <= 'Z') {
                 ch = ch - 'A' + 'a';
             }
             if (base != 0) {
@@ -232,7 +232,7 @@ status_code transform_tokens(FILE *in, FILE *out) {
             return READ_ERROR;
         }
         /* лексема кончилась - пропускаем разделители до начала следующей (или до EOF) */
-        sc = skip_razdeliteli(in, &ch);
+        sc = skip_separators(in, &ch);
         if (sc != OK) {
             return sc;
         }
@@ -249,17 +249,17 @@ status_code transform_tokens(FILE *in, FILE *out) {
    _fullpath(NULL, ...) умеет выделить память сам, но так не делаем: эту память выделяет
    библиотека Windows внутри себя, и программа Dr. Memory (проверка утечек) ее не видит -
    считает ошибкой наш free. Со своим malloc все выделения видны и понятны */
-status_code full_path(const char *put, char **polny) {
-    if (put == NULL || polny == NULL) {
+status_code full_path(const char *path, char **full) {
+    if (path == NULL || full == NULL) {
         return INVALID_ARGS;
     }
-    for (size_t razmer = 260; razmer <= 65536; razmer *= 2) {
-        char *buf = (char *)malloc(razmer);
+    for (size_t size = 260; size <= 65536; size *= 2) {
+        char *buf = (char *)malloc(size);
         if (buf == NULL) {
             return NO_MEMORY;
         }
-        if (_fullpath(buf, put, razmer) != NULL) {
-            *polny = buf;   /* освобождает вызывающий */
+        if (_fullpath(buf, path, size) != NULL) {
+            *full = buf;   /* освобождает вызывающий */
             return OK;
         }
         free(buf);   /* не поместилось (или путь плохой) - пробуем буфер вдвое больше */
@@ -268,7 +268,7 @@ status_code full_path(const char *put, char **polny) {
 }
 #endif
 
-/* Ведут ли два пути к одному и тому же файлу на диске: *odinakovye = 1 - да, 0 - нет.
+/* Ведут ли два пути к одному и тому же файлу на диске: *equal = 1 - да, 0 - нет.
    Сравнивать строки (strcmp) мало: "in.txt", "./in.txt", "../lab1/in.txt" и полный путь -
    разные строки, но один файл. Если выходной файл совпадет с входным, fopen(..., "w")
    сотрет его раньше, чем мы успеем прочитать.
@@ -280,35 +280,35 @@ status_code full_path(const char *put, char **polny) {
      сравниваем без учета больших и маленьких букв (в Windows IN.TXT и in.txt - один файл).
    Если какой-то путь не существует (stat не смог), это не один файл: например, выходного
    файла еще нет - его создаст fopen. Если не существует входной, fopen потом сообщит об ошибке */
-status_code same_file(const char *put1, const char *put2, int *odinakovye) {
-    if (put1 == NULL || put2 == NULL || odinakovye == NULL) {
+status_code same_file(const char *path1, const char *path2, int *equal) {
+    if (path1 == NULL || path2 == NULL || equal == NULL) {
         return INVALID_ARGS;
     }
-    *odinakovye = 0;
+    *equal = 0;
 #ifdef _WIN32
     /* full_path - полные пути в нашей памяти (потом free). Путь неправильный (BAD_PATH) -
        считаем, что файлы разные: fopen дальше сам сообщит об ошибке */
-    char *polny1 = NULL;
-    char *polny2 = NULL;
-    status_code sc1 = full_path(put1, &polny1);
-    status_code sc2 = full_path(put2, &polny2);
+    char *full1 = NULL;
+    char *full2 = NULL;
+    status_code sc1 = full_path(path1, &full1);
+    status_code sc2 = full_path(path2, &full2);
     if (sc1 == NO_MEMORY || sc2 == NO_MEMORY) {
-        free(polny1);   /* free(NULL) ничего не делает - можно не проверять */
-        free(polny2);
+        free(full1);   /* free(NULL) ничего не делает - можно не проверять */
+        free(full2);
         return NO_MEMORY;
     }
-    if (sc1 == OK && sc2 == OK && _stricmp(polny1, polny2) == 0) {
-        *odinakovye = 1;
+    if (sc1 == OK && sc2 == OK && _stricmp(full1, full2) == 0) {
+        *equal = 1;
     }
-    free(polny1);
-    free(polny2);
+    free(full1);
+    free(full2);
 #else
     /* stat возвращает 0, если сведения о файле получены; иначе (файла нет) - не 0 */
-    struct stat sved1;
-    struct stat sved2;
-    if (stat(put1, &sved1) == 0 && stat(put2, &sved2) == 0 &&
-        sved1.st_dev == sved2.st_dev && sved1.st_ino == sved2.st_ino) {
-        *odinakovye = 1;
+    struct stat info1;
+    struct stat info2;
+    if (stat(path1, &info1) == 0 && stat(path2, &info2) == 0 &&
+        info1.st_dev == info2.st_dev && info1.st_ino == info2.st_ino) {
+        *equal = 1;
     }
 #endif
     return OK;
@@ -326,9 +326,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     /* -r: флаг + 3 файла, -a: флаг + 2 файла */
-    int nuzhno = (flag == 'r') ? 5 : 4;
-    if (argc != nuzhno) {
-        fprintf(stderr, "Error: flag -%c needs %d file names\n", flag, nuzhno - 2);
+    int needed = (flag == 'r') ? 5 : 4;
+    if (argc != needed) {
+        fprintf(stderr, "Error: flag -%c needs %d file names\n", flag, needed - 2);
         return 1;
     }
 
@@ -338,18 +338,18 @@ int main(int argc, char *argv[]) {
        при -r разрешены: оба только читаются */
     const char *out_name = argv[argc - 1];
     for (int i = 2; i < argc - 1; i++) {
-        int odinakovye = 0;
-        status_code sc_put = same_file(argv[i], out_name, &odinakovye);
-        if (sc_put == NO_MEMORY) {
+        int equal = 0;
+        status_code sc_path = same_file(argv[i], out_name, &equal);
+        if (sc_path == NO_MEMORY) {
             /* на Windows same_file выделяет память под полные пути */
             fprintf(stderr, "Error: not enough memory\n");
             return 1;
         }
-        if (sc_put != OK) {
+        if (sc_path != OK) {
             fprintf(stderr, "Error: internal error\n");   /* INVALID_ARGS: NULL-ов здесь не бывает */
             return 1;
         }
-        if (odinakovye) {
+        if (equal) {
             fprintf(stderr, "Error: output file must be different from input files\n");
             return 1;
         }

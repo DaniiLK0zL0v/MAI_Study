@@ -19,8 +19,8 @@ typedef enum {
 #define MAX_PARTS (1LL << 24)      /* предел числа отрезков для интеграла */
 
 /* Строка -> double: конечное число без мусора */
-status_code parse_double(const char *str, double *chislo) {
-    if (str == NULL || chislo == NULL) {
+status_code parse_double(const char *str, double *number) {
+    if (str == NULL || number == NULL) {
         return INVALID_ARGS;
     }
     /* strtod сам пропускает пробелы в начале, а нам " 7" не подходит */
@@ -40,130 +40,130 @@ status_code parse_double(const char *str, double *chislo) {
     if (isinf(val) || isnan(val)) {
         return OUT_OF_RANGE;
     }
-    *chislo = val;
+    *number = val;
     return OK;
 }
 
 /* ===================== Ряды =====================
-   Все 4 ряда считаем одинаково: следующее слагаемое = текущее * otnoshenie(n).
+   Все 4 ряда считаем одинаково: следующее слагаемое = текущее * ratio_value(n).
    Так не нужны огромные факториалы и степени.
    Останавливаемся, когда |слагаемое| < eps. */
 
-/* otnoshenie = slag(n+1) / slag(n) для каждого ряда; кладем его в rez.
+/* ratio_value = term(n+1) / term(n) для каждого ряда; кладем его в result.
    n - номер слагаемого, он не может быть отрицательным */
-status_code ratio_a(const double x, const long long n, double *rez) {
-    if (rez == NULL || n < 0) {
+status_code ratio_a(const double x, const long long n, double *result) {
+    if (result == NULL || n < 0) {
         return INVALID_ARGS;
     }
     /* Как получено отношение: делим (n+1)-е слагаемое на n-е, все лишнее сокращается.
        x^(n+1) / (n+1)!  :  x^n / n!  =  x / (n+1) */
     /* x^n / n!  ->  x / (n+1) */
-    *rez = x / (double)(n + 1);
+    *result = x / (double)(n + 1);
     return OK;
 }
 
-status_code ratio_b(const double x, const long long n, double *rez) {
-    if (rez == NULL || n < 0) {
+status_code ratio_b(const double x, const long long n, double *result) {
+    if (result == NULL || n < 0) {
         return INVALID_ARGS;
     }
     /* (-1)^n x^2n / (2n)!  ->  -x^2 / ((2n+1)(2n+2)) */
     double dn = (double)n;
-    *rez = -x * x / ((2 * dn + 1) * (2 * dn + 2));
+    *result = -x * x / ((2 * dn + 1) * (2 * dn + 2));
     return OK;
 }
 
-status_code ratio_c(const double x, const long long n, double *rez) {
-    if (rez == NULL || n < 0) {
+status_code ratio_c(const double x, const long long n, double *result) {
+    if (result == NULL || n < 0) {
         return INVALID_ARGS;
     }
     /* 3^3n (n!)^3 x^2n / (3n)!  ->  27 (n+1)^3 x^2 / ((3n+1)(3n+2)(3n+3)) = 9 (n+1)^2 x^2 / ((3n+1)(3n+2)) */
     double dn = (double)n;
-    *rez = 9 * (dn + 1) * (dn + 1) * x * x / ((3 * dn + 1) * (3 * dn + 2));
+    *result = 9 * (dn + 1) * (dn + 1) * x * x / ((3 * dn + 1) * (3 * dn + 2));
     return OK;
 }
 
-status_code ratio_d(const double x, const long long n, double *rez) {
-    if (rez == NULL || n < 0) {
+status_code ratio_d(const double x, const long long n, double *result) {
+    if (result == NULL || n < 0) {
         return INVALID_ARGS;
     }
     /* (-1)^n (2n-1)!! x^2n / (2n)!!  ->  -(2n+1) x^2 / (2n+2) */
     double dn = (double)n;
-    *rez = -(2 * dn + 1) * x * x / (2 * dn + 2);
+    *result = -(2 * dn + 1) * x * x / (2 * dn + 2);
     return OK;
 }
 
 /* Общая функция суммирования ряда.
    first - первое слагаемое, n0 - его номер, ratio - отношение соседних слагаемых */
 status_code sum_series(const double x, const double eps, const double first, const long long n0,
-                       status_code (*ratio)(const double, const long long, double *), double *summa) {
-    if (ratio == NULL || summa == NULL || eps <= 0) {
+                       status_code (*ratio)(const double, const long long, double *), double *sum) {
+    if (ratio == NULL || sum == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
-    /* slag - текущее слагаемое, s - сумма уже сложенных слагаемых */
-    double slag = first;
+    /* term - текущее слагаемое, s - сумма уже сложенных слагаемых */
+    double term = first;
     double s = 0.0;
-    double max_slag = fabs(first);   /* самое большое слагаемое - для оценки ошибки округления */
+    double max_term = fabs(first);   /* самое большое слагаемое - для оценки ошибки округления */
 
     /* На каждом шаге: если слагаемое уже меньше eps - стоп, ответ готов.
-       Иначе прибавляем его к сумме и получаем следующее: slag * otnoshenie.
+       Иначе прибавляем его к сумме и получаем следующее: term * ratio_value.
        MAX_TERMS - защита от вечного цикла */
     for (long long n = n0; n < n0 + MAX_TERMS; n++) {
-        if (fabs(slag) < eps) {
-            *summa = s;
-            /* при больших слагаемых погрешность округления ~ max_slag * DBL_EPSILON.
+        if (fabs(term) < eps) {
+            *sum = s;
+            /* при больших слагаемых погрешность округления ~ max_term * DBL_EPSILON.
                Если она больше eps - честно говорим, что точность не достигнута */
-            if (max_slag * DBL_EPSILON > eps) {
+            if (max_term * DBL_EPSILON > eps) {
                 return PRECISION_LIMIT;
             }
             return OK;
         }
-        s += slag;
-        double otnoshenie = 0.0;
-        status_code sc = ratio(x, n, &otnoshenie);
+        s += term;
+        double ratio_value = 0.0;
+        status_code sc = ratio(x, n, &ratio_value);
         if (sc != OK) {
             return sc;
         }
-        slag *= otnoshenie;
+        term *= ratio_value;
         /* при большом x (например, e^1000) числа перестают влезать в double и становятся inf */
-        if (isinf(s) || isinf(slag)) {
+        if (isinf(s) || isinf(term)) {
             return OVERFLOW_ERROR;
         }
         /* запоминаем самое большое слагаемое (разница меньше eps для оценки не важна) */
-        if (fabs(slag) - max_slag > eps) {
-            max_slag = fabs(slag);
+        if (fabs(term) - max_term > eps) {
+            max_term = fabs(term);
         }
     }
-    *summa = s;
+    *sum = s;
     return PRECISION_LIMIT;
 }
 
 /* Каждый ряд - это вызов sum_series со своим первым слагаемым и своей функцией отношения */
 /* a. sum x^n / n!, n от 0 (это e^x) */
-status_code series_a(const double x, const double eps, double *summa) {
-    return sum_series(x, eps, 1.0, 0, ratio_a, summa);
+status_code series_a(const double x, const double eps, double *sum) {
+    return sum_series(x, eps, 1.0, 0, ratio_a, sum);
 }
 
 /* b. sum (-1)^n x^2n / (2n)!, n от 0 (это cos x) */
-status_code series_b(const double x, const double eps, double *summa) {
-    return sum_series(x, eps, 1.0, 0, ratio_b, summa);
+status_code series_b(const double x, const double eps, double *sum) {
+    return sum_series(x, eps, 1.0, 0, ratio_b, sum);
 }
 
 /* c. sum 3^3n (n!)^3 x^2n / (3n)!, n от 0. Сходится только при |x| < 1.
    Граница области сходимости точная, поэтому тут сравнение без eps */
-status_code series_c(const double x, const double eps, double *summa) {
+status_code series_c(const double x, const double eps, double *sum) {
     if (fabs(x) >= 1) {
         return DIVERGES;
     }
-    return sum_series(x, eps, 1.0, 0, ratio_c, summa);
+    return sum_series(x, eps, 1.0, 0, ratio_c, sum);
 }
 
 /* d. sum (-1)^n (2n-1)!! x^2n / (2n)!!, n от 1. Первое слагаемое -x^2/2.
    Берем |x| < 1 (при |x| = 1 сходится очень медленно, при |x| > 1 расходится) */
-status_code series_d(const double x, const double eps, double *summa) {
+status_code series_d(const double x, const double eps, double *sum) {
     if (fabs(x) >= 1) {
         return DIVERGES;
     }
-    return sum_series(x, eps, -x * x / 2, 1, ratio_d, summa);
+    return sum_series(x, eps, -x * x / 2, 1, ratio_d, sum);
 }
 
 /* ===================== Интегралы на [0, 1] =====================
@@ -172,57 +172,57 @@ status_code series_d(const double x, const double eps, double *summa) {
    это важно для c (в x = 1 функция уходит в бесконечность).
    Точность: удваиваем n, пока |I(2n) - I(n)| >= eps (правило Рунге).
    Подынтегральные функции проверяют, что x в области определения
-   (границы точные, поэтому без eps), значение кладут в rez. */
+   (границы точные, поэтому без eps), значение кладут в result. */
 
 /* f_a ... f_d - подынтегральные функции. Одинаковые параметры у всех четырех нужны,
    чтобы передавать их в midpoint и integral через указатель на функцию */
-status_code f_a(const double x, double *rez) {
-    if (rez == NULL) {
+status_code f_a(const double x, double *result) {
+    if (result == NULL) {
         return INVALID_ARGS;
     }
     if (x <= 0 || x > 1) {
         return OUT_OF_RANGE;         /* x = 0 - деление на 0 */
     }
-    *rez = log(1 + x) / x;
+    *result = log(1 + x) / x;
     return OK;
 }
 
-status_code f_b(const double x, double *rez) {
-    if (rez == NULL) {
+status_code f_b(const double x, double *result) {
+    if (result == NULL) {
         return INVALID_ARGS;
     }
     if (x < 0 || x > 1) {
         return OUT_OF_RANGE;
     }
-    *rez = exp(-x * x / 2);
+    *result = exp(-x * x / 2);
     return OK;
 }
 
-status_code f_c(const double x, double *rez) {
-    if (rez == NULL) {
+status_code f_c(const double x, double *result) {
+    if (result == NULL) {
         return INVALID_ARGS;
     }
     if (x < 0 || x >= 1) {
         return OUT_OF_RANGE;         /* x = 1 - деление на 0 и ln бесконечности */
     }
-    *rez = log(1 / (1 - x));
+    *result = log(1 / (1 - x));
     return OK;
 }
 
-status_code f_d(const double x, double *rez) {
-    if (rez == NULL) {
+status_code f_d(const double x, double *result) {
+    if (result == NULL) {
         return INVALID_ARGS;
     }
     if (x < 0 || x > 1) {
         return OUT_OF_RANGE;
     }
-    *rez = pow(x, x);
+    *result = pow(x, x);
     return OK;
 }
 
 /* Интеграл f на [0, 1] при n частях */
-status_code midpoint(status_code (*f)(const double, double *), const long long n, double *rez) {
-    if (f == NULL || rez == NULL || n <= 0) {
+status_code midpoint(status_code (*f)(const double, double *), const long long n, double *result) {
+    if (f == NULL || result == NULL || n <= 0) {
         return INVALID_ARGS;
     }
     /* h - ширина одной части. Прямоугольник i: от i*h до (i+1)*h, высота - значение
@@ -237,12 +237,12 @@ status_code midpoint(status_code (*f)(const double, double *), const long long n
         }
         s += y;
     }
-    *rez = s * h;
+    *result = s * h;
     return OK;
 }
 
-status_code integral(status_code (*f)(const double, double *), const double eps, double *rez) {
-    if (f == NULL || rez == NULL || eps <= 0) {
+status_code integral(status_code (*f)(const double, double *), const double eps, double *result) {
+    if (f == NULL || result == NULL || eps <= 0) {
         return INVALID_ARGS;
     }
     /* считаем при n = 1, 2, 4, 8 ... частях; prev - прошлое значение, cur - новое.
@@ -259,12 +259,12 @@ status_code integral(status_code (*f)(const double, double *), const double eps,
             return sc;
         }
         if (fabs(cur - prev) < eps) {
-            *rez = cur;
+            *result = cur;
             return OK;
         }
         prev = cur;
     }
-    *rez = prev;
+    *result = prev;
     return PRECISION_LIMIT;
 }
 
@@ -317,11 +317,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    /* читаем два числа: argv[1] в eps, argv[2] в x. kuda - адрес, куда положить очередное */
+    /* читаем два числа: argv[1] в eps, argv[2] в x. target - адрес, куда положить очередное */
     double eps = 0.0, x = 0.0;
     for (int i = 1; i <= 2; i++) {
-        double *kuda = (i == 1) ? &eps : &x;
-        status_code sc = parse_double(argv[i], kuda);
+        double *target = (i == 1) ? &eps : &x;
+        status_code sc = parse_double(argv[i], target);
         if (sc == INVALID_NUMBER) {
             fprintf(stderr, "Error: '%s' is not a number\n", argv[i]);
             return 1;
