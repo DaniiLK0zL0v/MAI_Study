@@ -1,0 +1,253 @@
+# Тесты для задания 3 (программа lab2_task3)
+#
+# Как запустить:  Linux:   bash run_tests.sh 3              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 3   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках, пустой - ""
+#   out:   строка, которую программа должна вывести в stdout (printf); "out:" без текста - пустая строка
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Файлы для поиска - tests/data/task3_*.txt. В подстроке \n - перевод строки, \t - табуляция,
+# \\ - обратная косая черта. Строки и позиции считаются с 1, позиция - в байтах.
+# Ожидаемые ответы посчитаны на Python: все вхождения с перекрытием, строка и позиция начала.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab2_task3
+
+# ============================================================
+# Демонстрация (без аргументов): несколько вызовов find_substring с готовыми списками файлов
+# ============================================================
+
+name: демонстрация: 2, 1, 1, 3 и 1 файл в вызове; подстрока с \n; перекрытия; нет файла; пустая подстрока
+args: 
+out: Search "cat":
+out: File 'tests/data/task3_text.txt': 5 matches
+out:   line 1, position 5
+out:   line 3, position 17
+out:   line 4, position 1
+out:   line 4, position 4
+out:   line 4, position 11
+out: File 'tests/data/task3_cats.txt': 4 matches
+out:   line 1, position 1
+out:   line 2, position 1
+out:   line 2, position 5
+out:   line 4, position 2
+out:
+out: Search "dog\nThe":
+out: File 'tests/data/task3_text.txt': 1 match
+out:   line 2, position 3
+out:
+out: Search "aa":
+out: File 'tests/data/task3_aaaa.txt': 3 matches
+out:   line 1, position 1
+out:   line 1, position 2
+out:   line 1, position 3
+out:
+out: Search "the":
+out: File 'tests/data/task3_text.txt': 2 matches
+out:   line 1, position 16
+out:   line 3, position 13
+out: Error: can not open file 'tests/data/task3_nofile.txt'
+out: File 'tests/data/task3_cats.txt': no matches
+out:
+out: Search "":
+out: Error: the substring must not be empty
+code: 0
+
+# ============================================================
+# Поиск в своих файлах (ответы посчитаны на Python)
+# ============================================================
+
+name: обычное слово: вхождения внутри слов тоже считаются (catcat, concatenate)
+args: cat tests/data/task3_text.txt
+out: File 'tests/data/task3_text.txt': 5 matches
+out:   line 1, position 5
+out:   line 3, position 17
+out:   line 4, position 1
+out:   line 4, position 4
+out:   line 4, position 11
+code: 0
+
+name: регистр важен: The и the - разные подстроки
+args: The tests/data/task3_text.txt
+out: File 'tests/data/task3_text.txt': 2 matches
+out:   line 1, position 1
+out:   line 3, position 1
+code: 0
+
+name: несколько файлов - по порядку аргументов
+args: cat tests/data/task3_text.txt tests/data/task3_cats.txt tests/data/task3_noeol.txt
+out: File 'tests/data/task3_text.txt': 5 matches
+out:   line 1, position 5
+out:   line 3, position 17
+out:   line 4, position 1
+out:   line 4, position 4
+out:   line 4, position 11
+out: File 'tests/data/task3_cats.txt': 4 matches
+out:   line 1, position 1
+out:   line 2, position 1
+out:   line 2, position 5
+out:   line 4, position 2
+out: File 'tests/data/task3_noeol.txt': 1 match
+out:   line 1, position 11
+code: 0
+
+name: перекрывающиеся вхождения: aa в aaaa - 3 раза
+args: aa tests/data/task3_aaaa.txt
+out: File 'tests/data/task3_aaaa.txt': 3 matches
+out:   line 1, position 1
+out:   line 1, position 2
+out:   line 1, position 3
+code: 0
+
+name: подстрока с переводом строки \n: конец строки + начало следующей
+args: dog\nThe tests/data/task3_text.txt
+out: File 'tests/data/task3_text.txt': 1 match
+out:   line 2, position 3
+code: 0
+
+name: подстрока с \n в нескольких местах
+args: b\na tests/data/task3_lines.txt
+out: File 'tests/data/task3_lines.txt': 2 matches
+out:   line 1, position 2
+out:   line 2, position 2
+code: 0
+
+name: подстрока из одного \n - сколько строк кончается переводом строки
+args: \n tests/data/task3_lines.txt
+out: File 'tests/data/task3_lines.txt': 3 matches
+out:   line 1, position 3
+out:   line 2, position 3
+out:   line 3, position 3
+code: 0
+
+name: табуляция \t в подстроке
+args: a\tb tests/data/task3_tab.txt
+out: File 'tests/data/task3_tab.txt': 1 match
+out:   line 1, position 3
+code: 0
+
+name: пробел в подстроке (аргумент в кавычках)
+args: "a b" tests/data/task3_tab.txt
+out: File 'tests/data/task3_tab.txt': 1 match
+out:   line 2, position 1
+code: 0
+
+name: обратная косая черта: \\ - один символ \
+args: \\dir tests/data/task3_slash.txt
+out: File 'tests/data/task3_slash.txt': 1 match
+out:   line 1, position 3
+code: 0
+
+name: две косые черты подряд
+args: \\\\ tests/data/task3_slash.txt
+out: File 'tests/data/task3_slash.txt': 1 match
+out:   line 2, position 1
+code: 0
+
+name: пустой файл - нет вхождений
+args: cat tests/data/task3_empty.txt
+out: File 'tests/data/task3_empty.txt': no matches
+code: 0
+
+name: подстрока длиннее файла
+args: aaaaaaaaaa tests/data/task3_aaaa.txt
+out: File 'tests/data/task3_aaaa.txt': no matches
+code: 0
+
+name: подстрока = весь файл
+args: aaaa\n tests/data/task3_aaaa.txt
+out: File 'tests/data/task3_aaaa.txt': 1 match
+out:   line 1, position 1
+code: 0
+
+name: последняя строка без перевода строки
+args: cat tests/data/task3_noeol.txt
+out: File 'tests/data/task3_noeol.txt': 1 match
+out:   line 1, position 11
+code: 0
+
+name: файл из Windows (\r\n): позиции те же, \r - обычный символ в конце строки
+args: cat tests/data/task3_crlf.txt
+out: File 'tests/data/task3_crlf.txt': 2 matches
+out:   line 1, position 5
+out:   line 2, position 5
+code: 0
+
+name: UTF-8: русская буква - 2 байта, то есть 2 позиции
+args: cat tests/data/task3_utf8.txt
+out: File 'tests/data/task3_utf8.txt': 1 match
+out:   line 1, position 8
+code: 0
+
+name: в файле есть байт 0 - поиск идет дальше него
+args: ab tests/data/task3_zero.txt
+out: File 'tests/data/task3_zero.txt': 2 matches
+out:   line 1, position 1
+out:   line 1, position 5
+code: 0
+
+name: одна буква - каждое ее место
+args: a tests/data/task3_text.txt
+out: File 'tests/data/task3_text.txt': 9 matches
+out:   line 1, position 6
+out:   line 1, position 10
+out:   line 1, position 21
+out:   line 3, position 9
+out:   line 3, position 18
+out:   line 4, position 2
+out:   line 4, position 5
+out:   line 4, position 12
+out:   line 4, position 16
+code: 0
+
+# ============================================================
+# Ошибки
+# ============================================================
+
+name: только подстрока, без файлов
+args: cat
+err: Usage: lab2_task3                     (demo)
+err:        lab2_task3 <substring> <file1> [file2 ...]
+err: In the substring \n is a new line, \t is a tab, \\ is \
+code: 1
+
+name: пустая подстрока
+args: "" tests/data/task3_text.txt
+err: Error: the substring must not be empty
+code: 1
+
+name: непонятное \x в подстроке
+args: a\xb tests/data/task3_text.txt
+err: Error: wrong '\' in the substring, use only \n, \t or \\
+code: 1
+
+name: \ в самом конце подстроки
+args: cat\ tests/data/task3_text.txt
+err: Error: wrong '\' in the substring, use only \n, \t or \\
+code: 1
+
+name: файла нет
+args: cat tests/data/task3_nofile.txt
+err: Error: can not open file 'tests/data/task3_nofile.txt'
+code: 1
+
+name: один файл из трех не существует - остальные обработаны, код 1
+args: cat tests/data/task3_text.txt tests/data/task3_nofile.txt tests/data/task3_cats.txt
+out: File 'tests/data/task3_text.txt': 5 matches
+out:   line 1, position 5
+out:   line 3, position 17
+out:   line 4, position 1
+out:   line 4, position 4
+out:   line 4, position 11
+out: File 'tests/data/task3_cats.txt': 4 matches
+out:   line 1, position 1
+out:   line 2, position 1
+out:   line 2, position 5
+out:   line 4, position 2
+err: Error: can not open file 'tests/data/task3_nofile.txt'
+code: 1

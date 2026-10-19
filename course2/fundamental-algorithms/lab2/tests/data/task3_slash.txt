@@ -1,0 +1,2 @@
+C:\dir\file
+\\server

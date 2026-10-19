@@ -1,0 +1,4 @@
+The cat sat on the mat.
+A dog
+The dog and the cat
+catcat concatenate
