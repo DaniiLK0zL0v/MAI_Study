@@ -1,0 +1,554 @@
+# Тесты для задания 7 (программа lab2_task7)
+#
+# Как запустить:  Linux:   bash run_tests.sh 7              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 7   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел; аргумент с пробелом - в кавычках: "a b"
+#   out:   строка, которую программа должна вывести в stdout (printf)
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Аргументы программы: <eps> <n> <вектор>... <норма>...
+#   вектор - n чисел через запятую (3,-4); норма - inf | p=<число> | A=<n*n чисел через запятую по строкам>.
+# Правильные ответы проверены на Python: длины - точными дробями (fractions.Fraction) до последнего корня,
+# самые длинные - тем же правилом: никто не длиннее больше чем на eps.
+#
+# Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
+
+program: lab2_task7
+
+# ============================================================
+# Демонстрация (без аргументов): готовые вызовы find_longest
+# ============================================================
+
+name: демонстрация - все примеры
+args:
+out: The longest vectors for every norm.
+out: A vector is the longest if no other vector is longer by more than eps.
+out:
+out: Plane (n = 2), eps = 1e-09
+out:   v1 = (3, 4)
+out:   v2 = (-4, 3)
+out:   v3 = (5, 0)
+out:   v4 = (1, 1)
+out: norm inf: longest 1 of 4
+out:   v3 = (5, 0), length 5
+out: norm p = 1: longest 2 of 4
+out:   v1 = (3, 4), length 7
+out:   v2 = (-4, 3), length 7
+out: norm p = 2: longest 3 of 4
+out:   v1 = (3, 4), length 5
+out:   v2 = (-4, 3), length 5
+out:   v3 = (5, 0), length 5
+out: norm A = [[2, 1], [1, 2]]: longest 1 of 4
+out:   v1 = (3, 4), length 8.602325267
+out:
+out: Space (n = 3), eps = 1e-09
+out:   v1 = (1, 2, 3)
+out:   v2 = (3, 2, 1)
+out:   v3 = (2, 2, 2)
+out:   v4 = (0, 0, -3.5)
+out: norm inf: longest 1 of 4
+out:   v4 = (0, 0, -3.5), length 3.5
+out: norm p = 1: longest 3 of 4
+out:   v1 = (1, 2, 3), length 6
+out:   v2 = (3, 2, 1), length 6
+out:   v3 = (2, 2, 2), length 6
+out: norm p = 2: longest 2 of 4
+out:   v1 = (1, 2, 3), length 3.741657387
+out:   v2 = (3, 2, 1), length 3.741657387
+out: norm p = 3: longest 1 of 4
+out:   v4 = (0, 0, -3.5), length 3.5
+out: norm A = [[1, 0, 0], [0, 2, 0], [0, 0, 3]]: longest 1 of 4
+out:   v4 = (0, 0, -3.5), length 6.062177826
+out:
+out: Role of eps, eps = 1e-09
+out:   v1 = (1, 0)
+out:   v2 = (0, 1.0000001)
+out: norm p = 2: longest 1 of 2
+out:   v2 = (0, 1.0000001), length 1.0000001
+out:
+out: Role of eps, eps = 1e-06
+out:   v1 = (1, 0)
+out:   v2 = (0, 1.0000001)
+out: norm p = 2: longest 2 of 2
+out:   v1 = (1, 0), length 1
+out:   v2 = (0, 1.0000001), length 1.0000001
+out:
+out: One zero vector, eps = 1e-09
+out:   v1 = (0, 0)
+out: norm inf: longest 1 of 1
+out:   v1 = (0, 0), length 0
+out: norm A = [[2, 1], [1, 2]]: longest 1 of 1
+out:   v1 = (0, 0), length 0
+out:
+out: Errors:
+out:
+out: Bad norms, eps = 1e-09
+out:   v1 = (3, 4)
+out:   v2 = (-4, 3)
+out:   v3 = (5, 0)
+out:   v4 = (1, 1)
+out: norm inf: longest 1 of 4
+out:   v3 = (5, 0), length 5
+out: norm p = 0.5: Error: p must be a usual number 1 or more
+out: norm A = [[1, 2], [0, 1]]: Error: matrix A must be symmetric
+out: norm A = [[1, 2], [2, 1]]: Error: matrix A must be positive definite
+out: norm A = [[1, 0, 0], [0, 2, 0], [0, 0, 3]]: Error: matrix A must be n x n
+out:
+out: Zero eps, eps = 0
+out:   v1 = (3, 4)
+out: Error: eps must be greater than 0
+out:
+out: Vector of other dimension, eps = 1e-09
+out:   v1 = (3, 4)
+out:   v2 = (1, 2, 3)
+out: Error: every vector must have n usual numbers
+out:
+out: NULL norm function: Error: a pointer is NULL (no norm function)
+code: 0
+
+# ============================================================
+# Обычные случаи
+# ============================================================
+
+name: плоскость: четыре нормы, в p = 2 три одинаковых
+args: 1e-9 2 3,4 -4,3 5,0 1,1 inf p=1 p=2 A=2,1,1,2
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out:   v2 = (-4, 3)
+out:   v3 = (5, 0)
+out:   v4 = (1, 1)
+out: norm inf: longest 1 of 4
+out:   v3 = (5, 0), length 5
+out: norm p = 1: longest 2 of 4
+out:   v1 = (3, 4), length 7
+out:   v2 = (-4, 3), length 7
+out: norm p = 2: longest 3 of 4
+out:   v1 = (3, 4), length 5
+out:   v2 = (-4, 3), length 5
+out:   v3 = (5, 0), length 5
+out: norm A = [[2, 1], [1, 2]]: longest 1 of 4
+out:   v1 = (3, 4), length 8.602325267
+code: 0
+
+name: трехмерное пространство, p = 3 и диагональная матрица
+args: 1e-9 3 1,2,3 3,2,1 2,2,2 0,0,-3.5 inf p=1 p=2 p=3 A=1,0,0,0,2,0,0,0,3
+out: Vectors (n = 3), eps = 1e-09:
+out:   v1 = (1, 2, 3)
+out:   v2 = (3, 2, 1)
+out:   v3 = (2, 2, 2)
+out:   v4 = (0, 0, -3.5)
+out: norm inf: longest 1 of 4
+out:   v4 = (0, 0, -3.5), length 3.5
+out: norm p = 1: longest 3 of 4
+out:   v1 = (1, 2, 3), length 6
+out:   v2 = (3, 2, 1), length 6
+out:   v3 = (2, 2, 2), length 6
+out: norm p = 2: longest 2 of 4
+out:   v1 = (1, 2, 3), length 3.741657387
+out:   v2 = (3, 2, 1), length 3.741657387
+out: norm p = 3: longest 1 of 4
+out:   v4 = (0, 0, -3.5), length 3.5
+out: norm A = [[1, 0, 0], [0, 2, 0], [0, 0, 3]]: longest 1 of 4
+out:   v4 = (0, 0, -3.5), length 6.062177826
+code: 0
+
+name: n = 1: длина - модуль числа, -7 и 7 одинаковые
+args: 1e-9 1 -7 3 7 inf p=2
+out: Vectors (n = 1), eps = 1e-09:
+out:   v1 = (-7)
+out:   v2 = (3)
+out:   v3 = (7)
+out: norm inf: longest 2 of 3
+out:   v1 = (-7), length 7
+out:   v3 = (7), length 7
+out: norm p = 2: longest 2 of 3
+out:   v1 = (-7), length 7
+out:   v3 = (7), length 7
+code: 0
+
+name: один вектор - он и самый длинный
+args: 1e-9 2 3,4 inf p=2
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out: norm inf: longest 1 of 1
+out:   v1 = (3, 4), length 4
+out: norm p = 2: longest 1 of 1
+out:   v1 = (3, 4), length 5
+code: 0
+
+name: нулевой вектор
+args: 1e-9 3 0,0,0 inf p=1 A=1,0,0,0,1,0,0,0,1
+out: Vectors (n = 3), eps = 1e-09:
+out:   v1 = (0, 0, 0)
+out: norm inf: longest 1 of 1
+out:   v1 = (0, 0, 0), length 0
+out: norm p = 1: longest 1 of 1
+out:   v1 = (0, 0, 0), length 0
+out: norm A = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]: longest 1 of 1
+out:   v1 = (0, 0, 0), length 0
+code: 0
+
+name: все векторы одинаковые - самые длинные все
+args: 1e-9 2 1,2 1,2 1,2 p=2
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (1, 2)
+out:   v2 = (1, 2)
+out:   v3 = (1, 2)
+out: norm p = 2: longest 3 of 3
+out:   v1 = (1, 2), length 2.236067977
+out:   v2 = (1, 2), length 2.236067977
+out:   v3 = (1, 2), length 2.236067977
+code: 0
+
+name: перестановка координат и смена знаков не меняют inf и p
+args: 1e-9 4 1,-2,3,-4 -4,3,-2,1 4,4,0,0 inf p=1 p=2
+out: Vectors (n = 4), eps = 1e-09:
+out:   v1 = (1, -2, 3, -4)
+out:   v2 = (-4, 3, -2, 1)
+out:   v3 = (4, 4, 0, 0)
+out: norm inf: longest 3 of 3
+out:   v1 = (1, -2, 3, -4), length 4
+out:   v2 = (-4, 3, -2, 1), length 4
+out:   v3 = (4, 4, 0, 0), length 4
+out: norm p = 1: longest 2 of 3
+out:   v1 = (1, -2, 3, -4), length 10
+out:   v2 = (-4, 3, -2, 1), length 10
+out: norm p = 2: longest 1 of 3
+out:   v3 = (4, 4, 0, 0), length 5.656854249
+code: 0
+
+name: единичная матрица дает обычную длину (p = 2)
+args: 1e-9 2 3,4 0,5 A=1,0,0,1 p=2
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out:   v2 = (0, 5)
+out: norm A = [[1, 0], [0, 1]]: longest 2 of 2
+out:   v1 = (3, 4), length 5
+out:   v2 = (0, 5), length 5
+out: norm p = 2: longest 2 of 2
+out:   v1 = (3, 4), length 5
+out:   v2 = (0, 5), length 5
+code: 0
+
+name: недиагональная матрица 3 x 3
+args: 1e-9 3 1,1,1 1,-1,0 0,0,2 A=4,1,0,1,3,1,0,1,2
+out: Vectors (n = 3), eps = 1e-09:
+out:   v1 = (1, 1, 1)
+out:   v2 = (1, -1, 0)
+out:   v3 = (0, 0, 2)
+out: norm A = [[4, 1, 0], [1, 3, 1], [0, 1, 2]]: longest 1 of 3
+out:   v1 = (1, 1, 1), length 3.605551275
+code: 0
+
+name: матрица меняет ответ: по A длиннее другой вектор, чем по p = 2
+args: 1e-9 2 1,0 0,1 p=2 A=1,0,0,9
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (1, 0)
+out:   v2 = (0, 1)
+out: norm p = 2: longest 2 of 2
+out:   v1 = (1, 0), length 1
+out:   v2 = (0, 1), length 1
+out: norm A = [[1, 0], [0, 9]]: longest 1 of 2
+out:   v2 = (0, 1), length 3
+code: 0
+
+name: дробные координаты и запись чисел
+args: 1e-9 2 0.5,.25 1e-1,-2.5E-1 inf p=1
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (0.5, 0.25)
+out:   v2 = (0.1, -0.25)
+out: norm inf: longest 1 of 2
+out:   v1 = (0.5, 0.25), length 0.5
+out: norm p = 1: longest 1 of 2
+out:   v1 = (0.5, 0.25), length 0.75
+code: 0
+
+name: одна и та же норма дважды
+args: 1e-9 2 1,2 2,1 p=2 p=2
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (1, 2)
+out:   v2 = (2, 1)
+out: norm p = 2: longest 2 of 2
+out:   v1 = (1, 2), length 2.236067977
+out:   v2 = (2, 1), length 2.236067977
+out: norm p = 2: longest 2 of 2
+out:   v1 = (1, 2), length 2.236067977
+out:   v2 = (2, 1), length 2.236067977
+code: 0
+
+name: нормы перед векторами - порядок аргументов не важен
+args: 1e-9 2 p=1 3,4 inf -6,0
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out:   v2 = (-6, 0)
+out: norm p = 1: longest 1 of 2
+out:   v1 = (3, 4), length 7
+out: norm inf: longest 1 of 2
+out:   v2 = (-6, 0), length 6
+code: 0
+
+# ============================================================
+# Масштаб: большие и маленькие числа
+# ============================================================
+
+name: координаты 1e200: квадрат не помещается в double, длина - помещается
+args: 1e-9 2 1e200,1e200 1e200,0 p=2 A=2,1,1,2
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (1e+200, 1e+200)
+out:   v2 = (1e+200, 0)
+out: norm p = 2: longest 1 of 2
+out:   v1 = (1e+200, 1e+200), length 1.414213562e+200
+out: norm A = [[2, 1], [1, 2]]: longest 1 of 2
+out:   v1 = (1e+200, 1e+200), length 2.449489743e+200
+code: 0
+
+name: большое p = 1000: числа меньше 1 в степени не пропадают
+args: 1e-9 2 0.5,0.25 0.3,0.5 p=1000
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (0.5, 0.25)
+out:   v2 = (0.3, 0.5)
+out: norm p = 1000: longest 2 of 2
+out:   v1 = (0.5, 0.25), length 0.5
+out:   v2 = (0.3, 0.5), length 0.5
+code: 0
+
+name: очень маленькие координаты (меньше eps)
+args: 1e-9 2 1e-12,0 0,2e-12 p=2
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (1e-12, 0)
+out:   v2 = (0, 2e-12)
+out: norm p = 2: longest 2 of 2
+out:   v1 = (1e-12, 0), length 1e-12
+out:   v2 = (0, 2e-12), length 2e-12
+code: 0
+
+name: длина больше максимального double
+args: 1e-9 2 1e308,1e308 1,1 p=1 inf
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (1e+308, 1e+308)
+out:   v2 = (1, 1)
+out: norm p = 1: Error: the length is too big
+out: norm inf: longest 1 of 2
+out:   v1 = (1e+308, 1e+308), length 1e+308
+code: 1
+
+# ============================================================
+# Роль eps
+# ============================================================
+
+name: длины 1 и 1.0000001 с eps = 1e-9 - разные
+args: 1e-9 2 1,0 0,1.0000001 p=2
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (1, 0)
+out:   v2 = (0, 1.0000001)
+out: norm p = 2: longest 1 of 2
+out:   v2 = (0, 1.0000001), length 1.0000001
+code: 0
+
+name: те же длины с eps = 1e-6 - равные
+args: 1e-6 2 1,0 0,1.0000001 p=2
+out: Vectors (n = 2), eps = 1e-06:
+out:   v1 = (1, 0)
+out:   v2 = (0, 1.0000001)
+out: norm p = 2: longest 2 of 2
+out:   v1 = (1, 0), length 1
+out:   v2 = (0, 1.0000001), length 1.0000001
+code: 0
+
+name: eps = 1: длины 5, 5.5, 6.2 - самые длинные 5.5 и 6.2
+args: 1 1 5 5.5 6.2 inf
+out: Vectors (n = 1), eps = 1:
+out:   v1 = (5)
+out:   v2 = (5.5)
+out:   v3 = (6.2)
+out: norm inf: longest 2 of 3
+out:   v2 = (5.5), length 5.5
+out:   v3 = (6.2), length 6.2
+code: 0
+
+# ============================================================
+# Ошибки отдельных норм: остальные нормы посчитаны, код 1
+# ============================================================
+
+name: p = 0.5 - не норма
+args: 1e-9 2 3,4 p=0.5 inf
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out: norm p = 0.5: Error: p must be a usual number 1 or more
+out: norm inf: longest 1 of 1
+out:   v1 = (3, 4), length 4
+code: 1
+
+name: p = 0 и p = -1
+args: 1e-9 2 3,4 p=0 p=-1 p=1
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out: norm p = 0: Error: p must be a usual number 1 or more
+out: norm p = -1: Error: p must be a usual number 1 or more
+out: norm p = 1: longest 1 of 1
+out:   v1 = (3, 4), length 7
+code: 1
+
+name: несимметричная матрица
+args: 1e-9 2 3,4 A=1,2,0,1 inf
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out: norm A = [[1, 2], [0, 1]]: Error: matrix A must be symmetric
+out: norm inf: longest 1 of 1
+out:   v1 = (3, 4), length 4
+code: 1
+
+name: не положительно определенная матрица: (Ax, x) < 0 при x = (1, -1)
+args: 1e-9 2 3,4 A=1,2,2,1 p=2
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out: norm A = [[1, 2], [2, 1]]: Error: matrix A must be positive definite
+out: norm p = 2: longest 1 of 1
+out:   v1 = (3, 4), length 5
+code: 1
+
+name: матрица с отрицательным числом на диагонали
+args: 1e-9 2 3,4 A=1,0,0,-1
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out: norm A = [[1, 0], [0, -1]]: Error: matrix A must be positive definite
+code: 1
+
+name: нулевая матрица - не положительно определенная
+args: 1e-9 2 3,4 A=0,0,0,0 inf
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out: norm A = [[0, 0], [0, 0]]: Error: matrix A must be positive definite
+out: norm inf: longest 1 of 1
+out:   v1 = (3, 4), length 4
+code: 1
+
+name: вырожденная матрица [[1, 1], [1, 1]]
+args: 1e-9 2 3,4 A=1,1,1,1 inf
+out: Vectors (n = 2), eps = 1e-09:
+out:   v1 = (3, 4)
+out: norm A = [[1, 1], [1, 1]]: Error: matrix A must be positive definite
+out: norm inf: longest 1 of 1
+out:   v1 = (3, 4), length 4
+code: 1
+
+# ============================================================
+# Ошибки ввода: ничего не считается
+# ============================================================
+
+name: в векторе больше чисел, чем n
+args: 1e-9 2 3,4,5 inf
+err: Error: vector '3,4,5' must be 2 usual numbers with ','
+code: 1
+
+name: в векторе меньше чисел, чем n
+args: 1e-9 3 3,4 inf
+err: Error: vector '3,4' must be 3 usual numbers with ','
+code: 1
+
+name: пустое место в векторе
+args: 1e-9 2 3,,4 inf
+err: Error: vector '3,,4' must be 2 usual numbers with ','
+code: 1
+
+name: запятая в конце
+args: 1e-9 2 3,4, inf
+err: Error: vector '3,4,' must be 2 usual numbers with ','
+code: 1
+
+name: буквы в векторе
+args: 1e-9 2 3,x inf
+err: Error: vector '3,x' must be 2 usual numbers with ','
+code: 1
+
+name: пробел в векторе
+args: 1e-9 2 "3, 4" inf
+err: Error: vector '3, 4' must be 2 usual numbers with ','
+code: 1
+
+name: inf в координате
+args: 1e-9 2 3,inf p=2
+err: Error: vector '3,inf' must be 2 usual numbers with ','
+code: 1
+
+name: матрица не n x n
+args: 1e-9 2 3,4 A=1,2,3
+err: Error: 'A=1,2,3': matrix must be n*n usual numbers with ','
+code: 1
+
+name: буквы в матрице
+args: 1e-9 2 3,4 A=1,0,0,a
+err: Error: 'A=1,0,0,a': matrix must be n*n usual numbers with ','
+code: 1
+
+name: p не число
+args: 1e-9 2 3,4 p=abc
+err: Error: 'p=abc': p must be a usual number
+code: 1
+
+name: p пустое
+args: 1e-9 2 3,4 p=
+err: Error: 'p=': p must be a usual number
+code: 1
+
+name: p = inf
+args: 1e-9 2 3,4 p=inf
+err: Error: 'p=inf': p must be a usual number
+code: 1
+
+name: нет векторов
+args: 1e-9 2 inf p=2
+err: Error: give at least one vector and one norm
+code: 1
+
+name: нет норм
+args: 1e-9 2 3,4 1,2
+err: Error: give at least one vector and one norm
+code: 1
+
+name: eps = 0
+args: 0 2 3,4 inf
+err: Error: eps '0' must be a number greater than 0
+code: 1
+
+name: eps < 0
+args: -1e-9 2 3,4 inf
+err: Error: eps '-1e-9' must be a number greater than 0
+code: 1
+
+name: eps не число
+args: abc 2 3,4 inf
+err: Error: eps 'abc' must be a number greater than 0
+code: 1
+
+name: n = 0
+args: 1e-9 0 3,4 inf
+err: Error: n '0' must be a whole number 1 or more
+code: 1
+
+name: n отрицательное
+args: 1e-9 -2 3,4 inf
+err: Error: n '-2' must be a whole number 1 or more
+code: 1
+
+name: n дробное
+args: 1e-9 2.5 3,4 inf
+err: Error: n '2.5' must be a whole number 1 or more
+code: 1
+
+name: n больше INT_MAX
+args: 1e-9 99999999999 3,4 inf
+err: Error: n '99999999999' must be a whole number 1 or more
+code: 1
+
+name: мало аргументов
+args: 1e-9 2 3,4
+err: Usage: lab2_task7                                  (demo)
+err:        lab2_task7 <eps> <n> <vector>... <norm>...
+err: vector: n numbers with ',' like 3,-4
+err: norm:   inf | p=<number> | A=<n*n numbers with ',' row by row>
+code: 1
