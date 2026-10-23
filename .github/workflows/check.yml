@@ -1,9 +1,13 @@
 name: linux-check
 
-# Сборка + тесты на Ubuntu при каждом push: C - gcc и valgrind, Java - javac (JDK 17).
-# Проверяется каждая лабораторная, в папке которой есть Makefile:
-# course*/<предмет>/labN/Makefile -> make (с -Werror), make test, make memcheck.
+# Сборка + тесты на Ubuntu: C - gcc и valgrind, Java - javac (JDK 17).
+# Лабораторная - папка course*/<предмет>/labN/ с Makefile: make (с -Werror), make test, make memcheck.
 # В Java-лабах CFLAGS не используется, а make memcheck ничего не делает (память освобождает сборщик мусора).
+#
+# Какие лабы проверяются:
+#   push, pull_request  - только те, в папке которых что-то изменилось;
+#                         все - если изменился этот файл или сравнить не с чем (новая ветка, force push);
+#   workflow_dispatch   - все (ручной запуск: Actions -> linux-check -> Run workflow).
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
@@ -11,18 +15,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # вся история: нужна, чтобы сравнить с предыдущим состоянием
       - name: Install JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Install valgrind
-        run: sudo apt-get update && sudo apt-get install -y valgrind
-      - name: Build, tests, valgrind (every lab with a Makefile)
+      - name: Build and test changed labs
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
         run: |
+          # с чем сравнивать: push - состояние до push, pull request - основная ветка
+          base=""
+          if [ "$EVENT" = "push" ]; then base="$BEFORE"; fi
+          if [ "$EVENT" = "pull_request" ]; then base="$PR_BASE"; fi
+
+          # список измененных файлов; all=1 - проверять все лабы
+          all=0
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] \
+             || ! changed=$(git diff --name-only "$base" "$GITHUB_SHA" 2>/dev/null); then
+            all=1
+          elif printf '%s\n' "$changed" | grep -qx '.github/workflows/check.yml'; then
+            all=1
+          fi
+          if [ $all -eq 1 ]; then
+            echo "Checking all labs"
+          else
+            echo "Changed files:"; printf '  %s\n' $changed
+          fi
+
           status=0
+          checked=0
           for mk in $(find course* -path '*/lab*/Makefile' | sort); do
             lab=$(dirname "$mk")
+            # лаба не менялась - пропускаем
+            if [ $all -eq 0 ] && ! printf '%s\n' "$changed" | grep -q "^$lab/"; then
+              echo "skip  $lab (not changed)"
+              continue
+            fi
+            # valgrind нужен только лабам на C; ставим один раз, когда встретилась первая такая
+            if ls "$lab"/*.c >/dev/null 2>&1 && ! command -v valgrind >/dev/null; then
+              sudo apt-get update -qq && sudo apt-get install -y -qq valgrind >/dev/null
+            fi
+            checked=$((checked + 1))
             echo "::group::$lab"
             if ! (cd "$lab" \
                   && make CFLAGS="-std=c99 -Wall -Wextra -Wpedantic -g -Werror" \
@@ -33,4 +71,5 @@ jobs:
             fi
             echo "::endgroup::"
           done
+          echo "Checked labs: $checked"
           exit $status
