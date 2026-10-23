@@ -1,0 +1,62 @@
+===== OOP lab 1, variant 11: bank card =====
+
+--- 1. FinancialInstrument (class 1) ---
+holder: Ivan Ivanov, bank: Sberbank, currency: RUB, status: active
+activate (already active): false
+block: true
+block (already blocked): false
+activate: true
+toString: Sberbank/Ivan Ivanov
+
+--- 2. BankCard (class 2, extends FinancialInstrument) ---
+holder: Anna Petrova, bank: T-Bank, currency: RUB, status: active
+  card: 2200 **** **** 9012, expires: 09/35, balance: 50000.00 RUB
+deposit 15000.00 -> OK | balance 65000.00
+pay 20000.00 -> OK | balance 45000.00
+pay 100000.00 -> NOT_ENOUGH_MONEY | balance 45000.00
+masked number: 2200 **** **** 9012
+block: true
+pay 100.00 -> CARD_BLOCKED | balance 45000.00
+activate: true
+pay 100.00 -> OK | balance 44900.00
+
+--- 3. CreditCard (class 3, extends BankCard) ---
+holder: Kirill Sidorov, bank: Alfa-Bank, currency: RUB, status: active
+  card: 5536 **** **** 5678, expires: 12/36, balance: 10000.00 RUB
+  credit: limit 200000.00, debt 0.00, available 200000.00, rate 24.00% per year
+pay 5000.00 -> OK | balance 5000.00, debt 0.00
+pay 50000.00 -> OK | balance 0.00, debt 45000.00
+interest for 3 months: 2700.00 RUB
+pay 300000.00 -> NOT_ENOUGH_MONEY | balance 0.00, debt 45000.00
+repay debt 20000.00 -> OK | balance 0.00, debt 25000.00
+repay debt 30000.00 -> OK | balance 5000.00, debt 0.00
+repay debt 1000.00 -> NO_DEBT | balance 5000.00, debt 0.00
+holder: Kirill Sidorov, bank: Alfa-Bank, currency: RUB, status: active
+  card: 5536 **** **** 5678, expires: 12/36, balance: 5000.00 RUB
+  credit: limit 200000.00, debt 0.00, available 200000.00, rate 24.00% per year
+
+--- 4. Polymorphism ---
+[FinancialInstrument] holder: Pavel Kozlov, bank: VTB, currency: USD, status: active
+[BankCard] holder: Maria Orlova, bank: Gazprombank, currency: RUB, status: active
+  card: 4276 **** **** 1234, expires: 06/37, balance: 75000.00 RUB
+[CreditCard] holder: Denis Novikov, bank: Sovcombank, currency: RUB, status: active
+  card: 5100 **** **** 1098, expires: 03/38, balance: 5000.00 RUB
+  credit: limit 150000.00, debt 0.00, available 150000.00, rate 19.90% per year
+BankCard pay 30000.00 -> NOT_ENOUGH_MONEY | balance 20000.00
+CreditCard pay 30000.00 -> OK | balance 0.00, debt 10000.00
+
+--- 5. Expiry date ---
+pay 100.00 -> CARD_EXPIRED | balance 1000.00
+deposit 100.00 -> CARD_EXPIRED | balance 1000.00
+
+--- 6. Wrong values (exceptions) ---
+card number with 15 digits: error: the card number must be 16 digits: 123456789012345
+expiry date 13/30: error: the expiry date must be MM/YY: 13/30
+currency "RUBLE": error: the currency must be 3 latin letters: RUBLE
+empty holder name: error: the holder name is empty
+negative balance: error: the balance is negative: -0.01
+pay -100.00: error: the amount must be positive: -100.00
+credit limit 0: error: the credit limit must be positive: 0.00
+interest rate 150: error: the interest rate must be from 0 to 100: 150.0
+interest for 0 months: error: the number of months must be positive: 0
+===== done =====

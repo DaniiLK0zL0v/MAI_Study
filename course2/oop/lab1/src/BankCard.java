@@ -1,52 +1,47 @@
-import java.util.Objects;
+import java.time.YearMonth;
 
 /**
- * Класс 2: Банковская карта (BankCard).
- * Наследуется от FinancialInstrument (1 -> 2).
- * Вариант 11 по списку тем.
+ * Класс 2 иерархии: банковская (дебетовая) карта - заданный класс варианта 11.
+ * Это финансовый инструмент, у которого есть номер, срок действия и собственные деньги
+ * на счете. Платить можно только своими деньгами: в минус карта не уходит.
  *
- * Собственные атрибуты:
- * - cardNumber (String)    — номер карты (16 цифр)
- * - expiryDate (String)    — срок действия (MM/YY)
- * - balance (double)       — текущий баланс на карте
+ * Иерархия: FinancialInstrument (1) -> BankCard (2) -> CreditCard (3).
+ *
+ * Собственные атрибуты: cardNumber, expiryDate, balance.
+ * Собственные методы:   deposit(), pay(), getMaskedNumber(), isExpired().
+ *
+ * Все суммы - в копейках (long), см. класс Money.
  */
 public class BankCard extends FinancialInstrument {
 
-    private String cardNumber;
-    private String expiryDate;
-    private double balance;
+    private String cardNumber;   // номер карты: ровно 16 цифр без пробелов
+    private String expiryDate;   // срок действия "MM/YY": карта работает до конца этого месяца
+    private long balance;        // собственные деньги на карте, в копейках, не меньше 0
 
     /**
-     * Конструктор банковской карты.
-     *
-     * @param holderName  имя владельца
-     * @param issuingBank банк-эмитент
-     * @param currency    валюта
-     * @param cardNumber  номер карты (16 цифр)
-     * @param expiryDate  срок действия (MM/YY)
-     * @param balance     начальный баланс (>= 0)
+     * Конструктор карты. super(...) - вызов конструктора родителя: он заполняет
+     * и проверяет поля FinancialInstrument (владелец, банк, валюта). В Java эта строка
+     * обязана быть первой: сначала создается часть родителя, потом своя.
      */
     public BankCard(String holderName, String issuingBank, String currency,
-                    String cardNumber, String expiryDate, double balance) {
+                    String cardNumber, String expiryDate, long balance) {
         super(holderName, issuingBank, currency);
+        // свои поля - через сеттеры, чтобы проверка была в одном месте
         setCardNumber(cardNumber);
         setExpiryDate(expiryDate);
         setBalance(balance);
     }
 
-    // ============================================================
-    // Геттеры и Сеттеры
-    // ============================================================
+    // ===== Свойства: геттеры и сеттеры с проверкой =====
 
     public String getCardNumber() {
         return cardNumber;
     }
 
-    public void setCardNumber(String cardNumber) {
+    public final void setCardNumber(String cardNumber) {
+        // регулярное выражение \d{16}: ровно 16 цифр, ничего больше (matches проверяет всю строку)
         if (cardNumber == null || !cardNumber.matches("\\d{16}")) {
-            throw new IllegalArgumentException(
-                "Номер карты должен содержать ровно 16 цифр. Получено: " + cardNumber
-            );
+            throw new IllegalArgumentException("the card number must be 16 digits: " + cardNumber);
         }
         this.cardNumber = cardNumber;
     }
@@ -55,108 +50,129 @@ public class BankCard extends FinancialInstrument {
         return expiryDate;
     }
 
-    public void setExpiryDate(String expiryDate) {
+    public final void setExpiryDate(String expiryDate) {
+        // месяц 01..12 (0[1-9] или 1[0-2]), затем "/", затем две цифры года
         if (expiryDate == null || !expiryDate.matches("(0[1-9]|1[0-2])/\\d{2}")) {
-            throw new IllegalArgumentException(
-                "Срок действия должен быть в формате MM/YY (например, 09/28). Получено: " + expiryDate
-            );
+            throw new IllegalArgumentException("the expiry date must be MM/YY: " + expiryDate);
         }
         this.expiryDate = expiryDate;
     }
 
-    public double getBalance() {
+    public long getBalance() {
         return balance;
     }
 
-    public void setBalance(double balance) {
+    public final void setBalance(long balance) {
+        // у дебетовой карты своих денег не может быть меньше нуля
         if (balance < 0) {
-            throw new IllegalArgumentException(
-                "Баланс дебетовой карты не может быть отрицательным. Получено: " + balance
-            );
+            throw new IllegalArgumentException("the balance is negative: " + Money.format(balance));
         }
         this.balance = balance;
     }
 
-    // ============================================================
-    // Собственные методы (не менее 3)
-    // ============================================================
+    // ===== Собственные методы =====
 
     /**
-     * Метод 1: Пополнение карты.
-     *
-     * @param amount сумма пополнения (> 0)
+     * Метод 1: пополнить карту на amount копеек.
+     * Возвращает OK, CARD_BLOCKED или CARD_EXPIRED. Сумма <= 0 - ошибка вызова (исключение).
      */
-    public void deposit(double amount) {
+    public OperationResult deposit(long amount) {
+        // сумма пополнения должна быть положительной
         if (amount <= 0) {
-            throw new IllegalArgumentException("Сумма пополнения должна быть > 0. Получено: " + amount);
+            throw new IllegalArgumentException("the amount must be positive: " + Money.format(amount));
         }
-        this.balance += amount;
-        System.out.printf("[%s] Пополнение: +%.2f %s. Новый баланс: %.2f %s%n",
-                getMaskedNumber(), amount, getCurrency(), balance, getCurrency());
+        // заблокированной или просроченной картой пользоваться нельзя
+        OperationResult state = checkUsable();
+        if (state != OperationResult.OK) {
+            return state;
+        }
+        // защита от переполнения long: balance + amount не должно превысить Long.MAX_VALUE.
+        // Сравниваем через вычитание, потому что сама сумма уже могла бы переполниться.
+        if (amount > Long.MAX_VALUE - balance) {
+            throw new IllegalArgumentException("the balance would be too big");
+        }
+        balance += amount;
+        return OperationResult.OK;
     }
 
     /**
-     * Метод 2: Оплата/списание средств.
-     *
-     * @param amount сумма списания (> 0)
-     * @return true, если платёж прошёл; false, если недостаточно средств
+     * Метод 2: оплатить amount копеек своими деньгами.
+     * Возвращает OK, CARD_BLOCKED, CARD_EXPIRED или NOT_ENOUGH_MONEY (тогда баланс не меняется).
+     * Кредитная карта переопределяет этот метод: она может доплатить кредитными деньгами.
      */
-    public boolean pay(double amount) {
+    public OperationResult pay(long amount) {
+        // сумма платежа должна быть положительной
         if (amount <= 0) {
-            throw new IllegalArgumentException("Сумма платежа должна быть > 0. Получено: " + amount);
+            throw new IllegalArgumentException("the amount must be positive: " + Money.format(amount));
         }
-        if (!isActive()) {
-            System.out.printf("[%s] Операция отклонена: карта заблокирована.%n", getMaskedNumber());
-            return false;
+        // заблокированной или просроченной картой пользоваться нельзя
+        OperationResult state = checkUsable();
+        if (state != OperationResult.OK) {
+            return state;
         }
+        // своих денег меньше, чем нужно, - отказ, баланс не трогаем
         if (amount > balance) {
-            System.out.printf("[%s] Недостаточно средств: требуется %.2f, доступно %.2f %s%n",
-                    getMaskedNumber(), amount, balance, getCurrency());
-            return false;
+            return OperationResult.NOT_ENOUGH_MONEY;
         }
-        this.balance -= amount;
-        System.out.printf("[%s] Оплата: -%.2f %s. Остаток: %.2f %s%n",
-                getMaskedNumber(), amount, getCurrency(), balance, getCurrency());
-        return true;
+        balance -= amount;
+        return OperationResult.OK;
     }
 
     /**
-     * Метод 3: Маскированный номер карты (для безопасного отображения).
-     * Показывает первые 4 и последние 4 цифры, остальные заменяет звёздочками.
-     *
-     * @return строка вида "1234 **** **** 5678"
+     * Метод 3: номер для показа на экране и в чеке: видны первые 4 и последние 4 цифры,
+     * "2200123456789012" -> "2200 **** **** 9012". Полный номер не показывают ради безопасности.
      */
     public String getMaskedNumber() {
+        // substring(0, 4) - символы с 0 по 3; substring(12) - с 12 до конца (последние 4)
         return cardNumber.substring(0, 4) + " **** **** " + cardNumber.substring(12);
     }
 
     /**
-     * Расширенное описание карты.
+     * Метод 4: закончился ли срок действия к месяцу today.
+     * Карта со сроком "09/35" работает до 30 сентября 2035 включительно,
+     * то есть просрочена, если today позже сентября 2035.
+     * Месяц передается параметром, чтобы метод можно было проверить для любой даты.
+     */
+    public boolean isExpired(YearMonth today) {
+        // "09/35": символы 0-1 - месяц, 3-4 - год (две последние цифры, век считаем 2000)
+        int month = Integer.parseInt(expiryDate.substring(0, 2));
+        int year = 2000 + Integer.parseInt(expiryDate.substring(3, 5));
+        return today.isAfter(YearMonth.of(year, month));
+    }
+
+    /**
+     * Можно ли сейчас проводить операции: OK, CARD_BLOCKED или CARD_EXPIRED.
+     * Общая проверка для deposit и pay. protected - метод виден подклассам
+     * (CreditCard использует его в своем pay), но не виден остальному коду.
+     */
+    protected OperationResult checkUsable() {
+        if (!isActive()) {
+            return OperationResult.CARD_BLOCKED;
+        }
+        // YearMonth.now() - текущий месяц по часам компьютера
+        if (isExpired(YearMonth.now())) {
+            return OperationResult.CARD_EXPIRED;
+        }
+        return OperationResult.OK;
+    }
+
+    // ===== Переопределенные методы родителя =====
+
+    /**
+     * Описание карты = описание родителя (super.getInfo()) + строка про карту.
+     * @Override просит компилятор проверить, что такой метод действительно есть у родителя
+     * (опечатка в имени тогда будет ошибкой компиляции, а не новым методом).
      */
     @Override
     public String getInfo() {
-        return super.getInfo() + String.format(
-            "%n  [Карта] Номер: %s | Срок: %s | Баланс: %.2f %s",
-            getMaskedNumber(), expiryDate, balance, getCurrency()
-        );
+        return super.getInfo()
+                + "\n  card: " + getMaskedNumber() + ", expires: " + expiryDate
+                + ", balance: " + Money.format(balance) + " " + getCurrency();
     }
 
+    // короткое имя карты: банк и замаскированный номер вместо имени владельца
     @Override
     public String getShortName() {
         return getIssuingBank() + "/" + getMaskedNumber();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BankCard)) return false;
-        if (!super.equals(o)) return false;
-        BankCard bankCard = (BankCard) o;
-        return Objects.equals(cardNumber, bankCard.cardNumber);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), cardNumber);
     }
 }
