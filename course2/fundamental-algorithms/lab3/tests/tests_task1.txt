@@ -1,0 +1,365 @@
+# Тесты для задания 1 (программа lab3_task1): перевод в систему с основанием 2^r
+#
+# Как запустить:  Linux:   bash run_tests.sh 1              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 1   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   args:  аргументы программы через пробел
+#   out:   строка, которую программа должна вывести в stdout
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Ответы посчитаны на Python (перевод через деление с остатком, независимо от программы).
+
+program: lab3_task1
+
+# ============================================================
+# Демонстрация (без аргументов)
+# ============================================================
+
+name: демонстрация - таблица для 11 чисел и всех r
+out: Demonstration: a number in bases 2, 4, 8, 16, 32
+out: 0
+out:     base  2 (r = 1): 0
+out:     base  4 (r = 2): 0
+out:     base  8 (r = 3): 0
+out:     base 16 (r = 4): 0
+out:     base 32 (r = 5): 0
+out: 1
+out:     base  2 (r = 1): 1
+out:     base  4 (r = 2): 1
+out:     base  8 (r = 3): 1
+out:     base 16 (r = 4): 1
+out:     base 32 (r = 5): 1
+out: 5
+out:     base  2 (r = 1): 101
+out:     base  4 (r = 2): 11
+out:     base  8 (r = 3): 5
+out:     base 16 (r = 4): 5
+out:     base 32 (r = 5): 5
+out: 31
+out:     base  2 (r = 1): 11111
+out:     base  4 (r = 2): 133
+out:     base  8 (r = 3): 37
+out:     base 16 (r = 4): 1F
+out:     base 32 (r = 5): V
+out: 32
+out:     base  2 (r = 1): 100000
+out:     base  4 (r = 2): 200
+out:     base  8 (r = 3): 40
+out:     base 16 (r = 4): 20
+out:     base 32 (r = 5): 10
+out: 255
+out:     base  2 (r = 1): 11111111
+out:     base  4 (r = 2): 3333
+out:     base  8 (r = 3): 377
+out:     base 16 (r = 4): FF
+out:     base 32 (r = 5): 7V
+out: 1000
+out:     base  2 (r = 1): 1111101000
+out:     base  4 (r = 2): 33220
+out:     base  8 (r = 3): 1750
+out:     base 16 (r = 4): 3E8
+out:     base 32 (r = 5): V8
+out: -1
+out:     base  2 (r = 1): -1
+out:     base  4 (r = 2): -1
+out:     base  8 (r = 3): -1
+out:     base 16 (r = 4): -1
+out:     base 32 (r = 5): -1
+out: -255
+out:     base  2 (r = 1): -11111111
+out:     base  4 (r = 2): -3333
+out:     base  8 (r = 3): -377
+out:     base 16 (r = 4): -FF
+out:     base 32 (r = 5): -7V
+out: 9223372036854775807
+out:     base  2 (r = 1): 111111111111111111111111111111111111111111111111111111111111111
+out:     base  4 (r = 2): 13333333333333333333333333333333
+out:     base  8 (r = 3): 777777777777777777777
+out:     base 16 (r = 4): 7FFFFFFFFFFFFFFF
+out:     base 32 (r = 5): 7VVVVVVVVVVVV
+out: -9223372036854775808
+out:     base  2 (r = 1): -1000000000000000000000000000000000000000000000000000000000000000
+out:     base  4 (r = 2): -20000000000000000000000000000000
+out:     base  8 (r = 3): -1000000000000000000000
+out:     base 16 (r = 4): -8000000000000000
+out:     base 32 (r = 5): -8000000000000
+out: Run with arguments to convert your number: lab3_task1 <number> <r>, r = 1..5
+code: 0
+
+# ============================================================
+# Перевод одного числа
+# ============================================================
+
+name: ноль: 0, r = 1
+args: 0 1
+out: Result: 0
+code: 0
+
+name: ноль, основание 32: 0, r = 5
+args: 0 5
+out: Result: 0
+code: 0
+
+name: единица: 1, r = 1
+args: 1 1
+out: Result: 1
+code: 0
+
+name: степень двойки: 2, r = 1
+args: 2 1
+out: Result: 10
+code: 0
+
+name: 255 -> FF: 255, r = 4
+args: 255 4
+out: Result: FF
+code: 0
+
+name: 256 -> 100: 256, r = 4
+args: 256 4
+out: Result: 100
+code: 0
+
+name: 31 - самая большая цифра V: 31, r = 5
+args: 31 5
+out: Result: V
+code: 0
+
+name: 32 -> 10: 32, r = 5
+args: 32 5
+out: Result: 10
+code: 0
+
+name: 1000 в восьмеричной: 1000, r = 3
+args: 1000 3
+out: Result: 1750
+code: 0
+
+name: 1000 в четверичной: 1000, r = 2
+args: 1000 2
+out: Result: 33220
+code: 0
+
+name: минус единица: -1, r = 1
+args: -1 1
+out: Result: -1
+code: 0
+
+name: отрицательное: -255, r = 4
+args: -255 4
+out: Result: -FF
+code: 0
+
+name: отрицательное, основание 32: -32, r = 5
+args: -32 5
+out: Result: -10
+code: 0
+
+name: LLONG_MAX в двоичной (63 цифры): 9223372036854775807, r = 1
+args: 9223372036854775807 1
+out: Result: 111111111111111111111111111111111111111111111111111111111111111
+code: 0
+
+name: LLONG_MAX в основании 32: 9223372036854775807, r = 5
+args: 9223372036854775807 5
+out: Result: 7VVVVVVVVVVVV
+code: 0
+
+name: LLONG_MIN в двоичной (64 цифры, модуль не помещается в long long): -9223372036854775808, r = 1
+args: -9223372036854775808 1
+out: Result: -1000000000000000000000000000000000000000000000000000000000000000
+code: 0
+
+name: LLONG_MIN в шестнадцатеричной: -9223372036854775808, r = 4
+args: -9223372036854775808 4
+out: Result: -8000000000000000
+code: 0
+
+name: LLONG_MIN + 1: -9223372036854775807, r = 3
+args: -9223372036854775807 3
+out: Result: -777777777777777777777
+code: 0
+
+name: одна цифра 7: 7, r = 3
+args: 7 3
+out: Result: 7
+code: 0
+
+name: 8 -> 10: 8, r = 3
+args: 8 3
+out: Result: 10
+code: 0
+
+name: случайное число: 426529259845943913, r = 5
+args: 426529259845943913 5
+out: Result: BQQM38DMR0J9
+code: 0
+
+name: случайное число: -9762786355211715, r = 4
+args: -9762786355211715 4
+out: Result: -22AF33D4B86DC3
+code: 0
+
+name: случайное число: 221065892331672371, r = 4
+args: 221065892331672371 4
+out: Result: 311624200625333
+code: 0
+
+name: случайное число: -84270020773918544, r = 2
+args: -84270020773918544 2
+out: Result: -10223120302030231130123131100
+code: 0
+
+name: случайное число: -29779807, r = 4
+args: -29779807 4
+out: Result: -1C6675F
+code: 0
+
+name: случайное число: 153, r = 5
+args: 153 5
+out: Result: 4P
+code: 0
+
+name: случайное число: 3350402933, r = 3
+args: 3350402933 3
+out: Result: 30754613565
+code: 0
+
+name: случайное число: -2309023876767906, r = 4
+args: -2309023876767906 4
+out: Result: -8340B83F3E0A2
+code: 0
+
+name: случайное число: -588461048928291, r = 1
+args: -588461048928291 1
+out: Result: -10000101110011001111000011110010010001100000100011
+code: 0
+
+name: случайное число: 64765, r = 2
+args: 64765 2
+out: Result: 33303331
+code: 0
+
+name: случайное число: 88195204117827, r = 3
+args: 88195204117827 3
+out: Result: 2403321363772503
+code: 0
+
+name: случайное число: 55509191428964773, r = 5
+args: 55509191428964773 5
+out: Result: 1H9LA32E90D5
+code: 0
+
+name: случайное число: 469901981274757812, r = 5
+args: 469901981274757812 5
+out: Result: D1BDBJ0I4MLK
+code: 0
+
+name: случайное число: 3889790985, r = 3
+args: 3889790985 3
+out: Result: 34766300011
+code: 0
+
+name: случайное число: 77156510977, r = 5
+args: 77156510977 5
+out: Result: 27RE5R81
+code: 0
+
+name: ведущие нули и знак +
+args: +000255 4
+out: Result: FF
+code: 0
+
+name: минус ноль
+args: -0 2
+out: Result: 0
+code: 0
+
+# ============================================================
+# Ошибки
+# ============================================================
+
+name: r = 0
+args: 10 0
+err: Error: r must be 1, 2, 3, 4 or 5, not '0'
+code: 1
+
+name: r = 6 (основание 64 - не по условию)
+args: 10 6
+err: Error: r must be 1, 2, 3, 4 or 5, not '6'
+code: 1
+
+name: r - две цифры
+args: 10 15
+err: Error: r must be 1, 2, 3, 4 or 5, not '15'
+code: 1
+
+name: r - не число
+args: 10 a
+err: Error: r must be 1, 2, 3, 4 or 5, not 'a'
+code: 1
+
+name: r пустой
+args: 10 ""
+err: Error: r must be 1, 2, 3, 4 or 5, not ''
+code: 1
+
+name: число - буквы
+args: abc 2
+err: Error: 'abc' is not a whole number
+code: 1
+
+name: число с мусором в конце
+args: 12x 2
+err: Error: '12x' is not a whole number
+code: 1
+
+name: дробное число
+args: 1.5 2
+err: Error: '1.5' is not a whole number
+code: 1
+
+name: только знак
+args: - 2
+err: Error: '-' is not a whole number
+code: 1
+
+name: пробел перед числом
+args: " 5" 2
+err: Error: ' 5' is not a whole number
+code: 1
+
+name: пустое число
+args: "" 2
+err: Error: '' is not a whole number
+code: 1
+
+name: LLONG_MAX + 1
+args: 9223372036854775808 1
+err: Error: '9223372036854775808' does not fit into long long (-9223372036854775808 .. 9223372036854775807)
+code: 1
+
+name: LLONG_MIN - 1
+args: -9223372036854775809 1
+err: Error: '-9223372036854775809' does not fit into long long (-9223372036854775808 .. 9223372036854775807)
+code: 1
+
+name: 25 цифр
+args: 1234567890123456789012345 3
+err: Error: '1234567890123456789012345' does not fit into long long (-9223372036854775808 .. 9223372036854775807)
+code: 1
+
+name: один аргумент
+args: 5
+err: Usage: lab3_task1 <number> <r>   (r = 1..5, base = 2^r)
+err:        lab3_task1                (demonstration)
+code: 1
+
+name: три аргумента
+args: 5 2 3
+err: Usage: lab3_task1 <number> <r>   (r = 1..5, base = 2^r)
+err:        lab3_task1                (demonstration)
+code: 1
