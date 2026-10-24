@@ -84,7 +84,7 @@ jobs:
           exit $status
 
   windows:
-    runs-on: windows-latest
+    runs-on: windows-2022   # Dr. Memory не работает на windows-latest (Server 2025)
     defaults:
       run:
         shell: bash   # Git Bash
