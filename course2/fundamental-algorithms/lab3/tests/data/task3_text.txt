@@ -1,0 +1,6 @@
+The quick brown fox jumps over the lazy dog.
+Huffman coding is a lossless data compression algorithm.
+The quick brown fox jumps over the lazy dog.
+Huffman coding is a lossless data compression algorithm.
+The quick brown fox jumps over the lazy dog.
+Huffman coding is a lossless data compression algorithm.
