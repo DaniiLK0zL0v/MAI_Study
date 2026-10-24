@@ -1,0 +1,31 @@
+# Тесты child2 отдельно от parent: на вход - строки, на выходе - пробельные символы заменены на _.
+# Формат - как в tests_parent.txt.
+
+program: child2
+
+name: пробелы -> _, буквы не меняются (регистр меняет child1, а не child2)
+input: Hello  World
+out: Hello__World
+code: 0
+
+name: табуляция -> _
+input: a	b	c
+out: a_b_c
+code: 0
+
+name: перевод строки не заменяется - строки остаются отдельными
+input: one two
+input: three
+out: one_two
+out: three
+code: 0
+
+name: пробелы в начале, в конце и строка из одних пробелов
+infile: tests/data/edge_spaces.txt
+out: __two_spaces_left_and_right__
+out: __tab_and_space__
+out: ___
+code: 0
+
+name: пустой ввод
+code: 0

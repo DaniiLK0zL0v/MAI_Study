@@ -1,0 +1,30 @@
+# Тесты child1 отдельно от parent: на вход - строки, на выходе - они же в верхнем регистре.
+# child1 работает с любым стандартным вводом - и с каналом от parent, и с вводом из теста.
+# Формат - как в tests_parent.txt.
+
+program: child1
+
+name: латинские буквы -> заглавные, пробелы не меняются
+input: Hello World  abc
+out: HELLO WORLD  ABC
+code: 0
+
+name: цифры, знаки и русские буквы не меняются
+input: 42 apples, яблоки!
+out: 42 APPLES, яблоки!
+code: 0
+
+name: несколько строк
+input: one
+input: Two
+out: ONE
+out: TWO
+code: 0
+
+name: длинная строка (30000 символов) - обрабатывается порциями по 4096 байт
+infile: tests/data/long_line.txt
+outre: [^a-z]+
+code: 0
+
+name: пустой ввод
+code: 0
