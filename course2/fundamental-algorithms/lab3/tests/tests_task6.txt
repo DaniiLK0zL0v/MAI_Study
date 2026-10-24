@@ -1,0 +1,205 @@
+# Тесты для задания 6 (программа lab3_task6): маршруты транспорта на односвязных списках
+#
+# Как запустить:  Linux:   bash run_tests.sh 6              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 6   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name: название;  args: файлы пунктов;  input: команда диалога
+#   out / err: строки stdout / stderr;  code: код возврата
+# Файлы task6_p1..p4 - четыре пункта с координатами (0,0), (3,4), (6,8), (0,10); записи в них перемешаны.
+# Ожидаемые ответы посчитаны на Python (своя группировка по транспорту, сортировка, разбиение на маршруты).
+
+program: lab3_task6
+
+name: list - маршруты: транспорт по алфавиту, остановки по времени (файлы и записи вперемешку)
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: list
+out: Routes: 7
+out: A1: 3 stops, length 10.00
+out:   (0, 0) 01.03.2024 08:00:00 - 01.03.2024 08:01:00 start
+out:   (3, 4) 01.03.2024 08:10:00 - 01.03.2024 08:12:00 middle
+out:   (6, 8) 01.03.2024 08:20:00 - 01.03.2024 08:20:30 end
+out: A1: 2 stops, length 10.00
+out:   (6, 8) 01.03.2024 09:00:00 - 01.03.2024 09:05:00 start
+out:   (0, 0) 01.03.2024 09:30:00 - 01.03.2024 09:31:00 end
+out: B2: 2 stops, length 10.00
+out:   (0, 10) 01.03.2024 07:00:00 - 01.03.2024 07:30:00 start
+out:   (0, 0) 01.03.2024 08:00:00 - 01.03.2024 08:00:10 end
+out: C3: 2 stops, length 5.00
+out:   (0, 0) 02.03.2024 10:00:00 - 02.03.2024 10:00:00 start
+out:   (3, 4) 02.03.2024 10:05:00 - 02.03.2024 10:05:00 end
+out: C3: 2 stops, length 5.00
+out:   (3, 4) 02.03.2024 11:00:00 - 02.03.2024 11:00:00 start
+out:   (0, 0) 02.03.2024 11:05:00 - 02.03.2024 11:05:00 end
+out: C3: 2 stops, length 5.00
+out:   (0, 0) 02.03.2024 12:00:00 - 02.03.2024 12:00:00 start
+out:   (3, 4) 02.03.2024 12:05:00 - 02.03.2024 12:05:00 end
+out: D4: 4 stops, length 21.71
+out:   (0, 10) 31.12.2023 23:50:00 - 31.12.2023 23:55:00 start
+out:   (3, 4) 01.01.2024 00:10:00 - 01.01.2024 00:11:00 middle
+out:   (6, 8) 01.01.2024 00:20:00 - 01.01.2024 00:21:00 middle
+out:   (0, 0) 01.01.2024 00:40:00 - 01.01.2024 00:40:01 end
+code: 0
+
+name: routes max
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: routes max
+out: routes max: C3, 3 routes
+code: 0
+
+name: routes min
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: routes min
+out: routes min: B2, 1 routes
+code: 0
+
+name: path max
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: path max
+out: path max: D4, length 21.71
+code: 0
+
+name: path min
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: path min
+out: path min: B2, length 10.00
+code: 0
+
+name: route max
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: route max
+out: route max: D4, length 21.71
+code: 0
+
+name: route min
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: route min
+out: route min: C3, length 5.00
+code: 0
+
+name: stop max
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: stop max
+out: stop max: B2, 0:30:00
+code: 0
+
+name: stop min
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: stop min
+out: stop min: C3, 0:00:00
+code: 0
+
+name: idle max
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: idle max
+out: idle max: B2, 0:30:10
+code: 0
+
+name: все вопросы подряд
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: routes max
+input: path max
+input: idle max
+input: exit
+input: routes min
+out: routes max: C3, 3 routes
+out: path max: D4, length 21.71
+out: idle max: B2, 0:30:10
+code: 0
+
+name: help и ошибки команд
+args: tests/data/task6_p3.txt tests/data/task6_p1.txt tests/data/task6_p4.txt tests/data/task6_p2.txt
+input: help
+input:
+input: foo
+input: routes
+input: routes avg
+input: idle min
+input: path max now
+input: list all
+out: Commands: routes max|min, path max|min, route max|min, stop max|min, idle max,
+out:           list, help, exit
+err: Error: unknown command 'foo' (type help)
+err: Error: use: routes max or routes min
+err: Error: use: routes max or routes min
+err: Error: use: idle max
+err: Error: use: path max or path min
+err: Error: unknown command 'list' (type help)
+code: 0
+
+name: не все файлы: маршруты транспорта не складываются
+args: tests/data/task6_p1.txt
+err: Error: stops of vehicle B2 do not form routes start ... end without overlaps
+code: 1
+
+name: файл без координат
+args: tests/data/task6_empty.txt
+err: Error: file 'tests/data/task6_empty.txt': no coordinates line
+code: 1
+
+name: координаты - три числа
+args: tests/data/task6_bad_coords.txt
+err: Error: file 'tests/data/task6_bad_coords.txt' line 1: coordinates must be two numbers: x y
+code: 1
+
+name: координата - не число
+args: tests/data/task6_bad_coords2.txt
+err: Error: file 'tests/data/task6_bad_coords2.txt' line 2: coordinates must be two numbers: x y
+code: 1
+
+name: в записи 5 слов
+args: tests/data/task6_bad_record.txt
+err: Error: file 'tests/data/task6_bad_record.txt' line 2: must be: number date time date time marker
+code: 1
+
+name: 31 февраля
+args: tests/data/task6_bad_time.txt
+err: Error: file 'tests/data/task6_bad_time.txt' line 2: time must be dd.MM.yyyy hh:mm:ss
+code: 1
+
+name: время без ведущего нуля
+args: tests/data/task6_bad_time2.txt
+err: Error: file 'tests/data/task6_bad_time2.txt' line 2: time must be dd.MM.yyyy hh:mm:ss
+code: 1
+
+name: отправление раньше прибытия
+args: tests/data/task6_bad_order.txt
+err: Error: file 'tests/data/task6_bad_order.txt' line 3: departure is earlier than arrival
+code: 1
+
+name: неизвестная метка
+args: tests/data/task6_bad_marker.txt
+err: Error: file 'tests/data/task6_bad_marker.txt' line 2: marker must be start, middle or end
+code: 1
+
+name: маршрут начинается не со start
+args: tests/data/task6_no_start.txt
+err: Error: stops of vehicle A1 do not form routes start ... end without overlaps
+code: 1
+
+name: маршрут не кончился
+args: tests/data/task6_no_end.txt
+err: Error: stops of vehicle B1 do not form routes start ... end without overlaps
+code: 1
+
+name: остановки пересекаются по времени
+args: tests/data/task6_overlap.txt
+err: Error: stops of vehicle C1 do not form routes start ... end without overlaps
+code: 1
+
+name: только координаты: маршрутов нет
+args: tests/data/task6_coords_only.txt
+input: list
+input: routes max
+out: Routes: 0
+err: Error: there are no routes
+code: 0
+
+name: нет аргументов
+err: Usage: lab3_task6 <stop file> [<stop file> ...]
+code: 1
+
+name: файла нет
+args: tests/data/task6_p1.txt tests/data/task6_nofile.txt
+err: Error: can not open file 'tests/data/task6_nofile.txt'
+code: 1
