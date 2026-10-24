@@ -1,0 +1,327 @@
+# Тесты для задания 5 (программа lab3_task5): студенты, поиск, сортировка, трассировка
+#
+# Как запустить:  Linux:   bash run_tests.sh 5              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 5   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название;  args: аргументы (файл студентов и трассировочный файл)
+#   input: команда диалога;  out / err: строки stdout / stderr;  code: код возврата
+#   file:  файл, который должна создать программа (трассировочный); fout: его строки
+# Ожидаемые ответы посчитаны на Python (своя реализация поиска, сортировки и средних).
+
+program: lab3_task5
+
+name: list - порядок как в файле (пустые строки и табуляции в файле пропускаются)
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: list
+out: Students: 7
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+out: 12 Sidorov Ivan, group M8O-211BV-25, marks 4 4 4 4 4, average 4.00
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+out: 5 Kuznetsova Maria, group M8O-213BV-25, marks 5 5 5 5 5, average 5.00
+out: 0 Ivanov Petr, group M8O-215BV-25, marks 4 3 5 4 4, average 4.00
+out: 20 Orlova Anna, group M8O-215BV-25, marks 3 4 4 4 3, average 3.60
+code: 0
+
+name: sort id
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: sort id
+out: Students: 7
+out: 0 Ivanov Petr, group M8O-215BV-25, marks 4 3 5 4 4, average 4.00
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+out: 5 Kuznetsova Maria, group M8O-213BV-25, marks 5 5 5 5 5, average 5.00
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 12 Sidorov Ivan, group M8O-211BV-25, marks 4 4 4 4 4, average 4.00
+out: 20 Orlova Anna, group M8O-215BV-25, marks 3 4 4 4 3, average 3.60
+code: 0
+
+name: sort surname (равные фамилии - по id)
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: sort surname
+out: Students: 7
+out: 0 Ivanov Petr, group M8O-215BV-25, marks 4 3 5 4 4, average 4.00
+out: 5 Kuznetsova Maria, group M8O-213BV-25, marks 5 5 5 5 5, average 5.00
+out: 20 Orlova Anna, group M8O-215BV-25, marks 3 4 4 4 3, average 3.60
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 12 Sidorov Ivan, group M8O-211BV-25, marks 4 4 4 4 4, average 4.00
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+code: 0
+
+name: sort name (равные имена - по id)
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: sort name
+out: Students: 7
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+out: 20 Orlova Anna, group M8O-215BV-25, marks 3 4 4 4 3, average 3.60
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 12 Sidorov Ivan, group M8O-211BV-25, marks 4 4 4 4 4, average 4.00
+out: 5 Kuznetsova Maria, group M8O-213BV-25, marks 5 5 5 5 5, average 5.00
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+out: 0 Ivanov Petr, group M8O-215BV-25, marks 4 3 5 4 4, average 4.00
+code: 0
+
+name: sort group (равные группы - по id)
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: sort group
+out: Students: 7
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+out: 12 Sidorov Ivan, group M8O-211BV-25, marks 4 4 4 4 4, average 4.00
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+out: 5 Kuznetsova Maria, group M8O-213BV-25, marks 5 5 5 5 5, average 5.00
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 0 Ivanov Petr, group M8O-215BV-25, marks 4 3 5 4 4, average 4.00
+out: 20 Orlova Anna, group M8O-215BV-25, marks 3 4 4 4 3, average 3.60
+code: 0
+
+name: sort, потом list - порядок сохраняется
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: sort surname
+input: list
+out: Students: 7
+out: 0 Ivanov Petr, group M8O-215BV-25, marks 4 3 5 4 4, average 4.00
+out: 5 Kuznetsova Maria, group M8O-213BV-25, marks 5 5 5 5 5, average 5.00
+out: 20 Orlova Anna, group M8O-215BV-25, marks 3 4 4 4 3, average 3.60
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 12 Sidorov Ivan, group M8O-211BV-25, marks 4 4 4 4 4, average 4.00
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+out: Students: 7
+out: 0 Ivanov Petr, group M8O-215BV-25, marks 4 3 5 4 4, average 4.00
+out: 5 Kuznetsova Maria, group M8O-213BV-25, marks 5 5 5 5 5, average 5.00
+out: 20 Orlova Anna, group M8O-215BV-25, marks 3 4 4 4 3, average 3.60
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 12 Sidorov Ivan, group M8O-211BV-25, marks 4 4 4 4 4, average 4.00
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+code: 0
+
+name: find id
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: find id 12
+out: Found: 1
+out: 12 Sidorov Ivan, group M8O-211BV-25, marks 4 4 4 4 4, average 4.00
+code: 0
+
+name: find id 0
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: find id 0
+out: Found: 1
+out: 0 Ivanov Petr, group M8O-215BV-25, marks 4 3 5 4 4, average 4.00
+code: 0
+
+name: find surname - двое (в текущем порядке)
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: find surname Petrov
+out: Found: 2
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+code: 0
+
+name: find name - двое
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: find name Anna
+out: Found: 2
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+out: 20 Orlova Anna, group M8O-215BV-25, marks 3 4 4 4 3, average 3.60
+code: 0
+
+name: find group - трое
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: find group M8O-213BV-25
+out: Found: 3
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+out: 5 Kuznetsova Maria, group M8O-213BV-25, marks 5 5 5 5 5, average 5.00
+code: 0
+
+name: find после sort - в новом порядке
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: sort id
+input: find surname Petrov
+out: Students: 7
+out: 0 Ivanov Petr, group M8O-215BV-25, marks 4 3 5 4 4, average 4.00
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+out: 5 Kuznetsova Maria, group M8O-213BV-25, marks 5 5 5 5 5, average 5.00
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 12 Sidorov Ivan, group M8O-211BV-25, marks 4 4 4 4 4, average 4.00
+out: 20 Orlova Anna, group M8O-215BV-25, marks 3 4 4 4 3, average 3.60
+out: Found: 2
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+code: 0
+
+name: find: никого (регистр букв важен)
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: find surname petrov
+input: find id 99
+out: Found: 0
+out: Found: 0
+code: 0
+
+name: trace id и trace best - в трассировочный файл
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: trace 7
+input: trace 1
+input: trace best
+out: Written to the trace file: student 7
+out: Written to the trace file: student 1
+out: Written to the trace file: 4 students above the average
+code: 0
+file: tests/data/res5.txt
+fout: Petrov Ivan, group M8O-213BV-25, average 4.60
+fout: Petrov Oleg, group M8O-211BV-25, average 3.00
+fout: Above the average 3.91: 4
+fout: Petrov Ivan
+fout: Sidorov Ivan
+fout: Kuznetsova Maria
+fout: Ivanov Petr
+
+name: trace best после sort name - в порядке списка
+args: tests/data/task5_students.txt tests/data/res5.txt
+input: sort name
+input: trace best
+out: Students: 7
+out: 3 Smirnova Anna, group M8O-213BV-25, marks 3 3 4 3 3, average 3.20
+out: 20 Orlova Anna, group M8O-215BV-25, marks 3 4 4 4 3, average 3.60
+out: 7 Petrov Ivan, group M8O-213BV-25, marks 5 4 5 5 4, average 4.60
+out: 12 Sidorov Ivan, group M8O-211BV-25, marks 4 4 4 4 4, average 4.00
+out: 5 Kuznetsova Maria, group M8O-213BV-25, marks 5 5 5 5 5, average 5.00
+out: 1 Petrov Oleg, group M8O-211BV-25, marks 2 3 3 2 5, average 3.00
+out: 0 Ivanov Petr, group M8O-215BV-25, marks 4 3 5 4 4, average 4.00
+out: Written to the trace file: 4 students above the average
+code: 0
+file: tests/data/res5.txt
+fout: Above the average 3.91: 4
+fout: Petrov Ivan
+fout: Sidorov Ivan
+fout: Kuznetsova Maria
+fout: Ivanov Petr
+
+name: без команд трассировочный файл пустой
+args: tests/data/task5_students.txt tests/data/res5.txt
+code: 0
+file: tests/data/res5.txt
+
+name: ошибки команд (диалог продолжается)
+args: tests/data/task5_students.txt tests/data/res5.txt
+input:
+input: foo
+input: find
+input: find age 5
+input: find id x
+input: sort
+input: sort mark
+input: sort id extra
+input: list 1
+input: trace
+input: trace x
+input: trace 99
+input: help
+input: exit
+input: list
+out: Commands: find id|surname|name|group <value>, sort id|surname|name|group, list,
+out:           trace <id>, trace best, help, exit
+err: Error: unknown command 'foo' (type help)
+err: Error: use: find id|surname|name|group <value>
+err: Error: use: find id|surname|name|group <value>
+err: Error: id must be a whole number from 0 to 9223372036854775807
+err: Error: use: sort id|surname|name|group
+err: Error: use: sort id|surname|name|group
+err: Error: use: sort id|surname|name|group
+err: Error: command 'list' takes no arguments
+err: Error: use: trace <id> or trace best
+err: Error: id must be a whole number from 0 to 9223372036854775807
+err: Error: no student with id 99
+code: 0
+
+name: пустой файл студентов: list и trace best
+args: tests/data/task5_empty.txt tests/data/res5.txt
+input: list
+input: trace best
+out: Students: 0
+err: Error: there are no students
+code: 0
+file: tests/data/res5.txt
+
+name: файл с BOM (из Блокнота)
+args: tests/data/task5_bom.txt tests/data/res5.txt
+input: list
+out: Students: 1
+out: 1 Lee Ann, group G1, marks 5 5 5 5 5, average 5.00
+code: 0
+
+name: одинаковые средние у всех - выше среднего никого
+args: tests/data/task5_bom.txt tests/data/res5.txt
+input: trace best
+out: Written to the trace file: 0 students above the average
+code: 0
+file: tests/data/res5.txt
+fout: Above the average 5.00: 0
+
+name: ошибка в файле: task5_bad_count.txt
+args: tests/data/task5_bad_count.txt tests/data/res5.txt
+err: Error: line 1: must be: id name surname group and 5 marks
+code: 1
+
+name: ошибка в файле: task5_bad_id.txt
+args: tests/data/task5_bad_id.txt tests/data/res5.txt
+err: Error: line 2: id must be a whole number from 0 to 9223372036854775807
+code: 1
+
+name: ошибка в файле: task5_bad_name.txt
+args: tests/data/task5_bad_name.txt tests/data/res5.txt
+err: Error: line 1: name must contain only Latin letters
+code: 1
+
+name: ошибка в файле: task5_bad_surname.txt
+args: tests/data/task5_bad_surname.txt tests/data/res5.txt
+err: Error: line 1: surname must contain only Latin letters
+code: 1
+
+name: ошибка в файле: task5_bad_mark.txt
+args: tests/data/task5_bad_mark.txt tests/data/res5.txt
+err: Error: line 2: a mark must be a whole number from 0 to 100
+code: 1
+
+name: ошибка в файле: task5_bad_mark2.txt
+args: tests/data/task5_bad_mark2.txt tests/data/res5.txt
+err: Error: line 1: a mark must be a whole number from 0 to 100
+code: 1
+
+name: ошибка в файле: task5_duplicate.txt
+args: tests/data/task5_duplicate.txt tests/data/res5.txt
+err: Error: line 3: this id is already used
+code: 1
+
+name: нет аргументов
+err: Usage: lab3_task5 <students file> <trace file>
+code: 1
+
+name: один аргумент
+args: tests/data/task5_students.txt
+err: Usage: lab3_task5 <students file> <trace file>
+code: 1
+
+name: файла студентов нет
+args: tests/data/task5_nofile.txt tests/data/res5.txt
+err: Error: can not open file 'tests/data/task5_nofile.txt'
+code: 1
+
+name: трассировочный файл = файл студентов (тот же путь)
+args: tests/data/task5_students.txt tests/data/task5_students.txt
+err: Error: the students file and the trace file must be different files
+code: 1
+
+name: трассировочный файл = файл студентов (через ./ и ../)
+args: tests/data/task5_students.txt ./tests/../tests/data/task5_students.txt
+err: Error: the students file and the trace file must be different files
+code: 1
+
+name: трассировочный файл не создать (нет папки)
+args: tests/data/task5_students.txt tests/no_dir/res5.txt
+err: Error: can not create file 'tests/no_dir/res5.txt'
+code: 1

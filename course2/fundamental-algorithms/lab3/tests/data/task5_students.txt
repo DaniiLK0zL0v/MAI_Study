@@ -1,0 +1,9 @@
+7 Ivan Petrov M8O-213BV-25 5 4 5 5 4
+3 Anna Smirnova M8O-213BV-25 3 3 4 3 3
+12 Ivan Sidorov M8O-211BV-25 4 4 4 4 4
+1 Oleg Petrov M8O-211BV-25 2 3 3 2 5
+
+   
+5	Maria  Kuznetsova M8O-213BV-25 5 5 5 5 5
+0	Petr  Ivanov M8O-215BV-25 4 3 5 4 4
+20	Anna  Orlova M8O-215BV-25 3 4 4 4 3
