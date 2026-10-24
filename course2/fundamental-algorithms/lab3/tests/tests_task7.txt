@@ -1,0 +1,442 @@
+# Тесты для задания 7 (программа lab3_task7): жители в списке по возрасту, изменения и Undo
+#
+# Как запустить:  Linux:   bash run_tests.sh 7              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 7   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name: название;  args: файл жителей;  input: строки диалога (после add/edit - 6 полей:
+#   фамилия, имя, отчество (пустая строка - нет), дата рождения, пол, доход)
+#   out / err: строки stdout / stderr;  code: код возврата;  file / fout: файл, который создает save
+# Ожидаемый вывод сценариев посчитан моделью на Python, в которой отмена - возврат к сохраненному
+# снимку списка (другим способом, чем в программе; 400 случайных сценариев совпали).
+
+program: lab3_task7
+
+name: list: младшие первыми; равные даты - в порядке файла; пустые строки пропускаются
+args: tests/data/task7_residents.txt
+input: list
+out: Residents: 6
+out: 1. Petrova Anna, 15.03.2005, W, income 30000.00
+out: 2. Orlov Petr, 29.02.2000, M, income 41000.00
+out: 3. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+out: 4. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+out: 5. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: 6. Smirnov Pavel Ivanovich, 05.05.1960, M, income 25000.00
+code: 0
+
+name: find по фамилии
+args: tests/data/task7_residents.txt
+input: find surname Ivanov
+out: Found: 1
+out: 3. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+code: 0
+
+name: find по полу и дате рождения (две пары условий)
+args: tests/data/task7_residents.txt
+input: find gender M birth 01.02.1990
+out: Found: 2
+out: 3. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+out: 4. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+code: 0
+
+name: find без отчества (patronymic -) и по доходу (сравнение с eps)
+args: tests/data/task7_residents.txt
+input: find patronymic -
+input: find income 72000.25
+input: find income 72000.2
+out: Found: 2
+out: 1. Petrova Anna, 15.03.2005, W, income 30000.00
+out: 2. Orlov Petr, 29.02.2000, M, income 41000.00
+out: Found: 1
+out: 5. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: Found: 0
+code: 0
+
+name: find: никого и все условия
+args: tests/data/task7_residents.txt
+input: find name Nobody
+input: find surname Orlov name Petr patronymic - birth 29.02.2000 gender M income 41000
+out: Found: 0
+out: Found: 1
+out: 2. Orlov Petr, 29.02.2000, M, income 41000.00
+code: 0
+
+name: add: младший встает первым, самый старший - последним
+args: tests/data/task7_residents.txt
+input: add
+input: Young
+input: Kid
+input:
+input: 01.01.2020
+input: M
+input: 0.0
+input: add
+input: Old
+input: Man
+input: Ivanovich
+input: 01.01.1930
+input: M
+input: 1.5
+input: list
+out: Added
+out: Added
+out: Residents: 8
+out: 1. Young Kid, 01.01.2020, M, income 0.00
+out: 2. Petrova Anna, 15.03.2005, W, income 30000.00
+out: 3. Orlov Petr, 29.02.2000, M, income 41000.00
+out: 4. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+out: 5. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+out: 6. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: 7. Smirnov Pavel Ivanovich, 05.05.1960, M, income 25000.00
+out: 8. Old Man Ivanovich, 01.01.1930, M, income 1.50
+code: 0
+
+name: add: та же дата рождения - после уже стоящих с этой датой
+args: tests/data/task7_residents.txt
+input: add
+input: Lee
+input: Kim
+input:
+input: 01.02.1990
+input: W
+input: 10.0
+input: list
+out: Added
+out: Residents: 7
+out: 1. Petrova Anna, 15.03.2005, W, income 30000.00
+out: 2. Orlov Petr, 29.02.2000, M, income 41000.00
+out: 3. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+out: 4. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+out: 5. Lee Kim, 01.02.1990, W, income 10.00
+out: 6. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: 7. Smirnov Pavel Ivanovich, 05.05.1960, M, income 25000.00
+code: 0
+
+name: edit: житель меняет место по новой дате
+args: tests/data/task7_residents.txt
+input: edit 1
+input: Old
+input: Man
+input: Ivanovich
+input: 01.01.1930
+input: M
+input: 1.5
+input: list
+out: Changed
+out: Residents: 6
+out: 1. Orlov Petr, 29.02.2000, M, income 41000.00
+out: 2. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+out: 3. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+out: 4. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: 5. Smirnov Pavel Ivanovich, 05.05.1960, M, income 25000.00
+out: 6. Old Man Ivanovich, 01.01.1930, M, income 1.50
+code: 0
+
+name: delete
+args: tests/data/task7_residents.txt
+input: delete 2
+input: list
+out: Deleted
+out: Residents: 5
+out: 1. Petrova Anna, 15.03.2005, W, income 30000.00
+out: 2. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+out: 3. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+out: 4. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: 5. Smirnov Pavel Ivanovich, 05.05.1960, M, income 25000.00
+code: 0
+
+name: undo: N = 4 - отменяются 2 последних (delete и edit), add остаются
+args: tests/data/task7_residents.txt
+input: add
+input: Young
+input: Kid
+input:
+input: 01.01.2020
+input: M
+input: 0.0
+input: add
+input: Lee
+input: Kim
+input:
+input: 01.02.1990
+input: W
+input: 10.0
+input: edit 3
+input: Old
+input: Man
+input: Ivanovich
+input: 01.01.1930
+input: M
+input: 1.5
+input: delete 1
+input: undo
+input: list
+out: Added
+out: Added
+out: Changed
+out: Deleted
+out: Undone 2 of 4 modification(s)
+out: Residents: 8
+out: 1. Young Kid, 01.01.2020, M, income 0.00
+out: 2. Petrova Anna, 15.03.2005, W, income 30000.00
+out: 3. Orlov Petr, 29.02.2000, M, income 41000.00
+out: 4. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+out: 5. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+out: 6. Lee Kim, 01.02.1990, W, income 10.00
+out: 7. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: 8. Smirnov Pavel Ivanovich, 05.05.1960, M, income 25000.00
+code: 0
+
+name: undo: N = 1 - отменять нечего, журнал остается; после еще одного изменения N = 2 - отменяется одно
+args: tests/data/task7_residents.txt
+input: delete 1
+input: undo
+input: delete 1
+input: undo
+input: list
+out: Deleted
+out: Nothing to undo: 1 modification(s), [N/2] = 0
+out: Deleted
+out: Undone 1 of 2 modification(s)
+out: Residents: 5
+out: 1. Orlov Petr, 29.02.2000, M, income 41000.00
+out: 2. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+out: 3. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+out: 4. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: 5. Smirnov Pavel Ivanovich, 05.05.1960, M, income 25000.00
+code: 0
+
+name: undo: N = 3 - отменяется 1; после отмены N = 0
+args: tests/data/task7_residents.txt
+input: add
+input: Young
+input: Kid
+input:
+input: 01.01.2020
+input: M
+input: 0.0
+input: delete 2
+input: delete 2
+input: undo
+input: undo
+input: list
+out: Added
+out: Deleted
+out: Deleted
+out: Undone 1 of 3 modification(s)
+out: Nothing to undo: 0 modification(s), [N/2] = 0
+out: Residents: 6
+out: 1. Young Kid, 01.01.2020, M, income 0.00
+out: 2. Orlov Petr, 29.02.2000, M, income 41000.00
+out: 3. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+out: 4. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+out: 5. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: 6. Smirnov Pavel Ivanovich, 05.05.1960, M, income 25000.00
+code: 0
+
+name: undo возвращает удаленного на его прежнее место среди равных дат
+args: tests/data/task7_residents.txt
+input: delete 3
+input: delete 3
+input: undo
+input: list
+out: Deleted
+out: Deleted
+out: Undone 1 of 2 modification(s)
+out: Residents: 5
+out: 1. Petrova Anna, 15.03.2005, W, income 30000.00
+out: 2. Orlov Petr, 29.02.2000, M, income 41000.00
+out: 3. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+out: 4. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: 5. Smirnov Pavel Ivanovich, 05.05.1960, M, income 25000.00
+code: 0
+
+name: ошибки номеров: нет такого жителя
+args: tests/data/task7_residents.txt
+input: delete 99
+input: edit 7
+err: Error: there is no resident number 99
+err: Error: there is no resident number 7
+code: 0
+
+name: save: выгрузка в файл (формат входного файла, без отчества - 5 слов)
+args: tests/data/task7_residents.txt
+input: delete 1
+input: save
+input: tests/data/res7.txt
+out: Deleted
+out: Saved to 'tests/data/res7.txt'
+code: 0
+file: tests/data/res7.txt
+fout: Orlov Petr 29.02.2000 M 41000
+fout: Ivanov Ivan Ivanovich 01.02.1990 M 50000.5
+fout: Sidorov Oleg Petrovich 01.02.1990 M 0
+fout: Kuznetsova Maria Olegovna 31.12.1975 W 72000.25
+fout: Smirnov Pavel Ivanovich 05.05.1960 M 25000
+
+name: save: файл не создать
+args: tests/data/task7_residents.txt
+input: save
+input: tests/no_dir/res7.txt
+input: list
+out: Residents: 6
+out: 1. Petrova Anna, 15.03.2005, W, income 30000.00
+out: 2. Orlov Petr, 29.02.2000, M, income 41000.00
+out: 3. Ivanov Ivan Ivanovich, 01.02.1990, M, income 50000.50
+out: 4. Sidorov Oleg Petrovich, 01.02.1990, M, income 0.00
+out: 5. Kuznetsova Maria Olegovna, 31.12.1975, W, income 72000.25
+out: 6. Smirnov Pavel Ivanovich, 05.05.1960, M, income 25000.00
+err: Error: can not create file 'tests/no_dir/res7.txt'
+code: 0
+
+name: add: неправильные поля - сообщение и все поля заново
+args: tests/data/task7_residents.txt
+input: add
+input: Iv4n
+input: A
+input:
+input: 01.01.2000
+input: M
+input: 1
+input: Ivan
+input: A
+input: B2
+input: 01.01.2000
+input: M
+input: 1
+input: Ivan
+input: A
+input:
+input: 30.02.2000
+input: M
+input: 1
+input: Ivan
+input: A
+input:
+input: 01.01.2999
+input: M
+input: 1
+input: Ivan
+input: A
+input:
+input: 01.01.2000
+input: X
+input: 1
+input: Ivan
+input: A
+input:
+input: 01.01.2000
+input: W
+input: -1
+input: Ivan
+input: A
+input:
+input: 01.01.2000
+input: W
+input: 1.
+input: find surname Ivan
+out: Added
+out: Found: 1
+out: 3. Ivan A, 01.01.2000, W, income 1.00
+err: Error: surname must contain only Latin letters, enter all fields again
+err: Error: patronymic must contain only Latin letters (or be empty), enter all fields again
+err: Error: birth date must be a real date dd.MM.yyyy, not later than today, enter all fields again
+err: Error: birth date must be a real date dd.MM.yyyy, not later than today, enter all fields again
+err: Error: gender must be M or W, enter all fields again
+err: Error: income must be a number 0 or more (digits and one dot), enter all fields again
+code: 0
+
+name: ошибки команд
+args: tests/data/task7_residents.txt
+input:
+input: foo
+input: list 1
+input: undo now
+input: edit
+input: edit x
+input: delete 0
+input: find
+input: find surname
+input: find age 5
+input: find gender X
+input: find birth 1990
+input: help
+input: exit
+input: list
+out: Commands: list, find <field> <value> [...] (fields: surname name patronymic birth gender income),
+out:           add, edit <number>, delete <number>, save, undo, help, exit
+err: Error: unknown command 'foo' (type help)
+err: Error: command 'list' takes no arguments
+err: Error: command 'undo' takes no arguments
+err: Error: use: edit <number>, number from the list (1, 2, ...)
+err: Error: use: edit <number>, number from the list (1, 2, ...)
+err: Error: use: delete <number>, number from the list (1, 2, ...)
+err: Error: use: find <field> <value> [<field> <value> ...]
+err: Error: use: find <field> <value> [<field> <value> ...]
+err: Error: wrong field or value in find
+err: Error: wrong field or value in find
+err: Error: wrong field or value in find
+code: 0
+
+name: ввод кончился посреди add
+args: tests/data/task7_residents.txt
+input: add
+input: Ivan
+err: Error: the input ended in the middle of a command
+code: 1
+
+name: ошибка в файле: Error: line 1: must be: surname name [patronymic] dd.MM.yyyy M|W income
+args: tests/data/task7_bad_count.txt
+err: Error: line 1: must be: surname name [patronymic] dd.MM.yyyy M|W income
+code: 1
+
+name: ошибка в файле: Error: line 1: surname must contain only Latin letters
+args: tests/data/task7_bad_surname.txt
+err: Error: line 1: surname must contain only Latin letters
+code: 1
+
+name: ошибка в файле: Error: line 2: name must contain only Latin letters
+args: tests/data/task7_bad_name.txt
+err: Error: line 2: name must contain only Latin letters
+code: 1
+
+name: ошибка в файле: Error: line 1: birth date must be a real date dd.MM.yyyy, not later than today
+args: tests/data/task7_bad_birth.txt
+err: Error: line 1: birth date must be a real date dd.MM.yyyy, not later than today
+code: 1
+
+name: ошибка в файле: Error: line 1: gender must be M or W
+args: tests/data/task7_bad_gender.txt
+err: Error: line 1: gender must be M or W
+code: 1
+
+name: ошибка в файле: Error: line 1: income must be a number 0 or more (digits and one dot)
+args: tests/data/task7_bad_income.txt
+err: Error: line 1: income must be a number 0 or more (digits and one dot)
+code: 1
+
+name: пустой файл: пустой список, add работает
+args: tests/data/task7_empty.txt
+input: list
+input: add
+input: Young
+input: Kid
+input:
+input: 01.01.2020
+input: M
+input: 0.0
+input: list
+out: Residents: 0
+out: Added
+out: Residents: 1
+out: 1. Young Kid, 01.01.2020, M, income 0.00
+code: 0
+
+name: нет аргументов
+err: Usage: lab3_task7 <residents file>
+code: 1
+
+name: файла нет
+args: tests/data/task7_nofile.txt
+err: Error: can not open file 'tests/data/task7_nofile.txt'
+code: 1
