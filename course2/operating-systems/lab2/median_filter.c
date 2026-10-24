@@ -1,422 +1,641 @@
 /*
- * median_filter.c — Лабораторная работа №2 по ОС (Вариант 11)
+ * Лабораторная работа 2 по ОС, вариант 11, Windows.
+ * Наложить K раз медианный фильтр на матрицу целых чисел. Размер окна задаёт пользователь.
+ * Наибольшее число потоков, работающих одновременно, задаётся ключом -t.
  *
- * Задание: Наложить K раз медианный фильтр на матрицу целых чисел.
- *          Размер окна задаётся пользователем.
- *          Максимальное количество потоков задаётся ключом запуска (-t).
- *
- * Модель параллелизма: Fork & Join (Лекция #3)
- *   - Для каждой итерации создаются num_threads потоков
- *   - Строки матрицы равномерно распределяются между потоками
- *   - После завершения всех потоков — обмен буферов и следующая итерация
- *   - Гонки данных отсутствуют: каждый поток пишет в свой диапазон строк,
- *     чтение из исходной матрицы — без модификации (read-only)
- *
- * Используемые средства Windows для работы с потоками:
- *   _beginthreadex()         — создание потока (безопасно для CRT, в отличие от CreateThread)
- *   WaitForMultipleObjects() — ожидание завершения группы потоков (Join)
- *   CloseHandle()            — закрытие дескриптора потока
- *   QueryPerformanceCounter/Frequency — высокоточный замер времени
- *
- * Компиляция:
- *   MSVC: cl /W3 /O2 /Fe:median_filter.exe median_filter.c
- *   GCC:  gcc -Wall -O2 -o median_filter.exe median_filter.c
+ * Медианный фильтр с окном W x W (W нечётное): каждый элемент заменяется медианой
+ * W*W чисел вокруг него (сам элемент - в центре окна). Медиана - число, которое стоит
+ * посередине, если эти W*W чисел упорядочить. За краем матрицы берётся ближайший
+ * элемент края (координата "прижимается" к границе).
  *
  * Запуск:
- *   median_filter.exe -r 500 -c 500 -w 3 -k 5 -t 4
- *   median_filter.exe -r 1000 -c 1000 -w 5 -k 3 -t 8 -b   (режим бенчмарка)
+ *   median_filter -t T -w W -k K                    матрица со стандартного ввода:
+ *                                                   "строки столбцы", затем все числа по строкам;
+ *                                                   результат печатается в том же виде (без размеров)
+ *   median_filter -t T -w W -k K -g R C SEED        случайная матрица R x C (SEED - начало
+ *                                                   генератора); печатаются время и контрольная сумма
+ *   median_filter -t T -w W -k K -g R C SEED -b     замер для 1, 2, ..., T потоков:
+ *                                                   время, ускорение и эффективность
+ *
+ * Модель параллельности - Fork & Join (лекция 3): на каждом из K проходов создаются T потоков
+ * (CreateThread), каждый обрабатывает свой отрезок строк, затем главный поток ждёт их всех
+ * (WaitForMultipleObjects). Потоки читают только исходную матрицу прохода и пишут каждый
+ * в свои строки новой матрицы - общих изменяемых данных нет, поэтому синхронизация
+ * (мьютексы и т.п.) не нужна. Новый проход начинается, только когда закончен предыдущий.
  */
 
 #include <windows.h>
-#include <process.h>   /* _beginthreadex */
+#include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+
+/* Ограничения на ключи */
+#define MAX_THREADS 64          /* WaitForMultipleObjects ждёт не больше 64 объектов сразу */
+#define MAX_WINDOW 99           /* окно 99 x 99 - уже почти 10000 чисел на каждый элемент */
+#define MAX_TIMES 1000          /* сколько раз можно наложить фильтр */
+#define MAX_SIDE 20000          /* наибольшее число строк и столбцов */
+#define MAX_CELLS 25000000      /* наибольшее число элементов (100 МБ на одну матрицу) */
+#define MAX_TOKEN 32            /* самое длинное число во вводе (в символах) */
+
+/* Что передаётся одному потоку: откуда читать, куда писать и какие строки - его */
+typedef struct {
+    const int *src;     /* матрица до этого прохода (только чтение)    */
+    int *dst;           /* матрица после прохода (поток пишет свои строки) */
+    int rows;           /* размеры матрицы                              */
+    int cols;
+    int window;         /* размер окна W                                */
+    int row_from;       /* первая строка потока                         */
+    int row_to;         /* строка после последней (не включается)       */
+} thread_task;
+
+/* Ключи запуска */
+typedef struct {
+    int threads;        /* -t: наибольшее число потоков               */
+    int window;         /* -w: размер окна                            */
+    int times;          /* -k: сколько раз наложить фильтр            */
+    int generate;       /* -g задан: матрица случайная                */
+    int rows;           /* для -g: размеры и начало генератора        */
+    int cols;
+    unsigned int seed;
+    int benchmark;      /* -b: замер для 1..T потоков                 */
+} options;
+
+/* ===================================================================== */
+/* Разбор ключей                                                          */
+/* ===================================================================== */
+
+static void print_usage(void) {
+    fprintf(stderr, "Usage: median_filter -t THREADS -w WINDOW -k TIMES [-g ROWS COLS SEED [-b]]\n");
+}
 
 /*
- * Максимальное число потоков.
- * Ограничено MAXIMUM_WAIT_OBJECTS (64) из-за WaitForMultipleObjects().
+ * Строка str -> целое число от low до high.
+ * Всё число должно состоять из цифр (можно со знаком), без лишних символов в конце.
+ * Возвращает 0 - успех, 1 - это не число или оно вне границ.
  */
-#define MAX_THREADS 64
+static int parse_number(const char *str, long long low, long long high, long long *value) {
+    char *end = NULL;
+    /* strtoll сам пропускает пробелы в начале - их не разрешаем */
+    if (str[0] == '\0' || str[0] == ' ' || str[0] == '\t') {
+        return 1;
+    }
+    errno = 0;
+    long long number = strtoll(str, &end, 10);
+    /* *end != '\0' - после числа есть что-то ещё; errno == ERANGE - не влезло в long long */
+    if (*end != '\0' || errno == ERANGE || number < low || number > high) {
+        return 1;
+    }
+    *value = number;
+    return 0;
+}
 
-/* ================================================================
- * Структура данных, передаваемая каждому потоку
- * ================================================================ */
-typedef struct {
-    const int *src;      /* Исходная матрица (только чтение)             */
-    int       *dst;      /* Результирующая матрица (запись)              */
-    int        rows;     /* Общее количество строк                       */
-    int        cols;     /* Общее количество столбцов                    */
-    int        win;      /* Размер окна фильтра (нечётное число)         */
-    int        row_from; /* Первая строка для обработки (включительно)    */
-    int        row_to;   /* Последняя строка (не включительно)           */
-} ThreadData;
+/*
+ * Взять значение ключа key: следующий аргумент после argv[*index], число от low до high.
+ * (Имя ключа передаётся отдельно: у -g три значения подряд, и argv[*index] - уже не сам ключ.)
+ * Возвращает 0 - успех, 1 - ошибка (сообщение уже напечатано).
+ */
+static int key_value(int argc, char *argv[], int *index, const char *key, long long low, long long high,
+                     const char *what, long long *value) {
+    if (*index + 1 >= argc) {
+        fprintf(stderr, "Error: key %s needs a value\n", key);
+        return 1;
+    }
+    (*index)++;
+    if (parse_number(argv[*index], low, high, value) != 0) {
+        fprintf(stderr, "Error: %s must be a number from %lld to %lld, not '%s'\n", what, low, high, argv[*index]);
+        return 1;
+    }
+    return 0;
+}
 
-/* ================================================================
- * Вспомогательные функции
- * ================================================================ */
+/*
+ * Разобрать все ключи в opts.
+ * Возвращает 0 - успех, 1 - ошибка (сообщение уже напечатано).
+ */
+static int parse_options(int argc, char *argv[], options *opts) {
+    long long value = 0;
+    /* -1 - ключ ещё не встретился */
+    opts->threads = -1;
+    opts->window = -1;
+    opts->times = -1;
+    opts->generate = 0;
+    opts->benchmark = 0;
 
-/* Функция сравнения для qsort (целые числа) */
-static int cmp_int(const void *a, const void *b) {
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-t") == 0) {
+            if (key_value(argc, argv, &i, "-t", 1, MAX_THREADS, "the number of threads", &value) != 0) {
+                return 1;
+            }
+            opts->threads = (int)value;
+        } else if (strcmp(argv[i], "-w") == 0) {
+            if (key_value(argc, argv, &i, "-w", 1, MAX_WINDOW, "the window size", &value) != 0) {
+                return 1;
+            }
+            /* у окна чётного размера нет центрального элемента */
+            if (value % 2 == 0) {
+                fprintf(stderr, "Error: the window size must be odd\n");
+                return 1;
+            }
+            opts->window = (int)value;
+        } else if (strcmp(argv[i], "-k") == 0) {
+            if (key_value(argc, argv, &i, "-k", 0, MAX_TIMES, "K", &value) != 0) {
+                return 1;
+            }
+            opts->times = (int)value;
+        } else if (strcmp(argv[i], "-g") == 0) {
+            /* три значения подряд: строки, столбцы, начало генератора */
+            opts->generate = 1;
+            if (key_value(argc, argv, &i, "-g", 1, MAX_SIDE, "the number of rows", &value) != 0) {
+                return 1;
+            }
+            opts->rows = (int)value;
+            if (key_value(argc, argv, &i, "-g", 1, MAX_SIDE, "the number of columns", &value) != 0) {
+                return 1;
+            }
+            opts->cols = (int)value;
+            if (key_value(argc, argv, &i, "-g", 0, 4294967295LL, "the seed", &value) != 0) {
+                return 1;
+            }
+            opts->seed = (unsigned int)value;
+        } else if (strcmp(argv[i], "-b") == 0) {
+            opts->benchmark = 1;
+        } else {
+            fprintf(stderr, "Error: unknown key '%s'\n", argv[i]);
+            print_usage();
+            return 1;
+        }
+    }
+
+    /* обязательные ключи */
+    if (opts->threads < 0 || opts->window < 0 || opts->times < 0) {
+        fprintf(stderr, "Error: keys -t, -w and -k are required\n");
+        print_usage();
+        return 1;
+    }
+    /* замер имеет смысл только на случайной матрице: её можно создать заново для каждого замера */
+    if (opts->benchmark && !opts->generate) {
+        fprintf(stderr, "Error: key -b works only with -g\n");
+        return 1;
+    }
+    if (opts->generate && (long long)opts->rows * opts->cols > MAX_CELLS) {
+        fprintf(stderr, "Error: the matrix is too big (more than %d elements)\n", MAX_CELLS);
+        return 1;
+    }
+    return 0;
+}
+
+/* ===================================================================== */
+/* Матрица: чтение, создание, печать                                      */
+/* ===================================================================== */
+
+/*
+ * Прочитать со стандартного ввода одно слово (символы до пробела, табуляции или конца строки).
+ * *found = 0 - ввод закончился, слова нет.
+ * Возвращает 0 - успех, 1 - слово длиннее MAX_TOKEN символов (такого числа не бывает).
+ */
+static int read_token(char *token, int *found) {
+    int symbol = getchar();
+    /* пропускаем пробельные символы перед словом */
+    while (symbol == ' ' || symbol == '\t' || symbol == '\n' || symbol == '\r') {
+        symbol = getchar();
+    }
+    *found = 0;
+    if (symbol == EOF) {
+        return 0;
+    }
+    /* собираем слово до пробельного символа или конца ввода */
+    int length = 0;
+    while (symbol != EOF && symbol != ' ' && symbol != '\t' && symbol != '\n' && symbol != '\r') {
+        if (length == MAX_TOKEN) {
+            token[length] = '\0';
+            return 1;
+        }
+        token[length++] = (char)symbol;
+        symbol = getchar();
+    }
+    token[length] = '\0';
+    *found = 1;
+    return 0;
+}
+
+/*
+ * Прочитать со стандартного ввода одно число от low до high.
+ * what - что это за число (для сообщения об ошибке).
+ * Возвращает 0 - успех, 1 - ошибка (сообщение уже напечатано).
+ */
+static int read_number(long long low, long long high, const char *what, long long *value) {
+    char token[MAX_TOKEN + 1];
+    int found = 0;
+    if (read_token(token, &found) != 0) {
+        fprintf(stderr, "Error: %s is too long: '%s...'\n", what, token);
+        return 1;
+    }
+    if (!found) {
+        fprintf(stderr, "Error: the input ended, %s expected\n", what);
+        return 1;
+    }
+    if (parse_number(token, low, high, value) != 0) {
+        fprintf(stderr, "Error: %s must be a number from %lld to %lld, not '%s'\n", what, low, high, token);
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ * Прочитать матрицу со стандартного ввода: "строки столбцы", затем строки*столбцы целых чисел.
+ * Память под матрицу выделяется здесь (malloc), освобождает вызывающий.
+ * Возвращает 0 - успех, 1 - ошибка (сообщение уже напечатано).
+ */
+static int read_matrix(int **matrix, int *rows, int *cols) {
+    /* Файл, сохранённый Блокнотом в UTF-8, может начинаться с невидимой метки BOM (байты EF BB BF).
+       Число с байта EF начаться не может, поэтому такой байт в начале - либо BOM, либо ошибка ввода. */
+    int symbol = getchar();
+    if (symbol == 0xEF) {
+        if (getchar() != 0xBB || getchar() != 0xBF) {
+            fprintf(stderr, "Error: wrong symbols at the start of the input\n");
+            return 1;
+        }
+    } else if (symbol != EOF) {
+        /* это не BOM - возвращаем символ во ввод, его прочитает read_number */
+        ungetc(symbol, stdin);
+    }
+
+    long long value = 0;
+    if (read_number(1, MAX_SIDE, "the number of rows", &value) != 0) {
+        return 1;
+    }
+    *rows = (int)value;
+    if (read_number(1, MAX_SIDE, "the number of columns", &value) != 0) {
+        return 1;
+    }
+    *cols = (int)value;
+    if ((long long)*rows * *cols > MAX_CELLS) {
+        fprintf(stderr, "Error: the matrix is too big (more than %d elements)\n", MAX_CELLS);
+        return 1;
+    }
+
+    size_t count = (size_t)*rows * (size_t)*cols;
+    *matrix = malloc(count * sizeof(int));
+    if (*matrix == NULL) {
+        fprintf(stderr, "Error: not enough memory for the matrix\n");
+        return 1;
+    }
+
+    /* элементы - любые числа типа int */
+    for (size_t i = 0; i < count; i++) {
+        if (read_number(INT_MIN, INT_MAX, "a matrix element", &value) != 0) {
+            free(*matrix);
+            *matrix = NULL;
+            return 1;
+        }
+        (*matrix)[i] = (int)value;
+    }
+
+    /* после матрицы ничего быть не должно: иначе размеры, скорее всего, указаны неверно */
+    char token[MAX_TOKEN + 1];
+    int found = 0;
+    read_token(token, &found);
+    if (found) {
+        fprintf(stderr, "Error: extra data after the matrix: '%s'\n", token);
+        free(*matrix);
+        *matrix = NULL;
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ * Заполнить матрицу случайными числами от 0 до 999.
+ * Генератор - линейный конгруэнтный: x = x * 1103515245 + 12345 (по модулю 2^32,
+ * переполнение unsigned int - это и есть взятие по модулю). Одинаковый seed - одинаковая матрица:
+ * так можно сравнить результаты при разном числе потоков.
+ */
+static void fill_random(int *matrix, size_t count, unsigned int seed) {
+    unsigned int state = seed;
+    for (size_t i = 0; i < count; i++) {
+        state = state * 1103515245u + 12345u;
+        /* старшие биты у такого генератора "случайнее" младших */
+        matrix[i] = (int)((state >> 16) % 1000u);
+    }
+}
+
+/*
+ * Контрольная сумма матрицы: h = h * 31 + элемент (по модулю 2^64).
+ * Зависит от каждого элемента и от его места: если две матрицы различаются,
+ * суммы почти наверняка разные.
+ */
+static unsigned long long checksum(const int *matrix, size_t count) {
+    unsigned long long hash = 0;
+    for (size_t i = 0; i < count; i++) {
+        hash = hash * 31u + (unsigned int)matrix[i];
+    }
+    return hash;
+}
+
+/* Напечатать матрицу: строка матрицы - строка вывода, числа через пробел */
+static void print_matrix(const int *matrix, int rows, int cols) {
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            printf(c == 0 ? "%d" : " %d", matrix[(size_t)r * cols + c]);
+        }
+        printf("\n");
+    }
+}
+
+/* ===================================================================== */
+/* Медианный фильтр                                                       */
+/* ===================================================================== */
+
+/* Сравнение двух int для qsort: отрицательное - a < b, 0 - равны, положительное - a > b */
+static int compare_ints(const void *a, const void *b) {
     int x = *(const int *)a;
     int y = *(const int *)b;
+    /* не x - y: разность может переполнить int */
     return (x > y) - (x < y);
 }
 
-/* Ограничение значения в диапазон [lo, hi] (для обработки границ матрицы) */
-static int clamp(int val, int lo, int hi) {
-    if (val < lo) return lo;
-    if (val > hi) return hi;
-    return val;
+/* Прижать координату к границам: меньше 0 -> 0, больше last -> last */
+static int clamp(int value, int last) {
+    if (value < 0) {
+        return 0;
+    }
+    if (value > last) {
+        return last;
+    }
+    return value;
 }
 
-/* Высокоточное текущее время в секундах */
-static double get_time_sec(void) {
-    LARGE_INTEGER freq, cnt;
-    QueryPerformanceFrequency(&freq);
-    QueryPerformanceCounter(&cnt);
-    return (double)cnt.QuadPart / (double)freq.QuadPart;
-}
+/*
+ * Функция потока: медианный фильтр для строк row_from .. row_to - 1.
+ * Возвращает код завершения потока: 0 - успех, 1 - не хватило памяти.
+ * WINAPI - соглашение о вызове, которого ждёт CreateThread.
+ */
+static DWORD WINAPI filter_rows(LPVOID arg) {
+    const thread_task *task = (const thread_task *)arg;
+    int half = task->window / 2;
+    int area = task->window * task->window;
 
-/* ================================================================
- * Функция потока: медианный фильтр для диапазона строк
- *
- * Для каждого пикселя (r, c) в назначенном диапазоне строк:
- *   1. Собирается окно win×win с центром в (r, c)
- *   2. Значения сортируются
- *   3. Медиана (центральный элемент) записывается в dst
- *
- * Граничные пиксели обрабатываются методом "зажатия" (clamp):
- * координаты за пределами матрицы отображаются на ближайший край.
- * ================================================================ */
-static unsigned __stdcall filter_thread(void *arg) {
-    ThreadData *td = (ThreadData *)arg;
-    int half = td->win / 2;
-    int win_area = td->win * td->win;
-
-    /* Локальный буфер для значений окна — у каждого потока свой (нет гонки) */
-    int *window = (int *)malloc((size_t)win_area * sizeof(int));
-    if (!window) {
-        fprintf(stderr, "[поток] Ошибка выделения памяти\n");
+    /* у каждого потока свой буфер для чисел окна - потоки не мешают друг другу */
+    int *values = malloc((size_t)area * sizeof(int));
+    if (values == NULL) {
         return 1;
     }
 
-    for (int r = td->row_from; r < td->row_to; r++) {
-        for (int c = 0; c < td->cols; c++) {
-            int cnt = 0;
-
-            /* Сбор значений окна */
-            for (int wr = -half; wr <= half; wr++) {
-                for (int wc = -half; wc <= half; wc++) {
-                    int nr = clamp(r + wr, 0, td->rows - 1);
-                    int nc = clamp(c + wc, 0, td->cols - 1);
-                    window[cnt++] = td->src[nr * td->cols + nc];
+    for (int r = task->row_from; r < task->row_to; r++) {
+        for (int c = 0; c < task->cols; c++) {
+            /* собираем W*W чисел вокруг (r, c); за краем - ближайший элемент края */
+            int count = 0;
+            for (int dr = -half; dr <= half; dr++) {
+                int row = clamp(r + dr, task->rows - 1);
+                const int *line = task->src + (size_t)row * task->cols;
+                for (int dc = -half; dc <= half; dc++) {
+                    values[count++] = line[clamp(c + dc, task->cols - 1)];
                 }
             }
-
-            /* Сортировка и выбор медианы */
-            qsort(window, (size_t)cnt, sizeof(int), cmp_int);
-            td->dst[r * td->cols + c] = window[cnt / 2];
+            /* упорядочиваем и берём средний элемент (count = W*W - нечётное) */
+            qsort(values, (size_t)count, sizeof(int), compare_ints);
+            task->dst[(size_t)r * task->cols + c] = values[count / 2];
         }
     }
 
-    free(window);
+    free(values);
     return 0;
 }
 
-/* ================================================================
- * Применение медианного фильтра K раз с num_threads потоками
- *
- * Использует модель Fork & Join:
- *   Для каждой из K итераций:
- *     Fork  — создание num_threads потоков
- *     Join  — ожидание завершения всех потоков (WaitForMultipleObjects)
- *     Swap  — обмен буферов src <-> dst
- *
- * Возвращает затраченное время в секундах.
- * ================================================================ */
-static double apply_filter(int *mat, int rows, int cols,
-                           int win, int K, int num_threads) {
-    int size = rows * cols;
-    int *buf = (int *)malloc((size_t)size * sizeof(int));
-    if (!buf) {
-        fprintf(stderr, "Ошибка выделения памяти для буфера\n");
-        return -1.0;
+/*
+ * Дождаться count потоков из handles, проверить их коды завершения и закрыть описатели.
+ * Возвращает 0 - все потоки отработали успешно, 1 - нет (сообщение уже напечатано).
+ */
+static int join_threads(HANDLE *handles, int count) {
+    int result = 0;
+    if (count == 0) {
+        return 0;
+    }
+    /* TRUE - ждать, пока завершатся все, INFINITE - без ограничения по времени */
+    if (WaitForMultipleObjects((DWORD)count, handles, TRUE, INFINITE) == WAIT_FAILED) {
+        fprintf(stderr, "Error: WaitForMultipleObjects failed (Windows error %lu)\n", (unsigned long)GetLastError());
+        result = 1;
+    }
+    for (int i = 0; i < count; i++) {
+        DWORD code = 0;
+        if (result == 0 && GetExitCodeThread(handles[i], &code) && code != 0) {
+            fprintf(stderr, "Error: not enough memory in a thread\n");
+            result = 1;
+        }
+        CloseHandle(handles[i]);
+    }
+    return result;
+}
+
+/*
+ * Наложить фильтр times раз, используя не больше threads потоков одновременно.
+ * matrix - исходная матрица, в ней же оказывается результат; spare - вторая матрица того же
+ * размера: проход читает одну матрицу и пишет в другую, потом они меняются ролями.
+ * Возвращает 0 - успех, 1 - ошибка (сообщение уже напечатано).
+ */
+static int apply_filter(int *matrix, int *spare, int rows, int cols, int window, int times, int threads) {
+    HANDLE handles[MAX_THREADS];
+    thread_task tasks[MAX_THREADS];
+    /* потоков больше, чем строк, не нужно: у лишних не было бы работы */
+    if (threads > rows) {
+        threads = rows;
     }
 
-    int *src = mat;
-    int *dst = buf;
+    int *src = matrix;
+    int *dst = spare;
+    for (int pass = 0; pass < times; pass++) {
+        /* Fork: делим строки поровну; первые rows % threads потоков получают на строку больше */
+        int base = rows / threads;
+        int extra = rows % threads;
+        int next_row = 0;
+        int created = 0;
+        for (int i = 0; i < threads; i++) {
+            tasks[i].src = src;
+            tasks[i].dst = dst;
+            tasks[i].rows = rows;
+            tasks[i].cols = cols;
+            tasks[i].window = window;
+            tasks[i].row_from = next_row;
+            tasks[i].row_to = next_row + base + (i < extra ? 1 : 0);
+            next_row = tasks[i].row_to;
 
-    /* Ограничиваем число потоков количеством строк */
-    if (num_threads > rows) num_threads = rows;
-    if (num_threads < 1)    num_threads = 1;
-
-    HANDLE     handles[MAX_THREADS];
-    ThreadData td[MAX_THREADS];
-
-    double t_start = get_time_sec();
-
-    for (int iter = 0; iter < K; iter++) {
-        /* --- Fork: распределение строк и создание потоков --- */
-        int base_chunk = rows / num_threads;
-        int remainder  = rows % num_threads;
-        int current_row = 0;
-
-        for (int t = 0; t < num_threads; t++) {
-            int chunk = base_chunk + (t < remainder ? 1 : 0);
-
-            td[t].src      = src;
-            td[t].dst      = dst;
-            td[t].rows     = rows;
-            td[t].cols     = cols;
-            td[t].win      = win;
-            td[t].row_from = current_row;
-            td[t].row_to   = current_row + chunk;
-            current_row += chunk;
-
-            handles[t] = (HANDLE)_beginthreadex(
-                NULL,           /* атрибуты безопасности  */
-                0,              /* размер стека (по умолч.) */
-                filter_thread,  /* функция потока          */
-                &td[t],         /* аргумент потока         */
-                0,              /* запуск немедленно       */
-                NULL            /* идентификатор потока    */
-            );
-            if (handles[t] == 0) {
-                fprintf(stderr, "Ошибка создания потока %d (код: %lu)\n",
-                        t, GetLastError());
-                free(buf);
-                return -1.0;
+            /* CreateThread: стек по умолчанию, функция filter_rows с аргументом &tasks[i],
+               0 - поток сразу начинает работать */
+            handles[i] = CreateThread(NULL, 0, filter_rows, &tasks[i], 0, NULL);
+            if (handles[i] == NULL) {
+                fprintf(stderr, "Error: CreateThread failed (Windows error %lu)\n", (unsigned long)GetLastError());
+                /* уже созданные потоки работают с нашими матрицами - их надо дождаться */
+                join_threads(handles, created);
+                return 1;
             }
+            created++;
         }
 
-        /* --- Join: ожидание завершения всех потоков --- */
-        WaitForMultipleObjects((DWORD)num_threads, handles, TRUE, INFINITE);
-
-        /* Закрытие дескрипторов потоков */
-        for (int t = 0; t < num_threads; t++) {
-            CloseHandle(handles[t]);
-        }
-
-        /* --- Swap: обмен буферов для следующей итерации --- */
-        {
-            int *tmp = src;
-            src = dst;
-            dst = tmp;
-        }
-    }
-
-    double t_end = get_time_sec();
-
-    /* Если результат оказался в buf, копируем обратно в mat */
-    if (src != mat) {
-        memcpy(mat, src, (size_t)size * sizeof(int));
-    }
-
-    free(buf);
-    return t_end - t_start;
-}
-
-/* ================================================================
- * Генерация матрицы случайными целыми числами 0..255
- * ================================================================ */
-static void generate_matrix(int *mat, int rows, int cols, unsigned seed) {
-    srand(seed);
-    for (int i = 0; i < rows * cols; i++) {
-        mat[i] = rand() % 256;
-    }
-}
-
-/* ================================================================
- * Печать матрицы (для отладки на малых размерах)
- * ================================================================ */
-static void print_matrix(const int *mat, int rows, int cols, const char *title) {
-    printf("\n%s (%d x %d):\n", title, rows, cols);
-    int print_rows = rows > 16 ? 16 : rows;
-    int print_cols = cols > 16 ? 16 : cols;
-
-    for (int r = 0; r < print_rows; r++) {
-        for (int c = 0; c < print_cols; c++) {
-            printf("%4d", mat[r * cols + c]);
-        }
-        if (cols > print_cols) printf("  ...");
-        printf("\n");
-    }
-    if (rows > print_rows) printf("  ...\n");
-}
-
-/* ================================================================
- * Вывод справки
- * ================================================================ */
-static void print_usage(const char *progname) {
-    printf("Медианный фильтр — Лаб. работа №2 по ОС (Вариант 11)\n\n");
-    printf("Использование: %s [параметры]\n\n", progname);
-    printf("Параметры:\n");
-    printf("  -r <строки>      Количество строк матрицы       (по умолч.: 500)\n");
-    printf("  -c <столбцы>     Количество столбцов матрицы     (по умолч.: 500)\n");
-    printf("  -w <окно>        Размер окна фильтра (нечётное)  (по умолч.: 3)\n");
-    printf("  -k <итерации>    Количество проходов фильтра     (по умолч.: 3)\n");
-    printf("  -t <потоки>      Макс. количество потоков (1-%d) (по умолч.: 4)\n", MAX_THREADS);
-    printf("  -s <seed>        Зерно генератора случ. чисел    (по умолч.: time)\n");
-    printf("  -b               Режим бенчмарка (замер 1..t потоков)\n");
-    printf("  -p               Печатать матрицу (до/после)\n");
-    printf("  -h               Показать эту справку\n");
-    printf("\nПримеры:\n");
-    printf("  %s -r 1000 -c 1000 -w 3 -k 5 -t 8\n", progname);
-    printf("  %s -r 800 -c 800 -w 5 -k 3 -t 8 -b\n", progname);
-}
-
-/* ================================================================
- * main
- * ================================================================ */
-int main(int argc, char *argv[]) {
-    /* --- Параметры по умолчанию --- */
-    int rows        = 500;
-    int cols        = 500;
-    int win         = 3;
-    int K           = 3;
-    int max_threads = 4;
-    unsigned seed   = (unsigned)time(NULL);
-    int benchmark   = 0;
-    int do_print    = 0;
-
-    /* --- Разбор аргументов командной строки --- */
-    for (int i = 1; i < argc; i++) {
-        if      (strcmp(argv[i], "-r") == 0 && i + 1 < argc) rows        = atoi(argv[++i]);
-        else if (strcmp(argv[i], "-c") == 0 && i + 1 < argc) cols        = atoi(argv[++i]);
-        else if (strcmp(argv[i], "-w") == 0 && i + 1 < argc) win         = atoi(argv[++i]);
-        else if (strcmp(argv[i], "-k") == 0 && i + 1 < argc) K           = atoi(argv[++i]);
-        else if (strcmp(argv[i], "-t") == 0 && i + 1 < argc) max_threads = atoi(argv[++i]);
-        else if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) seed        = (unsigned)atoi(argv[++i]);
-        else if (strcmp(argv[i], "-b") == 0) benchmark = 1;
-        else if (strcmp(argv[i], "-p") == 0) do_print  = 1;
-        else if (strcmp(argv[i], "-h") == 0) { print_usage(argv[0]); return 0; }
-        else {
-            fprintf(stderr, "Неизвестный параметр: %s\n\n", argv[i]);
-            print_usage(argv[0]);
-            return 1;
-        }
-    }
-
-    /* --- Валидация параметров --- */
-    if (win < 1 || win % 2 == 0) {
-        fprintf(stderr, "Ошибка: размер окна должен быть нечётным положительным числом (получено: %d)\n", win);
-        return 1;
-    }
-    if (rows < 1 || cols < 1) {
-        fprintf(stderr, "Ошибка: размеры матрицы должны быть > 0\n");
-        return 1;
-    }
-    if (max_threads < 1 || max_threads > MAX_THREADS) {
-        fprintf(stderr, "Ошибка: количество потоков от 1 до %d\n", MAX_THREADS);
-        return 1;
-    }
-    if (K < 1) {
-        fprintf(stderr, "Ошибка: количество итераций должно быть >= 1\n");
-        return 1;
-    }
-
-    /* --- Заголовок --- */
-    printf("============================================================\n");
-    printf("  Лабораторная работа №2 по ОС — Вариант 11\n");
-    printf("  Медианный фильтр (многопоточная реализация)\n");
-    printf("============================================================\n\n");
-    printf("Параметры:\n");
-    printf("  Матрица:    %d x %d\n", rows, cols);
-    printf("  Окно:       %d x %d\n", win, win);
-    printf("  Итерации:   %d\n", K);
-    printf("  Потоки:     %d (макс.)\n", max_threads);
-    printf("  Seed:       %u\n", seed);
-    printf("  PID:        %lu\n\n", GetCurrentProcessId());
-
-    printf("[подсказка] Откройте Диспетчер задач -> Подробности -> median_filter.exe\n");
-    printf("            столбец \"Потоки\" покажет количество потоков процесса.\n\n");
-
-    int size = rows * cols;
-
-    if (!benchmark) {
-        /* ============================================================
-         * Обычный режим: один запуск с max_threads потоками
-         * ============================================================ */
-        int *mat = (int *)malloc((size_t)size * sizeof(int));
-        if (!mat) {
-            fprintf(stderr, "Ошибка выделения памяти (%d элементов)\n", size);
+        /* Join: ждём все потоки этого прохода */
+        if (join_threads(handles, created) != 0) {
             return 1;
         }
 
-        generate_matrix(mat, rows, cols, seed);
-        if (do_print) print_matrix(mat, rows, cols, "Исходная матрица");
+        /* результат прохода - исходные данные следующего: меняем матрицы ролями */
+        int *tmp = src;
+        src = dst;
+        dst = tmp;
+    }
 
-        printf("[main] Запуск фильтра с %d потоками...\n", max_threads);
+    /* после нечётного числа проходов результат лежит в spare - копируем его в matrix */
+    if (src != matrix) {
+        memcpy(matrix, src, (size_t)rows * (size_t)cols * sizeof(int));
+    }
+    return 0;
+}
 
-        double elapsed = apply_filter(mat, rows, cols, win, K, max_threads);
+/* ===================================================================== */
+/* Время                                                                  */
+/* ===================================================================== */
 
-        if (elapsed < 0) {
-            free(mat);
-            return 1;
+/* Текущее время в секундах по точному счётчику Windows (QueryPerformanceCounter) */
+static double now_seconds(void) {
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER counter;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&counter);
+    return (double)counter.QuadPart / (double)frequency.QuadPart;
+}
+
+/* Число логических процессоров компьютера (ядер с учётом Hyper-Threading) */
+static int processor_count(void) {
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+    return (int)info.dwNumberOfProcessors;
+}
+
+/*
+ * Наложить фильтр на копию original и измерить время.
+ * work и spare - рабочие матрицы того же размера.
+ * Возвращает 0 - успех, 1 - ошибка (сообщение уже напечатано).
+ */
+static int timed_run(const options *opts, const int *original, int *work, int *spare, int threads,
+                     double *seconds, unsigned long long *sum) {
+    size_t count = (size_t)opts->rows * (size_t)opts->cols;
+    memcpy(work, original, count * sizeof(int));
+    /* замеряем только сам фильтр, без создания матрицы */
+    double start = now_seconds();
+    if (apply_filter(work, spare, opts->rows, opts->cols, opts->window, opts->times, threads) != 0) {
+        return 1;
+    }
+    *seconds = now_seconds() - start;
+    *sum = checksum(work, count);
+    return 0;
+}
+
+/* ===================================================================== */
+/* Три режима работы                                                      */
+/* ===================================================================== */
+
+/* Матрица со стандартного ввода -> фильтр -> результат на стандартный вывод */
+static int run_input_mode(const options *opts) {
+    int *matrix = NULL;
+    int rows = 0;
+    int cols = 0;
+    if (read_matrix(&matrix, &rows, &cols) != 0) {
+        return 1;
+    }
+    int *spare = malloc((size_t)rows * (size_t)cols * sizeof(int));
+    if (spare == NULL) {
+        fprintf(stderr, "Error: not enough memory for the matrix\n");
+        free(matrix);
+        return 1;
+    }
+
+    int result = apply_filter(matrix, spare, rows, cols, opts->window, opts->times, opts->threads);
+    if (result == 0) {
+        print_matrix(matrix, rows, cols);
+    }
+    free(matrix);
+    free(spare);
+    return result;
+}
+
+/*
+ * Случайная матрица: -g (один запуск с T потоками) или -g -b (замер для 1..T потоков).
+ * Нужны три матрицы: original (не меняется), work (результат) и spare (для смены ролей).
+ */
+static int run_generate_mode(const options *opts) {
+    size_t count = (size_t)opts->rows * (size_t)opts->cols;
+    int *original = malloc(count * sizeof(int));
+    int *work = malloc(count * sizeof(int));
+    int *spare = malloc(count * sizeof(int));
+    if (original == NULL || work == NULL || spare == NULL) {
+        fprintf(stderr, "Error: not enough memory for the matrix\n");
+        free(original);
+        free(work);
+        free(spare);
+        return 1;
+    }
+    fill_random(original, count, opts->seed);
+
+    /* сколько потоков реально будет работать: не больше, чем строк */
+    int used = opts->threads < opts->rows ? opts->threads : opts->rows;
+    printf("matrix: %d x %d, window: %d, K: %d, logical processors: %d\n",
+           opts->rows, opts->cols, opts->window, opts->times, processor_count());
+
+    int result = 0;
+    double seconds = 0.0;
+    unsigned long long sum = 0;
+    if (!opts->benchmark) {
+        /* PID - чтобы найти процесс в Диспетчере задач и посмотреть число его потоков */
+        printf("process id: %lu, threads: %d\n", (unsigned long)GetCurrentProcessId(), used);
+        fflush(stdout);
+        result = timed_run(opts, original, work, spare, opts->threads, &seconds, &sum);
+        if (result == 0) {
+            printf("time: %.4f s\n", seconds);
+            printf("checksum: %llu\n", sum);
         }
-
-        printf("[main] Завершено за %.4f сек.\n", elapsed);
-        if (do_print) print_matrix(mat, rows, cols, "Результат");
-
-        free(mat);
-
     } else {
-        /* ============================================================
-         * Режим бенчмарка: замер от 1 до max_threads потоков
-         *
-         * Для каждого числа потоков p вычисляются:
-         *   T(p)  — время выполнения
-         *   S(p)  = T(1) / T(p)           — ускорение
-         *   E(p)  = S(p) / p              — эффективность
-         *
-         * (см. Лекция #3 — закон Амдала, метрики параллелизма)
-         * ============================================================ */
-        printf("--- Бенчмарк ---\n\n");
-        printf("%-10s %-14s %-14s %-14s\n",
-               "Потоки", "Время (сек)", "Ускорение S", "Эффективн. E");
-        printf("---------- -------------- -------------- --------------\n");
-
-        double t1 = 0.0;
-
-        for (int t = 1; t <= max_threads; t++) {
-            int *mat = (int *)malloc((size_t)size * sizeof(int));
-            if (!mat) {
-                fprintf(stderr, "Ошибка выделения памяти\n");
-                return 1;
+        /* T(1) - время с одним потоком; ускорение S = T(1) / T(p), эффективность E = S / p */
+        double time_one = 0.0;
+        unsigned long long sum_one = 0;
+        printf("threads  time, s   speedup  efficiency\n");
+        for (int p = 1; p <= used && result == 0; p++) {
+            result = timed_run(opts, original, work, spare, p, &seconds, &sum);
+            if (result != 0) {
+                break;
             }
-
-            /* Генерируем одинаковую матрицу для честного сравнения */
-            generate_matrix(mat, rows, cols, seed);
-
-            double elapsed = apply_filter(mat, rows, cols, win, K, t);
-            if (elapsed < 0) {
-                free(mat);
-                return 1;
+            if (p == 1) {
+                time_one = seconds;
+                sum_one = sum;
+            } else if (sum != sum_one) {
+                /* при любом числе потоков результат обязан быть одинаковым - иначе ошибка в программе */
+                fprintf(stderr, "Error: internal error (the result depends on the number of threads)\n");
+                result = 1;
+                break;
             }
-
-            if (t == 1) t1 = elapsed;
-
-            double speedup    = (elapsed > 0.0) ? t1 / elapsed : 0.0;
-            double efficiency = (t > 0)         ? speedup / t  : 0.0;
-
-            printf("%-10d %-14.4f %-14.4f %-14.4f\n",
-                   t, elapsed, speedup, efficiency);
-
-            free(mat);
+            /* очень быстрый проход может занять "0 секунд" - тогда ускорение не считаем */
+            double speedup = seconds > 0.0 ? time_one / seconds : 0.0;
+            printf("%7d  %8.4f  %7.2f  %10.2f\n", p, seconds, speedup, speedup / p);
+            fflush(stdout);
         }
-
-        printf("\nT(1) = %.4f сек\n", t1);
-        printf("\nПояснение (Лекция #3, закон Амдала):\n");
-        printf("  S = T(1)/T(p) — ускорение, идеальное S = p\n");
-        printf("  E = S/p       — эффективность, идеальная E = 1.0\n");
-        printf("  При увеличении числа потоков S растёт, но ограничен\n");
-        printf("  долей последовательного кода (закон Амдала: S <= 1/a).\n");
-        printf("  При p > числа ядер CPU наблюдается псевдопараллелизм\n");
-        printf("  и дополнительные накладные расходы на переключение контекста.\n");
+        if (result == 0) {
+            printf("checksum: %llu\n", sum_one);
+        }
     }
 
-    printf("\n[main] Программа завершена.\n");
-    return 0;
+    free(original);
+    free(work);
+    free(spare);
+    return result;
+}
+
+int main(int argc, char *argv[]) {
+    options opts;
+    if (parse_options(argc, argv, &opts) != 0) {
+        return 1;
+    }
+    /* матрица либо случайная (-g), либо со стандартного ввода */
+    if (opts.generate) {
+        return run_generate_mode(&opts);
+    }
+    return run_input_mode(&opts);
 }

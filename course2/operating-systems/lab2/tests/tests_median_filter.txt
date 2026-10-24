@@ -1,0 +1,383 @@
+# Тесты медианного фильтра (вариант 11)
+#
+# Как запустить:  make test                (Git Bash: все тесты)
+#                 ..\windows\run_tests.bat (то же из проводника или cmd)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:    название теста - просто для понимания
+#   args:    аргументы программы через пробел
+#   input:   строка стандартного ввода (их может быть несколько)
+#   infile:  файл, который подаётся на стандартный ввод целиком
+#   out:     строка, которую программа должна вывести в stdout
+#   outre:   то же, но шаблоном (регулярное выражение) - для времени и номера процесса
+#   outfile: файл, с которым должен совпасть весь вывод программы
+#   err:     строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:    код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Ожидаемые матрицы и контрольные суммы посчитаны на Python (тот же генератор и тот же фильтр).
+
+program: median_filter
+
+# ============================================================
+# Матрица со стандартного ввода
+# ============================================================
+
+name: 3x4, окно 3, один раз; за краем - ближайший элемент края
+args: -t 2 -w 3 -k 1
+input: 3 4
+input: 1 2 3 4
+input: 5 6 7 8
+input: 9 10 11 12
+out: 2 3 4 4
+out: 5 6 7 8
+out: 9 9 10 11
+code: 0
+
+name: одиночные выбросы (шум) пропадают - для этого и нужен медианный фильтр
+args: -t 3 -w 3 -k 1
+input: 5 5
+input: 0 0 0 0 7
+input: 0 0 0 0 0
+input: 0 0 100 0 0
+input: 0 0 0 0 0
+input: 0 0 0 0 0
+out: 0 0 0 0 0
+out: 0 0 0 0 0
+out: 0 0 0 0 0
+out: 0 0 0 0 0
+out: 0 0 0 0 0
+code: 0
+
+name: K = 1
+args: -t 4 -w 3 -k 1
+input: 4 5
+input: 9 1 8 2 7
+input: 3 6 4 5 0
+input: 1 1 9 9 2
+input: 8 0 3 7 5
+out: 6 6 4 5 5
+out: 3 4 5 5 2
+out: 3 3 5 5 5
+out: 1 3 3 5 5
+code: 0
+
+name: K = 2 - фильтр к результату первого прохода
+args: -t 4 -w 3 -k 2
+input: 4 5
+input: 9 1 8 2 7
+input: 3 6 4 5 0
+input: 1 1 9 9 2
+input: 8 0 3 7 5
+out: 6 5 5 5 5
+out: 3 4 5 5 5
+out: 3 3 5 5 5
+out: 3 3 3 5 5
+code: 0
+
+name: K = 3 (нечётное число проходов - результат копируется из второй матрицы)
+args: -t 2 -w 3 -k 3
+input: 4 5
+input: 9 1 8 2 7
+input: 3 6 4 5 0
+input: 1 1 9 9 2
+input: 8 0 3 7 5
+out: 5 5 5 5 5
+out: 3 5 5 5 5
+out: 3 3 5 5 5
+out: 3 3 3 5 5
+code: 0
+
+name: окно 5 больше половины матрицы
+args: -t 1 -w 5 -k 1
+input: 4 5
+input: 9 1 8 2 7
+input: 3 6 4 5 0
+input: 1 1 9 9 2
+input: 8 0 3 7 5
+out: 8 5 5 5 7
+out: 6 5 5 5 5
+out: 4 5 5 5 5
+out: 3 5 5 5 5
+code: 0
+
+name: одна строка, окно 3
+args: -t 1 -w 3 -k 1
+input: 1 5
+input: 5 1 4 2 3
+out: 5 4 2 3 3
+code: 0
+
+name: одна строка, окно 5
+args: -t 8 -w 5 -k 1
+input: 1 5
+input: 5 1 4 2 3
+out: 5 4 3 3 3
+code: 0
+
+name: окно 1 - каждый элемент сам себе медиана, матрица не меняется
+args: -t 2 -w 1 -k 5
+input: 2 3
+input: 3 1 2
+input: 9 8 7
+out: 3 1 2
+out: 9 8 7
+code: 0
+
+name: K = 0 - фильтр не накладывается
+args: -t 2 -w 3 -k 0
+input: 2 3
+input: 3 1 2
+input: 9 8 7
+out: 3 1 2
+out: 9 8 7
+code: 0
+
+name: матрица 1x1 и окно 99
+args: -t 1 -w 99 -k 2
+input: 1 1
+input: -42
+out: -42
+code: 0
+
+name: отрицательные числа и границы int
+args: -t 3 -w 3 -k 1
+input: 3 3
+input: -5 2147483647 -2147483648
+input: 0 -1 3
+input: 10 -20 30
+out: -1 -1 -1
+out: 0 0 3
+out: 0 3 3
+code: 0
+
+name: потоков больше, чем строк, - работает по потоку на строку
+args: -t 64 -w 3 -k 1
+input: 3 4
+input: 1 2 3 4
+input: 5 6 7 8
+input: 9 10 11 12
+out: 2 3 4 4
+out: 5 6 7 8
+out: 9 9 10 11
+code: 0
+
+name: числа можно разбить на строки как угодно
+args: -t 2 -w 3 -k 1
+input: 3
+input: 4 1 2 3 4 5 6
+input:    7 8 9 10
+input: 11 12
+out: 2 3 4 4
+out: 5 6 7 8
+out: 9 9 10 11
+code: 0
+
+name: файл с BOM и концами строк Windows (как из Блокнота)
+args: -t 2 -w 3 -k 1
+infile: tests/data/bom_matrix.txt
+out: 2 2
+out: 3 3
+code: 0
+
+name: матрица 60x50, окно 5, K = 3, 1 поток
+args: -t 1 -w 5 -k 3
+infile: tests/data/matrix_60x50.txt
+outfile: tests/data/matrix_60x50_w5_k3.txt
+code: 0
+
+name: та же матрица, 7 потоков - ответ тот же
+args: -t 7 -w 5 -k 3
+infile: tests/data/matrix_60x50.txt
+outfile: tests/data/matrix_60x50_w5_k3.txt
+code: 0
+
+# ============================================================
+# Случайная матрица (-g): контрольная сумма не зависит от числа потоков
+# ============================================================
+
+name: -g 200x150, 1 поток
+args: -t 1 -w 3 -k 2 -g 200 150 42
+outre: matrix: 200 x 150, window: 3, K: 2, logical processors: [0-9]+
+outre: process id: [0-9]+, threads: 1
+outre: time: [0-9]+\.[0-9]{4} s
+out: checksum: 9325105597167613885
+code: 0
+
+name: -g 200x150, 8 потоков - контрольная сумма та же
+args: -t 8 -w 3 -k 2 -g 200 150 42
+outre: matrix: 200 x 150, window: 3, K: 2, logical processors: [0-9]+
+outre: process id: [0-9]+, threads: 8
+outre: time: [0-9]+\.[0-9]{4} s
+out: checksum: 9325105597167613885
+code: 0
+
+name: -g: 3 строки, 10 потоков - работает 3 потока
+args: -t 10 -w 3 -k 1 -g 3 40 9
+outre: matrix: 3 x 40, window: 3, K: 1, logical processors: [0-9]+
+outre: process id: [0-9]+, threads: 3
+outre: time: [0-9]+\.[0-9]{4} s
+out: checksum: 3493505398831489883
+code: 0
+
+name: -g с K = 0 - контрольная сумма самой случайной матрицы
+args: -t 2 -w 5 -k 0 -g 7 9 0
+outre: matrix: 7 x 9, window: 5, K: 0, logical processors: [0-9]+
+outre: process id: [0-9]+, threads: 2
+outre: time: [0-9]+\.[0-9]{4} s
+out: checksum: 5511198203966110996
+code: 0
+
+name: -b: замер для 1, 2, 3 потоков
+args: -b -t 3 -w 3 -k 1 -g 120 100 5
+outre: matrix: 120 x 100, window: 3, K: 1, logical processors: [0-9]+
+out: threads  time, s   speedup  efficiency
+outre: [ ]*1 +[0-9.]+ +[0-9.]+ +[0-9.]+
+outre: [ ]*2 +[0-9.]+ +[0-9.]+ +[0-9.]+
+outre: [ ]*3 +[0-9.]+ +[0-9.]+ +[0-9.]+
+out: checksum: 16544185017357432477
+code: 0
+
+# ============================================================
+# Ошибки в ключах
+# ============================================================
+
+name: без ключей
+err: Error: keys -t, -w and -k are required
+err: Usage: median_filter -t THREADS -w WINDOW -k TIMES [-g ROWS COLS SEED [-b]]
+code: 1
+
+name: нет ключа -k
+args: -t 2 -w 3
+err: Error: keys -t, -w and -k are required
+err: Usage: median_filter -t THREADS -w WINDOW -k TIMES [-g ROWS COLS SEED [-b]]
+code: 1
+
+name: 0 потоков
+args: -t 0 -w 3 -k 1
+err: Error: the number of threads must be a number from 1 to 64, not '0'
+code: 1
+
+name: 65 потоков - больше, чем ждёт WaitForMultipleObjects
+args: -t 65 -w 3 -k 1
+err: Error: the number of threads must be a number from 1 to 64, not '65'
+code: 1
+
+name: потоков - не число
+args: -t 4x -w 3 -k 1
+err: Error: the number of threads must be a number from 1 to 64, not '4x'
+code: 1
+
+name: чётное окно - нет центра
+args: -t 1 -w 4 -k 1
+err: Error: the window size must be odd
+code: 1
+
+name: окно больше 99
+args: -t 1 -w 101 -k 1
+err: Error: the window size must be a number from 1 to 99, not '101'
+code: 1
+
+name: отрицательное K
+args: -t 1 -w 3 -k -1
+err: Error: K must be a number from 0 to 1000, not '-1'
+code: 1
+
+name: у ключа нет значения
+args: -w 3 -k 1 -t
+err: Error: key -t needs a value
+code: 1
+
+name: неизвестный ключ
+args: -t 1 -w 3 -k 1 -x
+err: Error: unknown key '-x'
+err: Usage: median_filter -t THREADS -w WINDOW -k TIMES [-g ROWS COLS SEED [-b]]
+code: 1
+
+name: -b без -g
+args: -b -t 2 -w 3 -k 1
+err: Error: key -b works only with -g
+code: 1
+
+name: -g: слишком большая матрица
+args: -t 1 -w 3 -k 1 -g 20000 20000 1
+err: Error: the matrix is too big (more than 25000000 elements)
+code: 1
+
+name: -g: seed больше 2^32 - 1
+args: -t 1 -w 3 -k 1 -g 10 10 4294967296
+err: Error: the seed must be a number from 0 to 4294967295, not '4294967296'
+code: 1
+
+name: -g: не хватает значений
+args: -t 1 -w 3 -k 1 -g 10 10
+err: Error: key -g needs a value
+code: 1
+
+# ============================================================
+# Ошибки во вводе матрицы
+# ============================================================
+
+name: пустой ввод
+args: -t 1 -w 3 -k 1
+err: Error: the input ended, the number of rows expected
+code: 1
+
+name: 0 строк
+args: -t 1 -w 3 -k 1
+input: 0 3
+err: Error: the number of rows must be a number from 1 to 20000, not '0'
+code: 1
+
+name: размер - не число
+args: -t 1 -w 3 -k 1
+input: 2 a
+err: Error: the number of columns must be a number from 1 to 20000, not 'a'
+code: 1
+
+name: матрица слишком большая
+args: -t 1 -w 3 -k 1
+input: 20000 20000
+err: Error: the matrix is too big (more than 25000000 elements)
+code: 1
+
+name: чисел меньше, чем нужно
+args: -t 1 -w 3 -k 1
+input: 2 2
+input: 1 2 3
+err: Error: the input ended, a matrix element expected
+code: 1
+
+name: чисел больше, чем нужно
+args: -t 1 -w 3 -k 1
+input: 2 2
+input: 1 2 3 4 5
+err: Error: extra data after the matrix: '5'
+code: 1
+
+name: элемент - не число
+args: -t 1 -w 3 -k 1
+input: 2 2
+input: 1 2 3x 4
+err: Error: a matrix element must be a number from -2147483648 to 2147483647, not '3x'
+code: 1
+
+name: элемент не помещается в int
+args: -t 1 -w 3 -k 1
+input: 1 2
+input: 1 2147483648
+err: Error: a matrix element must be a number from -2147483648 to 2147483647, not '2147483648'
+code: 1
+
+name: дробное число
+args: -t 1 -w 3 -k 1
+input: 1 2
+input: 1 2.5
+err: Error: a matrix element must be a number from -2147483648 to 2147483647, not '2.5'
+code: 1
+
+name: очень длинное "число"
+args: -t 1 -w 3 -k 1
+input: 1 1
+input: 123456789012345678901234567890123456789
+err: Error: a matrix element is too long: '12345678901234567890123456789012...'
+code: 1
