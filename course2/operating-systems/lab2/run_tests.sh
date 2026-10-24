@@ -33,6 +33,13 @@ if [ "$1" = "--memcheck" ]; then
         echo "${RED}Error: Dr. Memory not found (install it from https://drmemory.org)${NC}"
         exit 1
     fi
+    # Dr. Memory запускается? (печатаем путь и версию - видно, какой именно используется)
+    if ! version=$("$DRM" -version 2>&1); then
+        echo "${RED}Error: Dr. Memory does not start: $DRM${NC}"
+        echo "$version"
+        exit 1
+    fi
+    echo "Dr. Memory: $DRM ($version)"
     TIMEOUT=600   # под Dr. Memory программы работают в десятки раз медленнее
     # код 99 программа сама никогда не возвращает - так отличаем ошибку памяти;
     # drmemory.supp - ложные срабатывания в стартовом коде (до main), см. комментарии в нём
@@ -142,6 +149,12 @@ run_test() {
         timeout $TIMEOUT "${cmd[@]}" </dev/null >"$TMP/out" 2>"$TMP/err"
     fi
     local kod=$?
+    # код 127 под Dr. Memory - он не смог запустить программу; один раз показываем его сообщения
+    if [ $MEMCHECK -eq 1 ] && [ $kod -eq 127 ] && [ -z "$SHOWN_127" ]; then
+        SHOWN_127=1
+        echo "${YELLOW}Dr. Memory could not run $EXE, its messages:${NC}"
+        "$DRM" -batch -- "$EXE" </dev/null 2>&1 | tail -15 | awk '{ print "       " $0 }'
+    fi
 
     local ok=1 okOut=1 okErr=1 okCode=1 okMem=1
     # ошибку памяти определяем по коду 99
