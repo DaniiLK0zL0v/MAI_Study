@@ -1,0 +1,644 @@
+# Тесты для задания 4 (программа lab3_task4): String и почтовое отделение
+#
+# Как запустить:  Linux:   bash run_tests.sh 4              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 4   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   input: строка стандартного ввода. Сначала 6 строк адреса отделения (город, улица, дом,
+#          корпус - здесь пустой, квартира, индекс), потом команды; после add - 10 строк полей:
+#          город, улица, дом, корпус, квартира, индекс, вес, id, создано, срок вручения
+#   out:   строка stdout;  err: строка stderr;  code: код возврата
+# При вводе не с клавиатуры подсказки не печатаются - в выводе только ответы на команды.
+# Сроки вручения в 2024 году уже прошли, в 2099 - еще нет (expired сравнивает с системным временем).
+# Ожидаемый вывод написан по условию вручную (а не взят из программы).
+
+program: lab3_task4
+
+name: адрес отделения
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: office
+out: Office: 119002, Moscow, Arbat, house 1, apartment 10
+code: 0
+
+name: help
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: help
+out: Commands: add, remove <id>, find <id>, list, deliver <id>, delivered, expired,
+out:           office, demo, help, exit
+code: 0
+
+name: демонстрация функций String
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: demo
+out: String demonstration
+out: create: a = "Hello" (length 5), b = "World!" (length 6), c = "Hello"
+out: compare(a, b) = -1, compare(b, a) = 1, compare(a, c) = 0
+out: equal(a, c) = yes, equal(a, b) = no
+out: duplicate a into new d: d = "Hello"
+out: copy b into a: a = "World!"
+out: concat a + c: a = "World!Hello" (length 11)
+out: concat c + c: c = "HelloHello"
+out: clear a: a.data = NULL, a.length = 0
+code: 0
+
+name: добавить и найти: срок прошел - статус expired, корпус печатается
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input: Kazan
+input: Baumana
+input: 5
+input: 2
+input: 7
+input: 420111
+input: 1.5
+input: 12345678901234
+input: 01:02:2024 10:00:00
+input: 05:02:2024 18:00:00
+input: find 12345678901234
+out: Added mail 12345678901234
+out: Mail 12345678901234
+out:   to: 420111, Kazan, Baumana, house 5, building 2, apartment 7
+out:   weight: 1.5
+out:   created: 01:02:2024 10:00:00
+out:   delivery: 05:02:2024 18:00:00
+out:   status: expired
+code: 0
+
+name: срок еще не прошел - статус in transit, пустой корпус не печатается, вес 0
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input: Omsk
+input: Lenina
+input: 3
+input:
+input: 4
+input: 644000
+input: 0
+input: 00000000000002
+input: 31:12:2023 23:59:59
+input: 01:01:2099 00:00:00
+input: find 00000000000002
+out: Added mail 00000000000002
+out: Mail 00000000000002
+out:   to: 644000, Omsk, Lenina, house 3, apartment 4
+out:   weight: 0
+out:   created: 31:12:2023 23:59:59
+out:   delivery: 01:01:2099 00:00:00
+out:   status: in transit
+code: 0
+
+name: порядок хранения: по индексу, при равных индексах - по id (добавлены в другом порядке)
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input: Omsk
+input: Lenina
+input: 1
+input:
+input: 1
+input: 644000
+input: 1
+input: 00000000000005
+input: 01:01:2024 00:00:00
+input: 01:01:2099 00:00:00
+input: add
+input: Moscow
+input: Tverskaya
+input: 2
+input:
+input: 2
+input: 101000
+input: 2
+input: 00000000000009
+input: 02:01:2024 00:00:00
+input: 01:01:2099 00:00:00
+input: add
+input: Omsk
+input: Mira
+input: 3
+input:
+input: 3
+input: 644000
+input: 3
+input: 00000000000001
+input: 03:01:2024 00:00:00
+input: 01:01:2099 00:00:00
+input: list
+out: Added mail 00000000000005
+out: Added mail 00000000000009
+out: Added mail 00000000000001
+out: Mails: 3
+out: 00000000000009  index 101000  created 02:01:2024 00:00:00  delivery 01:01:2099 00:00:00
+out: 00000000000001  index 644000  created 03:01:2024 00:00:00  delivery 01:01:2099 00:00:00
+out: 00000000000005  index 644000  created 01:01:2024 00:00:00  delivery 01:01:2099 00:00:00
+code: 0
+
+name: delivered и expired - по времени создания, от старых к новым (срок 2099 - не истек)
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 300000
+input: 1
+input: 00000000000001
+input: 10:05:2024 12:00:00
+input: 11:05:2024 12:00:00
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 100000
+input: 1
+input: 00000000000002
+input: 09:05:2024 12:00:00
+input: 10:05:2024 12:00:00
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 200000
+input: 1
+input: 00000000000003
+input: 10:05:2024 11:59:59
+input: 01:06:2024 00:00:00
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 400000
+input: 1
+input: 00000000000004
+input: 01:01:2020 00:00:00
+input: 01:01:2099 00:00:00
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 500000
+input: 1
+input: 00000000000005
+input: 05:05:2024 00:00:00
+input: 06:05:2024 00:00:00
+input: deliver 00000000000001
+input: deliver 00000000000004
+input: delivered
+input: expired
+out: Added mail 00000000000001
+out: Added mail 00000000000002
+out: Added mail 00000000000003
+out: Added mail 00000000000004
+out: Added mail 00000000000005
+out: Mail 00000000000001 is delivered
+out: Mail 00000000000004 is delivered
+out: Delivered: 2
+out: Mail 00000000000004
+out:   to: 400000, A, B, house 1, apartment 1
+out:   weight: 1
+out:   created: 01:01:2020 00:00:00
+out:   delivery: 01:01:2099 00:00:00
+out:   status: delivered
+out: Mail 00000000000001
+out:   to: 300000, A, B, house 1, apartment 1
+out:   weight: 1
+out:   created: 10:05:2024 12:00:00
+out:   delivery: 11:05:2024 12:00:00
+out:   status: delivered
+out: Expired: 3
+out: Mail 00000000000005
+out:   to: 500000, A, B, house 1, apartment 1
+out:   weight: 1
+out:   created: 05:05:2024 00:00:00
+out:   delivery: 06:05:2024 00:00:00
+out:   status: expired
+out: Mail 00000000000002
+out:   to: 100000, A, B, house 1, apartment 1
+out:   weight: 1
+out:   created: 09:05:2024 12:00:00
+out:   delivery: 10:05:2024 12:00:00
+out:   status: expired
+out: Mail 00000000000003
+out:   to: 200000, A, B, house 1, apartment 1
+out:   weight: 1
+out:   created: 10:05:2024 11:59:59
+out:   delivery: 01:06:2024 00:00:00
+out:   status: expired
+code: 0
+
+name: пустые списки
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: list
+input: delivered
+input: expired
+out: Mails: 0
+out: Delivered: 0
+out: Expired: 0
+code: 0
+
+name: неправильные поля - сообщение и повторный вопрос того же поля
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input:
+input: Samara
+input:     
+input: Gagarina
+input: 0
+input: abc
+input: 99999999999
+input: 12
+input:
+input: 1a
+input: -1
+input: 8
+input: 12345
+input: 1234567
+input: 44300a
+input: 443001
+input: -1
+input: 1.2.3
+input: abc
+input: 1e3
+input: 0.25
+input: 1234567890123
+input: 123456789012345
+input: 1234567890123x
+input: 55555555555555
+input: 29:02:2023 10:00:00
+input: 1:02:2024 10:00:00
+input: 01:13:2024 10:00:00
+input: 31:04:2024 10:00:00
+input: 01-02-2024 10:00:00
+input: 29:02:2024 10:00:00
+input: 28:02:2024 10:00:00
+input: 01:03:2024 24:00:00
+input: 01:03:2024 10:60:00
+input: 01:03:2024 10:00:61
+input: 29:02:2024 10:00:00
+input: find 55555555555555
+out: Added mail 55555555555555
+out: Mail 55555555555555
+out:   to: 443001, Samara, Gagarina, house 12, apartment 8
+out:   weight: 0.25
+out:   created: 29:02:2024 10:00:00
+out:   delivery: 29:02:2024 10:00:00
+out:   status: expired
+err: Error: City must not be empty, try again
+err: Error: Street must not be empty, try again
+err: Error: House must be a whole number from 1 to 2147483647, try again
+err: Error: House must be a whole number from 1 to 2147483647, try again
+err: Error: House must be a whole number from 1 to 2147483647, try again
+err: Error: Apartment must be a whole number from 1 to 2147483647, try again
+err: Error: Apartment must be a whole number from 1 to 2147483647, try again
+err: Error: Index must be exactly 6 digits, try again
+err: Error: Index must be exactly 6 digits, try again
+err: Error: Index must be exactly 6 digits, try again
+err: Error: Weight must be a number 0 or more (digits and one dot), try again
+err: Error: Weight must be a number 0 or more (digits and one dot), try again
+err: Error: Weight must be a number 0 or more (digits and one dot), try again
+err: Error: Weight must be a number 0 or more (digits and one dot), try again
+err: Error: Id must be exactly 14 digits, try again
+err: Error: Id must be exactly 14 digits, try again
+err: Error: Id must be exactly 14 digits, try again
+err: Error: Created must be a real date and time dd:MM:yyyy hh:mm:ss, try again
+err: Error: Created must be a real date and time dd:MM:yyyy hh:mm:ss, try again
+err: Error: Created must be a real date and time dd:MM:yyyy hh:mm:ss, try again
+err: Error: Created must be a real date and time dd:MM:yyyy hh:mm:ss, try again
+err: Error: Created must be a real date and time dd:MM:yyyy hh:mm:ss, try again
+err: Error: Delivery must not be earlier than Created, try again
+err: Error: Delivery must be a real date and time dd:MM:yyyy hh:mm:ss, try again
+err: Error: Delivery must be a real date and time dd:MM:yyyy hh:mm:ss, try again
+err: Error: Delivery must be a real date and time dd:MM:yyyy hh:mm:ss, try again
+code: 0
+
+name: високосные годы: 29.02.1900 нет (делится на 100), 29.02.2000 есть (делится на 400)
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input: Tver
+input: Sovetskaya
+input: 1
+input: A
+input: 1
+input: 170000
+input: 2
+input: 77777777777777
+input: 29:02:1900 00:00:00
+input: 29:02:2000 00:00:00
+input: 01:01:2099 00:00:00
+input: list
+out: Added mail 77777777777777
+out: Mails: 1
+out: 77777777777777  index 170000  created 29:02:2000 00:00:00  delivery 01:01:2099 00:00:00
+err: Error: Created must be a real date and time dd:MM:yyyy hh:mm:ss, try again
+code: 0
+
+name: вес: целое, с точкой в конце, с точкой в начале
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 100000
+input: 2
+input: 00000000000001
+input: 01:01:2024 00:00:00
+input: 01:01:2099 00:00:00
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 100000
+input: 3.
+input: 00000000000002
+input: 01:01:2024 00:00:00
+input: 01:01:2099 00:00:00
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 100000
+input: .5
+input: 00000000000003
+input: 01:01:2024 00:00:00
+input: 01:01:2099 00:00:00
+input: find 00000000000002
+input: find 00000000000003
+out: Added mail 00000000000001
+out: Added mail 00000000000002
+out: Added mail 00000000000003
+out: Mail 00000000000002
+out:   to: 100000, A, B, house 1, apartment 1
+out:   weight: 3
+out:   created: 01:01:2024 00:00:00
+out:   delivery: 01:01:2099 00:00:00
+out:   status: in transit
+out: Mail 00000000000003
+out:   to: 100000, A, B, house 1, apartment 1
+out:   weight: 0.5
+out:   created: 01:01:2024 00:00:00
+out:   delivery: 01:01:2099 00:00:00
+out:   status: in transit
+code: 0
+
+name: повторный id - отправление не добавляется
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 100000
+input: 1
+input: 12121212121212
+input: 01:01:2024 00:00:00
+input: 01:01:2099 00:00:00
+input: add
+input: C
+input: D
+input: 2
+input:
+input: 2
+input: 200000
+input: 2
+input: 12121212121212
+input: 01:01:2024 00:00:00
+input: 01:01:2099 00:00:00
+input: list
+out: Added mail 12121212121212
+out: Mails: 1
+out: 12121212121212  index 100000  created 01:01:2024 00:00:00  delivery 01:01:2099 00:00:00
+err: Error: mail 12121212121212 already exists, not added
+code: 0
+
+name: удалить, потом найти и удалить еще раз
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 100000
+input: 1
+input: 12121212121212
+input: 01:01:2024 00:00:00
+input: 01:01:2099 00:00:00
+input: remove 12121212121212
+input: find 12121212121212
+input: remove 12121212121212
+input: list
+out: Added mail 12121212121212
+out: Removed mail 12121212121212
+out: Mails: 0
+err: Error: no mail with id 12121212121212
+err: Error: no mail with id 12121212121212
+code: 0
+
+name: вручить дважды
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input: A
+input: B
+input: 1
+input:
+input: 1
+input: 100000
+input: 1
+input: 12121212121212
+input: 01:01:2024 00:00:00
+input: 01:01:2099 00:00:00
+input: deliver 12121212121212
+input: deliver 12121212121212
+out: Added mail 12121212121212
+out: Mail 12121212121212 is delivered
+out: Mail 12121212121212 is already delivered
+code: 0
+
+name: ошибки команд: нет id, короткий id, лишний аргумент, неизвестная команда, нет такого id
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: remove
+input: find 123
+input: deliver 1234567890123a
+input: list all
+input: foo
+input: Add
+input: deliver 11111111111111
+input: list
+out: Mails: 0
+err: Error: command 'remove' needs an id of exactly 14 digits
+err: Error: command 'find' needs an id of exactly 14 digits
+err: Error: command 'deliver' needs an id of exactly 14 digits
+err: Error: command 'list' takes no argument
+err: Error: unknown command 'foo' (type help)
+err: Error: unknown command 'Add' (type help)
+err: Error: no mail with id 11111111111111
+code: 0
+
+name: пустые строки и пробелы вокруг команд
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input:
+input:    office   
+input:
+input:   find    12121212121212  
+out: Office: 119002, Moscow, Arbat, house 1, apartment 10
+err: Error: no mail with id 12121212121212
+code: 0
+
+name: после exit команды не выполняются
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: exit
+input: office
+code: 0
+
+name: в начале ввода метка BOM (файл из Блокнота) - пропускается
+input: ﻿Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: office
+out: Office: 119002, Moscow, Arbat, house 1, apartment 10
+code: 0
+
+name: ввод кончился посреди add - отправление не добавлено
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 119002
+input: add
+input: Kazan
+input: Baumana
+err: Error: the input ended in the middle of a mail, it is not added
+code: 1
+
+name: ввод кончился до конца адреса отделения
+input: Moscow
+input: Arbat
+err: Error: the input ended before the post office address was entered
+code: 1
+
+name: пустой ввод
+err: Error: the input ended before the post office address was entered
+code: 1
+
+name: неправильный индекс отделения - повторный вопрос
+input: Moscow
+input: Arbat
+input: 1
+input:
+input: 10
+input: 11900
+input: 119002
+input: office
+out: Office: 119002, Moscow, Arbat, house 1, apartment 10
+err: Error: Index must be exactly 6 digits, try again
+code: 0
+
+name: лишний аргумент программы
+args: file.txt
+err: Usage: lab3_task4   (commands are read from the input, type help)
+code: 1
