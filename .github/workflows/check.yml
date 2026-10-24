@@ -126,8 +126,13 @@ jobs:
             # make и Dr. Memory ставим один раз, когда встретилась первая лаба
             if [ $checked -eq 0 ]; then
               command -v make >/dev/null || choco install make -y --no-progress >/dev/null
-              choco install drmemory -y --no-progress >/dev/null
               export PATH="$PATH:/c/ProgramData/chocolatey/bin"
+              # Dr. Memory 2.6.0 (choco) не запускает программы на новых Windows Server
+              # ("ucrtbase.dll: library initializer failed") - берём более новую сборку
+              curl -sSL -o "$RUNNER_TEMP/drm.zip" \
+                https://github.com/DynamoRIO/drmemory/releases/download/cronbuild-2.6.20434/DrMemory-Windows-2.6.20434.zip
+              unzip -q "$RUNNER_TEMP/drm.zip" -d "$RUNNER_TEMP/drm"
+              export DRMEMORY=$(ls "$RUNNER_TEMP"/drm/*/bin64/drmemory.exe)
             fi
             checked=$((checked + 1))
             echo "::group::$lab"
