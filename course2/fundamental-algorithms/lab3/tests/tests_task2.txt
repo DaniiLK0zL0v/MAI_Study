@@ -1,0 +1,415 @@
+# Тесты для задания 2 (программа lab3_task2): сколько докладов поместится в k залов
+#
+# Как запустить:  Linux:   bash run_tests.sh 2              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 2   (то же под valgrind)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:  название теста - просто для понимания
+#   input: строка стандартного ввода (первая - "n k", дальше "id начало конец")
+#   out:   строка, которую программа должна вывести в stdout
+#   err:   строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:  код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии.
+# Ответы проверены полным перебором на Python: перебираются все наборы докладов, набор годится,
+# если ни в какую минуту одновременно не идет больше k докладов.
+
+program: lab3_task2
+
+# ============================================================
+# Простые случаи
+# ============================================================
+
+name: пример из шапки: конец одного = начало другого, один зал
+input: 3 1
+input: 1 09:00 10:00
+input: 2 09:30 10:30
+input: 3 10:00 11:00
+out: 2
+code: 0
+
+name: тот же набор, 2 зала - помещаются все
+input: 3 2
+input: 1 09:00 10:00
+input: 2 09:30 10:30
+input: 3 10:00 11:00
+out: 3
+code: 0
+
+name: одна заявка
+input: 1 1
+input: 7 12:00 12:30
+out: 1
+code: 0
+
+name: все пересекаются, 1 зал - только один доклад
+input: 4 1
+input: 1 10:00 12:00
+input: 2 10:30 11:30
+input: 3 11:00 13:00
+input: 4 09:00 14:00
+out: 1
+code: 0
+
+name: все пересекаются, 3 зала - три доклада
+input: 4 3
+input: 1 10:00 12:00
+input: 2 10:30 11:30
+input: 3 11:00 13:00
+input: 4 09:00 14:00
+out: 3
+code: 0
+
+name: залов больше, чем заявок
+input: 2 100
+input: 1 10:00 11:00
+input: 2 10:00 11:00
+out: 2
+code: 0
+
+name: длинный доклад мешает двум коротким - жадно по окончанию берем короткие
+input: 3 1
+input: 1 08:00 12:00
+input: 2 08:00 09:00
+input: 3 09:00 10:00
+out: 2
+code: 0
+
+name: ловушка для "взять любой свободный зал": важно занять зал, освободившийся позже
+input: 4 2
+input: 1 08:00 09:00
+input: 2 08:00 10:00
+input: 3 10:00 11:00
+input: 4 09:30 12:00
+out: 4
+code: 0
+
+name: одинаковые доклады
+input: 3 2
+input: 1 10:00 11:00
+input: 2 10:00 11:00
+input: 3 10:00 11:00
+out: 2
+code: 0
+
+name: весь день: 00:00 - 23:59
+input: 2 1
+input: 1 00:00 23:59
+input: 2 00:00 00:01
+out: 1
+code: 0
+
+name: цепочка по минуте
+input: 5 1
+input: 1 00:00 00:01
+input: 2 00:01 00:02
+input: 3 00:02 00:03
+input: 4 00:03 00:04
+input: 5 00:04 00:05
+out: 5
+code: 0
+
+name: огромное k (больше, чем int)
+input: 2 9223372036854775807
+input: 1 10:00 11:00
+input: 2 10:00 11:00
+out: 2
+code: 0
+
+name: пустые строки и лишние пробелы допускаются
+input: 
+input:   2   1  
+input: 
+input: 1   10:00   11:00
+input: 2 11:00 12:00
+out: 2
+code: 0
+
+name: заявки не по порядку времени
+input: 4 1
+input: 4 15:00 16:00
+input: 3 09:00 10:00
+input: 2 12:00 13:00
+input: 1 09:30 12:30
+out: 3
+code: 0
+
+# ============================================================
+# Случайные наборы (ответ - полный перебор)
+# ============================================================
+
+name: случайный набор 1: 8 заявок, 3 зал(а)
+input: 8 3
+input: 1 09:02 09:04
+input: 2 07:56 09:36
+input: 3 04:15 09:48
+input: 4 00:53 03:34
+input: 5 01:55 05:06
+input: 6 08:00 09:52
+input: 7 04:12 07:27
+input: 8 09:16 09:23
+out: 7
+code: 0
+
+name: случайный набор 2: 7 заявок, 1 зал(а)
+input: 7 1
+input: 1 03:41 07:10
+input: 2 04:46 06:20
+input: 3 06:38 07:19
+input: 4 01:13 03:36
+input: 5 07:35 08:08
+input: 6 02:15 02:16
+input: 7 00:05 03:40
+out: 4
+code: 0
+
+name: случайный набор 3: 7 заявок, 2 зал(а)
+input: 7 2
+input: 1 00:09 00:20
+input: 2 00:06 00:24
+input: 3 00:28 00:29
+input: 4 00:05 00:28
+input: 5 00:06 00:19
+input: 6 00:09 00:10
+input: 7 00:11 00:25
+out: 4
+code: 0
+
+name: случайный набор 4: 6 заявок, 2 зал(а)
+input: 6 2
+input: 1 00:08 00:51
+input: 2 00:38 01:56
+input: 3 01:15 01:16
+input: 4 01:16 02:00
+input: 5 01:30 01:41
+input: 6 00:08 00:48
+out: 5
+code: 0
+
+name: случайный набор 5: 9 заявок, 3 зал(а)
+input: 9 3
+input: 1 01:29 01:40
+input: 2 00:23 01:25
+input: 3 01:00 01:46
+input: 4 00:22 00:30
+input: 5 00:32 00:35
+input: 6 01:35 01:47
+input: 7 01:48 01:55
+input: 8 00:02 01:13
+input: 9 01:40 01:54
+out: 9
+code: 0
+
+name: случайный набор 6: 9 заявок, 4 зал(а)
+input: 9 4
+input: 1 00:09 07:53
+input: 2 00:47 03:53
+input: 3 03:21 04:22
+input: 4 04:11 08:08
+input: 5 05:52 08:04
+input: 6 06:03 09:52
+input: 7 08:57 09:14
+input: 8 07:53 08:07
+input: 9 06:16 09:57
+out: 8
+code: 0
+
+name: случайный набор 7: 8 заявок, 1 зал(а)
+input: 8 1
+input: 1 00:11 00:38
+input: 2 00:43 01:49
+input: 3 01:18 01:42
+input: 4 01:57 01:58
+input: 5 00:43 01:19
+input: 6 01:58 01:59
+input: 7 00:39 01:20
+input: 8 00:39 01:02
+out: 5
+code: 0
+
+name: случайный набор 8: 5 заявок, 2 зал(а)
+input: 5 2
+input: 1 05:16 09:24
+input: 2 02:45 08:54
+input: 3 00:49 02:12
+input: 4 09:06 09:32
+input: 5 00:32 04:36
+out: 5
+code: 0
+
+name: случайный набор 9: 9 заявок, 3 зал(а)
+input: 9 3
+input: 1 01:23 01:50
+input: 2 00:18 00:26
+input: 3 01:57 02:00
+input: 4 00:04 01:47
+input: 5 01:03 01:25
+input: 6 01:47 01:51
+input: 7 00:16 01:50
+input: 8 01:12 01:21
+input: 9 01:20 01:47
+out: 7
+code: 0
+
+name: случайный набор 10: 5 заявок, 2 зал(а)
+input: 5 2
+input: 1 00:47 01:07
+input: 2 00:07 01:56
+input: 3 00:53 01:31
+input: 4 00:18 01:17
+input: 5 01:58 01:59
+out: 3
+code: 0
+
+name: случайный набор 11: 12 заявок, 4 зал(а)
+input: 12 4
+input: 1 01:28 01:49
+input: 2 01:01 01:19
+input: 3 00:37 01:38
+input: 4 00:51 01:10
+input: 5 00:14 01:03
+input: 6 01:45 01:54
+input: 7 00:22 01:43
+input: 8 01:59 02:00
+input: 9 01:51 01:57
+input: 10 00:23 00:35
+input: 11 01:02 01:20
+input: 12 01:05 01:56
+out: 10
+code: 0
+
+name: случайный набор 12: 12 заявок, 3 зал(а)
+input: 12 3
+input: 1 00:25 00:28
+input: 2 00:22 00:23
+input: 3 00:24 00:27
+input: 4 00:11 00:29
+input: 5 00:22 00:27
+input: 6 00:26 00:30
+input: 7 00:08 00:18
+input: 8 00:10 00:16
+input: 9 00:18 00:19
+input: 10 00:15 00:24
+input: 11 00:24 00:27
+input: 12 00:10 00:19
+out: 8
+code: 0
+
+# ============================================================
+# Ошибки ввода
+# ============================================================
+
+name: пустой ввод
+err: Error: no input, the first line must be: n k
+code: 1
+
+name: в первой строке одно число
+input: 3
+err: Error: line 1: the first line must be: n k
+code: 1
+
+name: n = 0
+input: 0 1
+err: Error: line 1: n must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: k = 0
+input: 1 0
+input: 1 10:00 11:00
+err: Error: line 1: k must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: k отрицательное
+input: 1 -2
+err: Error: line 1: k must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: n слишком большое
+input: 99999999999999999999 1
+err: Error: line 1: n must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: в строке заявки два слова
+input: 1 1
+input: 1 10:00
+err: Error: line 2: a report line must be: id start finish
+code: 1
+
+name: id = 0
+input: 1 1
+input: 0 10:00 11:00
+err: Error: line 2: id must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: id - буквы
+input: 1 1
+input: abc 10:00 11:00
+err: Error: line 2: id must be a whole number from 1 to 9223372036854775807
+code: 1
+
+name: время без ведущего нуля
+input: 1 1
+input: 1 9:00 11:00
+err: Error: line 2: start time must be HH:MM (00:00 .. 23:59)
+code: 1
+
+name: 24:00 - такого времени нет
+input: 1 1
+input: 1 23:00 24:00
+err: Error: line 2: finish time must be HH:MM (00:00 .. 23:59)
+code: 1
+
+name: 60 минут
+input: 1 1
+input: 1 10:60 11:00
+err: Error: line 2: start time must be HH:MM (00:00 .. 23:59)
+code: 1
+
+name: разделитель не двоеточие
+input: 1 1
+input: 1 10:00 11.00
+err: Error: line 2: finish time must be HH:MM (00:00 .. 23:59)
+code: 1
+
+name: лишний символ во времени
+input: 1 1
+input: 1 10:00 11:000
+err: Error: line 2: finish time must be HH:MM (00:00 .. 23:59)
+code: 1
+
+name: начало позже конца
+input: 1 1
+input: 1 12:00 11:00
+err: Error: line 2: start time must be earlier than finish time
+code: 1
+
+name: начало равно концу (доклад нулевой длины)
+input: 1 1
+input: 1 12:00 12:00
+err: Error: line 2: start time must be earlier than finish time
+code: 1
+
+name: заявок меньше, чем n
+input: 3 1
+input: 1 10:00 11:00
+err: Error: expected 3 reports, but found only 1
+code: 1
+
+name: заявок больше, чем n
+input: 1 1
+input: 1 10:00 11:00
+input: 2 11:00 12:00
+err: Error: line 3: there are more than 1 reports
+code: 1
+
+name: повторяющийся id
+input: 3 2
+input: 5 10:00 11:00
+input: 7 11:00 12:00
+input: 5 12:00 13:00
+err: Error: report id 5 is used more than once
+code: 1
+
+name: лишний аргумент
+args: input.txt
+err: Usage: lab3_task2 < input.txt   (first line: n k, then n lines: id HH:MM HH:MM)
+code: 1
