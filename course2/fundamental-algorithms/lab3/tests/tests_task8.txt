@@ -1,0 +1,192 @@
+# Тесты для задания 8 (программа lab3_task8): многочлены на односвязном списке, файл инструкций
+#
+# Как запустить:  Linux:   bash run_tests.sh 8              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 8   (то же под valgrind)
+#
+# Формат одного теста: name - название; args - файл инструкций; out / err - строки stdout / stderr; code.
+# Ожидаемый вывод посчитан эталоном на Python (многочлен - словарь степень -> коэффициент);
+# кроме того, 500 случайных файлов инструкций дали одинаковый вывод у программы и эталона.
+
+program: lab3_task8
+
+name: пример из условия: Add, Div, Mult, Add с сумматором, Eval с сумматором; комментарии % и [ ]
+args: tests/data/task8_example.txt
+out: Add: x^2 + 2x + 1
+out: Div: x^3 + x
+out: Mult: x^5 + 3x^4 + x^3 + 6x^2 - 2x
+out: Add: x^5 + 3x^4 + x^3 + 6x^2 + 2x - 8
+out: Eval: 5
+code: 0
+
+name: все операции с двумя параметрами
+args: tests/data/task8_all_ops.txt
+out: Add: x^3 - 2x^2 + x + 1
+out: Sub: x^3 - 2x^2 - x + 7
+out: Mult: x^4 - 5x^3 + 6x^2 + 4x - 12
+out: Div: x^2 + x + 3
+out: Mod: 13
+out: Eval: -12
+out: Diff: 3x^2 - 4x
+out: Cmps: x^3 - 11x^2 + 39x - 41
+out: Cmps: x^3 - 2x^2 + 1
+code: 0
+
+name: цепочка через сумматор (сумматор вначале 0; Diff() и Eval(точка) - тоже от сумматора)
+args: tests/data/task8_accumulator.txt
+out: Add: x + 1
+out: Mult: x^2 + 2x + 1
+out: Mult: x^3 + 3x^2 + 3x + 1
+out: Sub: 3x^2 + 3x + 1
+out: Diff: 6x + 3
+out: Cmps: 12x + 3
+out: Div: 4x + 1
+out: Mod: 1
+out: Eval: 1
+code: 0
+
+name: деление: старший коэффициент делится нацело, нулевое делимое, делитель большей степени, константа
+args: tests/data/task8_division.txt
+out: Div: 2x
+out: Mod: 2
+out: Div: -2x
+out: Mod: -x
+out: Div: 0
+out: Mod: 0
+out: Div: 0
+out: Mod: x^2 + x
+out: Div: 2x^2 - 1
+out: Mod: 0
+code: 0
+
+name: запись: подобные члены складываются, пробелы, x^0 и x^1, члены в любом порядке, 0
+args: tests/data/task8_notation.txt
+out: Add: x^2 - 2x + 4
+out: Add: 5
+out: Sub: 0
+out: Mult: x^2
+out: Diff: 0
+out: Eval: 0
+code: 0
+
+name: большие коэффициенты: на границе long long
+args: tests/data/task8_big.txt
+out: Mult: 9223372030926249001x
+out: Add: 9223372036854775806
+out: Eval: 4611686018427387904
+err: Error: line 4: Eval: the value is too big
+code: 1
+
+name: пустой файл и только комментарии - ничего не выводится
+args: tests/data/task8_empty.txt
+code: 0
+
+name: ошибка: неизвестная инструкция (регистр важен)
+args: tests/data/task8_bad1.txt
+err: Error: line 1: add: unknown instruction (names are case-sensitive: Add, Sub, Mult, Div, Mod, Eval, Diff, Cmps)
+code: 1
+
+name: ошибка: нет ';'
+args: tests/data/task8_bad2.txt
+err: Error: line 1: ';' expected after ')'
+code: 1
+
+name: ошибка: нет ')'
+args: tests/data/task8_bad3.txt
+err: Error: line 1: ')' expected: the instruction is not closed
+code: 1
+
+name: ошибка: нет '('
+args: tests/data/task8_bad4.txt
+err: Error: line 2: '(' expected after the instruction name
+code: 1
+
+name: ошибка: не имя инструкции
+args: tests/data/task8_bad5.txt
+out: Add: x + 1
+err: Error: line 2: an instruction must start with its name: Add, Sub, Mult, Div, Mod, Eval, Diff, Cmps
+code: 1
+
+name: ошибка: вложенный комментарий
+args: tests/data/task8_bad6.txt
+err: Error: line 1: nested comments [ [ ] ] are not allowed
+code: 1
+
+name: ошибка: незакрытый комментарий
+args: tests/data/task8_bad7.txt
+out: Add: x + 1
+err: Error: line 4: comment [ ... ] is not closed
+code: 1
+
+name: ошибка: неправильный многочлен: x^ без степени
+args: tests/data/task8_bad8.txt
+err: Error: line 1: Add: wrong polynomial
+code: 1
+
+name: ошибка: неправильный многочлен: отрицательная степень
+args: tests/data/task8_bad9.txt
+err: Error: line 1: Add: wrong polynomial
+code: 1
+
+name: ошибка: неправильный многочлен: другая переменная
+args: tests/data/task8_bad10.txt
+err: Error: line 1: Mult: wrong polynomial
+code: 1
+
+name: ошибка: неправильный многочлен: два знака подряд, знак в конце
+args: tests/data/task8_bad11.txt
+err: Error: line 1: Sub: wrong polynomial
+code: 1
+
+name: ошибка: пустой параметр
+args: tests/data/task8_bad12.txt
+err: Error: line 1: Add: wrong polynomial
+code: 1
+
+name: ошибка: деление на ноль
+args: tests/data/task8_bad13.txt
+err: Error: line 1: Div: division by the zero polynomial
+code: 1
+
+name: ошибка: деление не нацело
+args: tests/data/task8_bad14.txt
+err: Error: line 1: Div: the division is not exact in whole numbers (a leading coefficient is not divisible)
+code: 1
+
+name: ошибка: три параметра
+args: tests/data/task8_bad15.txt
+err: Error: line 1: Add: this instruction takes 1 or 2 parameters
+code: 1
+
+name: ошибка: Diff с двумя параметрами
+args: tests/data/task8_bad16.txt
+err: Error: line 1: Diff: Diff takes 0 or 1 parameters
+code: 1
+
+name: ошибка: точка Eval не целая
+args: tests/data/task8_bad17.txt
+err: Error: line 1: Eval: the point must be a whole number
+code: 1
+
+name: ошибка: коэффициент не помещается в long long
+args: tests/data/task8_bad18.txt
+err: Error: line 1: Add: a coefficient is too big
+code: 1
+
+name: ошибка: переполнение в результате
+args: tests/data/task8_bad19.txt
+err: Error: line 1: Mult: a coefficient of the result is too big
+code: 1
+
+name: ошибка: степень больше 100000
+args: tests/data/task8_bad20.txt
+err: Error: line 1: Add: the degree is too big
+code: 1
+
+name: нет аргументов
+err: Usage: lab3_task8 <instructions file>
+code: 1
+
+name: файла нет
+args: tests/data/task8_nofile.txt
+err: Error: can not open file 'tests/data/task8_nofile.txt'
+code: 1

@@ -1,0 +1,3 @@
+Add(x, 1);
+[ comment
+Add(x, 2);

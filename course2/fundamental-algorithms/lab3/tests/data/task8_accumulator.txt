@@ -1,0 +1,9 @@
+Add(x+1);
+Mult(x+1);
+Mult(x+1);
+Sub(x^3);
+Diff();
+Cmps(2x);
+Div(3);
+Mod(x);
+Eval(7);
