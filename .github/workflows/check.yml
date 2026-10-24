@@ -1,17 +1,21 @@
-name: linux-check
+name: check
 
-# Сборка + тесты на Ubuntu: C - gcc и valgrind, Java - javac (JDK 17).
+# Сборка + тесты каждой лабораторной.
 # Лабораторная - папка course*/<предмет>/labN/ с Makefile: make (с -Werror), make test, make memcheck.
-# В Java-лабах CFLAGS не используется, а make memcheck ничего не делает (память освобождает сборщик мусора).
+#   linux   (Ubuntu): C - gcc и valgrind, Java - javac (JDK 17).
+#           В Java-лабах CFLAGS не используется, а make memcheck ничего не делает (память освобождает сборщик мусора).
+#   windows (Windows Server): лабы, в Makefile которых есть строка "# platform: windows"
+#           (операционные системы - программы на WinAPI); zig cc и Dr. Memory, команды из Git Bash.
+#           Linux-задача такие лабы пропускает.
 #
 # Какие лабы проверяются:
 #   push, pull_request  - только те, в папке которых что-то изменилось;
 #                         все - если изменился этот файл или сравнить не с чем (новая ветка, force push);
-#   workflow_dispatch   - все (ручной запуск: Actions -> linux-check -> Run workflow).
+#   workflow_dispatch   - все (ручной запуск: Actions -> check -> Run workflow, или gh workflow run check).
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  check:
+  linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +55,11 @@ jobs:
           checked=0
           for mk in $(find course* -path '*/lab*/Makefile' | sort); do
             lab=$(dirname "$mk")
+            # лаба для Windows - ее проверяет задача windows
+            if grep -q '^# platform: windows' "$mk"; then
+              echo "skip  $lab (Windows lab)"
+              continue
+            fi
             # лаба не менялась - пропускаем
             if [ $all -eq 0 ] && ! printf '%s\n' "$changed" | grep -q "^$lab/"; then
               echo "skip  $lab (not changed)"
@@ -64,6 +73,66 @@ jobs:
             echo "::group::$lab"
             if ! (cd "$lab" \
                   && make CFLAGS="-std=c99 -Wall -Wextra -Wpedantic -g -Werror" \
+                  && make test \
+                  && make memcheck); then
+              echo "::error::$lab: check failed"
+              status=1
+            fi
+            echo "::endgroup::"
+          done
+          echo "Checked labs: $checked"
+          exit $status
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash   # Git Bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+      - name: Build and test changed Windows labs
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          # с чем сравнивать и какие лабы проверять - так же, как в задаче linux
+          base=""
+          if [ "$EVENT" = "push" ]; then base="$BEFORE"; fi
+          if [ "$EVENT" = "pull_request" ]; then base="$PR_BASE"; fi
+          all=0
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] \
+             || ! changed=$(git diff --name-only "$base" "$GITHUB_SHA" 2>/dev/null); then
+            all=1
+          elif printf '%s\n' "$changed" | grep -qx '.github/workflows/check.yml'; then
+            all=1
+          fi
+
+          status=0
+          checked=0
+          for mk in $(find course* -path '*/lab*/Makefile' | sort); do
+            lab=$(dirname "$mk")
+            grep -q '^# platform: windows' "$mk" || continue
+            if [ $all -eq 0 ] && ! printf '%s\n' "$changed" | grep -q "^$lab/"; then
+              echo "skip  $lab (not changed)"
+              continue
+            fi
+            # make и Dr. Memory ставим один раз, когда встретилась первая лаба
+            if [ $checked -eq 0 ]; then
+              command -v make >/dev/null || choco install make -y --no-progress >/dev/null
+              choco install drmemory -y --no-progress >/dev/null
+              export PATH="$PATH:/c/ProgramData/chocolatey/bin"
+            fi
+            checked=$((checked + 1))
+            echo "::group::$lab"
+            if ! (cd "$lab" \
+                  && make CFLAGS="-std=c99 -Wall -Wextra -Wpedantic -g -fno-sanitize=undefined -Werror" \
                   && make test \
                   && make memcheck); then
               echo "::error::$lab: check failed"

@@ -11,8 +11,9 @@
 | 1 | Летняя практика по C++ (2026) | [`course1/summer-practice`](course1/summer-practice) | решения задач по темам: основы C++, динамическое программирование, префиксные суммы и два указателя, теория чисел, графы, кратчайшие пути |
 | 2 | Фундаментальные алгоритмы | [`course2/fundamental-algorithms`](course2/fundamental-algorithms) | лабораторная 1 (задания 1-10), лабораторная 2 (задания 1-10) |
 | 2 | Объектно-ориентированное программирование | [`course2/oop`](course2/oop) | лабораторная 1 (Java, вариант 11: иерархия классов «банковская карта») |
+| 2 | Операционные системы | [`course2/operating-systems`](course2/operating-systems) | лабораторная 1 (процессы и каналы, вариант 11), лабораторная 2 (потоки, медианный фильтр, вариант 11); Windows, WinAPI |
 
-Программы на C собираются и проверяются на Linux (gcc, valgrind). В папке каждой лабораторной -
+Программы на C по фундаментальным алгоритмам собираются и проверяются на Linux (gcc, valgrind). В папке лабораторной -
 исходники заданий (`labN_taskK.c`), `Makefile`, тесты (`tests/`) и `README.md` с описанием сборки,
 формата тестов и замечаниями по заданиям.
 
@@ -26,8 +27,12 @@ make memcheck         # все тесты под valgrind
 Программы на Java (ООП) собираются `javac` (JDK 17+, предупреждения считаются ошибками); в папке лабораторной -
 `src/`, `tests/` (свои проверки без внешних библиотек), `Makefile` и `README.md`. Команды те же: `make`, `make test`.
 
-GitHub Actions (`.github/workflows/check.yml`) при каждом push собирает каждую лабораторную с `Makefile`
-(gcc или javac с `-Werror`) и запускает тесты, для C - и valgrind.
+Программы по операционным системам написаны под Windows (WinAPI: `CreateProcess`, `CreatePipe`, `CreateThread`);
+они собираются `zig cc` (или gcc из MinGW) в Git Bash, утечки памяти проверяет Dr. Memory. Команды те же: `make`,
+`make test`, `make memcheck`.
+
+GitHub Actions (`.github/workflows/check.yml`) при каждом push собирает каждую изменённую лабораторную с `Makefile`
+и запускает тесты: на Linux - gcc или javac с `-Werror` и valgrind, на Windows (лабы по ОС) - zig cc с `-Werror` и Dr. Memory.
 
 ## История
 
