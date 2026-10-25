@@ -1,0 +1,7 @@
+A (B (E (G, T, R (W, Z)), F (L, M)), C)
+leaf
+
+   
+root(a,b(c),d)
+x  (  y ( z )  )
+1 (2, 3, 4, 5)

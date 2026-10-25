@@ -1,0 +1,150 @@
+# Тесты для задания 10 (программа lab3_task10): деревья скобочных выражений
+#
+# Как запустить:  Linux:   bash run_tests.sh 10              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 10   (то же под valgrind)
+#
+# Формат одного теста: name; args - входной и выходной файл; out / err - строки stdout / stderr; code;
+# file / fout - выходной файл и его строки.
+# Ожидаемые рисунки - эталон на Python (рекурсивная печать); 500 случайных деревьев с произвольными
+# пробелами дали одинаковый результат у программы и эталона.
+
+program: lab3_task10
+
+name: пример из условия, лист, разные пробелы, много детей; пустые строки пропускаются
+args: tests/data/task10_example.txt tests/data/res10.txt
+out: Written 5 trees to 'tests/data/res10.txt'
+code: 0
+file: tests/data/res10.txt
+fout: Expression 1: A (B (E (G, T, R (W, Z)), F (L, M)), C)
+fout: A
+fout: +-- B
+fout: |   +-- E
+fout: |   |   +-- G
+fout: |   |   +-- T
+fout: |   |   `-- R
+fout: |   |       +-- W
+fout: |   |       `-- Z
+fout: |   `-- F
+fout: |       +-- L
+fout: |       `-- M
+fout: `-- C
+fout:
+fout: Expression 2: leaf
+fout: leaf
+fout:
+fout: Expression 3: root(a,b(c),d)
+fout: root
+fout: +-- a
+fout: +-- b
+fout: |   `-- c
+fout: `-- d
+fout:
+fout: Expression 4: x  (  y ( z )  )
+fout: x
+fout: `-- y
+fout:     `-- z
+fout:
+fout: Expression 5: 1 (2, 3, 4, 5)
+fout: 1
+fout: +-- 2
+fout: +-- 3
+fout: +-- 4
+fout: `-- 5
+
+name: вложенность 2000 уровней: разбор и печать без рекурсии (вывод около 8 МБ - строки растут с глубиной)
+args: tests/data/task10_deep.txt tests/data/res10_deep.txt
+out: Written 1 trees to 'tests/data/res10_deep.txt'
+code: 0
+
+name: файл без выражений - выходной файл пустой
+args: tests/data/task10_empty.txt tests/data/res10.txt
+out: Written 0 trees to 'tests/data/res10.txt'
+code: 0
+file: tests/data/res10.txt
+
+name: ошибка: A (B
+args: tests/data/task10_bad1.txt tests/data/res10.txt
+err: Error: line 1: ')' expected: a bracket is not closed
+code: 1
+
+name: ошибка: A ()
+args: tests/data/task10_bad2.txt tests/data/res10.txt
+err: Error: line 1: a name expected before ')' (empty brackets or ',)')
+code: 1
+
+name: ошибка: A (B,)
+args: tests/data/task10_bad3.txt tests/data/res10.txt
+err: Error: line 1: a name expected before ')' (empty brackets or ',)')
+code: 1
+
+name: ошибка: A, B
+args: tests/data/task10_bad4.txt tests/data/res10.txt
+err: Error: line 1: ',' outside brackets: only one root is allowed
+code: 1
+
+name: ошибка: A B
+args: tests/data/task10_bad5.txt tests/data/res10.txt
+err: Error: line 1: only one root is allowed (',' or brackets expected)
+code: 1
+
+name: ошибка: A (B) C
+args: tests/data/task10_bad6.txt tests/data/res10.txt
+err: Error: line 1: only one root is allowed (',' or brackets expected)
+code: 1
+
+name: ошибка: A (B))
+args: tests/data/task10_bad7.txt tests/data/res10.txt
+err: Error: line 1: ')' without '('
+code: 1
+
+name: ошибка: (A)
+args: tests/data/task10_bad8.txt tests/data/res10.txt
+err: Error: line 1: a name expected
+code: 1
+
+name: ошибка: A (B) (C)
+args: tests/data/task10_bad9.txt tests/data/res10.txt
+err: Error: line 1: '(' must follow a name
+code: 1
+
+name: ошибка: A (B C)
+args: tests/data/task10_bad10.txt tests/data/res10.txt
+err: Error: line 1: ',' or ')' expected between names
+code: 1
+
+name: ошибка: A (
+args: tests/data/task10_bad11.txt tests/data/res10.txt
+err: Error: line 1: a name expected at the end
+code: 1
+
+name: ошибка в третьей строке: два дерева уже записаны
+args: tests/data/task10_bad_line3.txt tests/data/res10.txt
+err: Error: line 3: a name expected
+code: 1
+file: tests/data/res10.txt
+fout: Expression 1: A (B)
+fout: A
+fout: `-- B
+fout:
+fout: Expression 2: C
+fout: C
+
+name: выходной файл = входной
+args: tests/data/task10_example.txt ./tests/../tests/data/task10_example.txt
+err: Error: input and output must be different files
+code: 1
+
+name: входного файла нет
+args: tests/data/task10_nofile.txt tests/data/res10.txt
+err: Error: can not open file 'tests/data/task10_nofile.txt'
+code: 1
+
+name: выходной файл не создать
+args: tests/data/task10_example.txt tests/no_dir/out.txt
+err: Error: can not create file 'tests/no_dir/out.txt'
+code: 1
+
+name: один аргумент
+args: tests/data/task10_example.txt
+err: Usage: lab3_task10 <input file> <output file>
+code: 1
