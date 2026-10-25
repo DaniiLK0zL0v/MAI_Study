@@ -1,0 +1,262 @@
+# Тесты для задания 9 (программа lab3_task9): слова текста в двоичном дереве поиска
+#
+# Как запустить:  Linux:   bash run_tests.sh 9              (только это задание; все - make test)
+#                          bash run_tests.sh --memcheck 9   (то же под valgrind)
+#
+# Формат одного теста: name; args - файл с текстом и сепараторы (\s - пробел, \t - табуляция);
+# input - команды; out / err - строки stdout / stderr; code; file / fout - файл, который создает save.
+# Ожидаемый вывод - эталон на Python (то же дерево поиска); кроме того, 300 случайных текстов дали
+# одинаковый вывод у программы и эталона (все команды, save и load).
+
+program: lab3_task9
+
+name: все запросы: count (есть, нет, регистр), top, longest, shortest, depth, tree, list
+args: tests/data/task9_text.txt \s , . ! ; \t
+input: count the
+input: count The
+input: count horse
+input: top 3
+input: top 100
+input: longest
+input: shortest
+input: depth
+input: tree
+input: list
+out: 'the': 3
+out: 'The': 2
+out: 'horse': 0
+out: Top 3:
+out: 1. 'the' 3
+out: 2. 'The' 2
+out: 3. 'a' 2
+out: Top 12:
+out: 1. 'the' 3
+out: 2. 'The' 2
+out: 3. 'a' 2
+out: 4. 'cat' 2
+out: 5. 'dog' 2
+out: 6. 'on' 2
+out: 7. 'sat' 2
+out: 8. 'A' 1
+out: 9. 'bird' 1
+out: 10. 'end' 1
+out: 11. 'log' 1
+out: 12. 'mat' 1
+out: Longest: 'bird' (4 chars)
+out: Shortest: 'A' (1 chars)
+out: Depth: 8
+out: 'The' 2
+out:   L: 'A' 1
+out:   R: 'cat' 2
+out:     L: 'a' 2
+out:       R: 'bird' 1
+out:     R: 'sat' 2
+out:       L: 'on' 2
+out:         L: 'mat' 1
+out:           L: 'dog' 2
+out:             R: 'log' 1
+out:               L: 'end' 1
+out:       R: 'the' 3
+out: Words: 12
+out: 'A' 1
+out: 'The' 2
+out: 'a' 2
+out: 'bird' 1
+out: 'cat' 2
+out: 'dog' 2
+out: 'end' 1
+out: 'log' 1
+out: 'mat' 1
+out: 'on' 2
+out: 'sat' 2
+out: 'the' 3
+code: 0
+
+name: пробел не сепаратор: слово с пробелом
+args: tests/data/task9_spaces.txt ,
+input: count new york
+input: count york
+input: list
+input: longest
+out: 'new york': 2
+out: 'york': 0
+out: Words: 3
+out: 'London' 2
+out: 'new york' 2
+out: 'san francisco' 1
+out: Longest: 'san francisco' (13 chars)
+code: 0
+
+name: save: форма дерева в файле (прямой обход, '-' - пустое место)
+args: tests/data/task9_text.txt \s , . ! ; \t
+input: save tests/data/res9.txt
+out: Saved 12 nodes to 'tests/data/res9.txt'
+code: 0
+file: tests/data/res9.txt
+fout: + 2 3 The
+fout: + 1 1 A
+fout: -
+fout: -
+fout: + 2 3 cat
+fout: + 2 1 a
+fout: -
+fout: + 1 4 bird
+fout: -
+fout: -
+fout: + 2 3 sat
+fout: + 2 2 on
+fout: + 1 3 mat
+fout: + 2 3 dog
+fout: -
+fout: + 1 3 log
+fout: + 1 3 end
+fout: -
+fout: -
+fout: -
+fout: -
+fout: -
+fout: + 3 3 the
+fout: -
+fout: -
+
+name: load: дерево из файла заменяет текущее, форма та же
+args: tests/data/task9_text.txt \s , . ! ; \t
+input: load tests/data/task9_tree.txt
+input: tree
+input: top 2
+input: depth
+out: Loaded 4 words, depth 3
+out: 'm' 2
+out:   L: 'c' 1
+out:     R: 'e' 5
+out:   R: 'xy' 1
+out: Top 2:
+out: 1. 'e' 5
+out: 2. 'm' 2
+out: Depth: 3
+code: 0
+
+name: load: испорченный файл task9_bad_tree1.txt - старое дерево остается
+args: tests/data/task9_text.txt \s , . ! ; \t
+input: load tests/data/task9_bad_tree1.txt
+input: depth
+out: Depth: 8
+err: Error: file 'tests/data/task9_bad_tree1.txt' is not a saved tree
+code: 0
+
+name: load: испорченный файл task9_bad_tree2.txt - старое дерево остается
+args: tests/data/task9_text.txt \s , . ! ; \t
+input: load tests/data/task9_bad_tree2.txt
+input: depth
+out: Depth: 8
+err: Error: file 'tests/data/task9_bad_tree2.txt' is not a saved tree
+code: 0
+
+name: load: испорченный файл task9_bad_tree3.txt - старое дерево остается
+args: tests/data/task9_text.txt \s , . ! ; \t
+input: load tests/data/task9_bad_tree3.txt
+input: depth
+out: Depth: 8
+err: Error: file 'tests/data/task9_bad_tree3.txt' is not a saved tree
+code: 0
+
+name: load: испорченный файл task9_bad_tree4.txt - старое дерево остается
+args: tests/data/task9_text.txt \s , . ! ; \t
+input: load tests/data/task9_bad_tree4.txt
+input: depth
+out: Depth: 8
+err: Error: file 'tests/data/task9_bad_tree4.txt' is not a saved tree
+code: 0
+
+name: load: испорченный файл task9_bad_tree5.txt - старое дерево остается
+args: tests/data/task9_text.txt \s , . ! ; \t
+input: load tests/data/task9_bad_tree5.txt
+input: depth
+out: Depth: 8
+err: Error: the tree in file 'tests/data/task9_bad_tree5.txt' is not a search tree
+code: 0
+
+name: 20000 слов по алфавиту: дерево - цепочка глубиной 20000 (обходы без рекурсии), save и load
+args: tests/data/task9_sorted.txt ,
+input: depth
+input: longest
+input: save tests/data/res9.txt
+input: load tests/data/res9.txt
+input: depth
+input: count w19999
+out: Depth: 20000
+out: Longest: 'w00000' (6 chars)
+out: Saved 20000 nodes to 'tests/data/res9.txt'
+out: Loaded 20000 words, depth 20000
+out: Depth: 20000
+out: 'w19999': 1
+code: 0
+
+name: текст без слов
+args: tests/data/task9_empty.txt , \s
+input: depth
+input: tree
+input: list
+input: top 2
+input: longest
+input: shortest
+input: count a
+out: Depth: 0
+out: (empty tree)
+out: Words: 0
+out: Top 0:
+out: 'a': 0
+err: Error: there are no words
+err: Error: there are no words
+code: 0
+
+name: ошибки команд
+args: tests/data/task9_text.txt \s , . ! ; \t
+input:
+input: foo
+input: count
+input: top
+input: top 0
+input: top x
+input: depth 1
+input: save
+input: save tests/data/task9_text.txt
+input: save ./tests/../tests/data/task9_text.txt
+input: save tests/no_dir/t.txt
+input: load tests/data/task9_nofile.txt
+input: help
+input: exit
+input: depth
+out: Commands: count <word>, top <n>, longest, shortest, depth, save <file>, load <file>,
+out:           tree, list, help, exit
+err: Error: unknown command 'foo' (type help)
+err: Error: command 'count' needs an argument
+err: Error: command 'top' needs an argument
+err: Error: n must be a whole number 1 or more
+err: Error: n must be a whole number 1 or more
+err: Error: command 'depth' takes no argument
+err: Error: command 'save' needs an argument
+err: Error: can not save the tree over the text file
+err: Error: can not save the tree over the text file
+err: Error: can not create file 'tests/no_dir/t.txt'
+err: Error: can not open file 'tests/data/task9_nofile.txt'
+code: 0
+
+name: нет сепараторов
+args: tests/data/task9_text.txt
+err: Usage: lab3_task9 <text file> <separator> [<separator> ...]   (\t - tab, \s - space)
+code: 1
+
+name: нет аргументов
+err: Usage: lab3_task9 <text file> <separator> [<separator> ...]   (\t - tab, \s - space)
+code: 1
+
+name: сепаратор из двух символов
+args: tests/data/task9_text.txt , ab
+err: Error: separator 'ab' must be one character (or \t, \s, \\)
+code: 1
+
+name: файла с текстом нет
+args: tests/data/task9_nofile.txt ,
+err: Error: can not open file 'tests/data/task9_nofile.txt'
+code: 1

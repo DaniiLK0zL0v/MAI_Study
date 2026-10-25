@@ -1,0 +1,2 @@
+new york,London,new york
+san francisco,London
