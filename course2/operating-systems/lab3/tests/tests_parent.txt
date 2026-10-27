@@ -1,0 +1,115 @@
+# Тесты всей цепочки: parent -> child1 -> child2 -> parent (вариант 11), каналы - разделяемая память
+#
+# Как запустить:  make test                (Git Bash: все тесты)
+#                 ..\windows\run_tests.bat (то же из проводника или cmd)
+#
+# Формат одного теста (тесты разделяются пустой строкой):
+#   name:    название теста - просто для понимания
+#   args:    аргументы программы через пробел
+#   input:   строка, которую "вводит пользователь" (их может быть несколько)
+#   infile:  файл, который подаётся на вход целиком (для пустых строк, пробелов в конце строки,
+#            длинных строк - их нельзя записать строкой input:)
+#   out:     строка, которую программа должна вывести в stdout
+#   outfile: файл, с которым должен совпасть весь вывод программы
+#   err:     строка, которую программа должна вывести в stderr (сообщения об ошибках)
+#   code:    код возврата: 0 - всё хорошо, 1 - ошибка
+# Строки, начинающиеся с #, - комментарии. Пробелы в конце строк вывода не сравниваются.
+# Ожидаемые ответы для файлов из tests/data посчитаны на Python.
+
+program: parent
+
+# ============================================================
+# Обычные строки
+# ============================================================
+
+name: одна строка: буквы вверх, пробел -> _
+input: Hello World
+out: HELLO_WORLD
+code: 0
+
+name: несколько пробелов подряд - каждый становится _
+input: a  b   c
+out: A__B___C
+code: 0
+
+name: табуляция - тоже пробельный символ
+input: tab	here	and	there
+out: TAB_HERE_AND_THERE
+code: 0
+
+name: цифры и знаки препинания не меняются
+input: abc 123, def! x-y; (z)
+out: ABC_123,_DEF!_X-Y;_(Z)
+code: 0
+
+name: уже заглавные буквы остаются заглавными
+input: ALREADY UPPER Mixed
+out: ALREADY_UPPER_MIXED
+code: 0
+
+name: русские буквы не меняются (toupper меняет только латиницу)
+input: привет world
+out: привет_WORLD
+code: 0
+
+name: несколько строк - на каждую свой ответ, по порядку
+input: first line
+input: second line
+input: third
+out: FIRST_LINE
+out: SECOND_LINE
+out: THIRD
+code: 0
+
+# ============================================================
+# Особые строки (из файлов)
+# ============================================================
+
+name: пустые строки проходят как пустые
+infile: tests/data/empty_lines.txt
+out: FIRST
+out:
+out:
+out: SECOND_LINE
+code: 0
+
+name: пробелы и табуляции в начале и в конце строки, строка из одних пробелов
+infile: tests/data/edge_spaces.txt
+out: __TWO_SPACES_LEFT_AND_RIGHT__
+out: __TAB_AND_SPACE__
+out: ___
+code: 0
+
+name: последняя строка без перевода строки
+infile: tests/data/no_newline.txt
+out: LINE_ONE
+out: LAST_LINE_WITHOUT_NEWLINE
+code: 0
+
+name: файл с концами строк Windows (CR LF) - \r не превращается в _
+infile: tests/data/crlf_lines.txt
+out: WINDOWS_LINE
+out: SECOND__ONE
+code: 0
+
+name: строка 30000 символов - больше порции разделяемой памяти (4096 байт), нет зависания
+infile: tests/data/long_line.txt
+outfile: tests/data/long_line_expected.txt
+code: 0
+
+name: 1000 строк разной длины
+infile: tests/data/many_lines.txt
+outfile: tests/data/many_lines_expected.txt
+code: 0
+
+name: пустой ввод - ничего не выводится
+code: 0
+
+# ============================================================
+# Ошибки
+# ============================================================
+
+name: аргументы не нужны
+args: file.txt
+err: Error: parent takes no arguments, it reads lines from the input
+code: 1

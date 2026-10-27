@@ -1,0 +1,23 @@
+# Подавление одного ложного срабатывания Dr. Memory в стартовом коде (до main, не код программы):
+#   ___chkstk_ms               - проба стека из compiler_rt (zig, stack_probe.zig)
+#   _pei386_runtime_relocator  - стартовый код mingw-w64 (crt/pseudo-reloc.c)
+#   __tmainCRTStartup, mainCRTStartup
+# ___chkstk_ms читает память ниже вершины стека, чтобы заранее выделить страницы под
+# большой кадр; Dr. Memory считает это обращением за пределы стека.
+UNADDRESSABLE ACCESS
+name=startup stack probe (false positive)
+*!___chkstk_ms
+*!_pei386_runtime_relocator
+
+# Та же проба стека ___chkstk_ms, но внутри printf / fprintf библиотеки mingw-w64
+# (__pformat_int - печать %d %lld %zu, __pformat_xint - %x %o): у этих функций большой
+# кадр стека, и перед ним проба читает память ниже вершины стека. Это не код программы.
+UNADDRESSABLE ACCESS
+name=stack probe in mingw printf %d (false positive)
+*!___chkstk_ms
+*!__pformat_int
+
+UNADDRESSABLE ACCESS
+name=stack probe in mingw printf %x (false positive)
+*!___chkstk_ms
+*!__pformat_xint

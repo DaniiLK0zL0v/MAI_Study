@@ -1,0 +1,30 @@
+# Тесты child2 отдельно от parent - только ошибки запуска.
+# В лабе 3 child2 не читает стандартный ввод: он открывает по именам разделяемую память, семафоры
+# и событие остановки, которые создал parent. Поэтому без parent он может только сообщить об ошибке.
+# Как child2 работает в цепочке, проверяют тесты tests_parent.txt. Формат - как в tests_parent.txt.
+
+program: child2
+
+name: без аргументов - подсказка, как запускать
+err: Usage: child2 <prefix> <input channel> <output channel> <parent pid>  (started by parent)
+code: 1
+
+name: не хватает аргументов
+args: os_lab3_1 first middle
+err: Usage: child2 <prefix> <input channel> <output channel> <parent pid>  (started by parent)
+code: 1
+
+name: PID parent - не число
+args: os_lab3_1 first middle 12x
+err: Error: child2: wrong parent pid '12x'
+code: 1
+
+name: PID parent - пустая строка
+args: os_lab3_1 first middle ""
+err: Error: child2: wrong parent pid ''
+code: 1
+
+name: parent с таким префиксом не запущен - объектов с такими именами нет (ошибка 2 - не найдено)
+args: os_lab3_no_such_parent first middle 1
+err: Error: child2: OpenEvent failed (Windows error 2)
+code: 1
