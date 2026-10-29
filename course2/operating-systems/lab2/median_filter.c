@@ -248,13 +248,12 @@ static int read_number(long long low, long long high, const char *what, long lon
 }
 
 /*
- * Прочитать матрицу со стандартного ввода: "строки столбцы", затем строки*столбцы целых чисел.
- * Память под матрицу выделяется здесь (malloc), освобождает вызывающий.
- * Возвращает 0 - успех, 1 - ошибка (сообщение уже напечатано).
+ * Пропустить невидимую метку BOM (байты EF BB BF) в самом начале ввода, если она есть.
+ * Её пишут Блокнот (файл в UTF-8) и PowerShell (при передаче текста программе).
+ * Число с байта EF начаться не может, поэтому такой байт в начале - либо BOM, либо ошибка ввода.
+ * Возвращает 0 - успех, 1 - в начале ввода неправильные байты (сообщение уже напечатано).
  */
-static int read_matrix(int **matrix, int *rows, int *cols) {
-    /* Файл, сохранённый Блокнотом в UTF-8, может начинаться с невидимой метки BOM (байты EF BB BF).
-       Число с байта EF начаться не может, поэтому такой байт в начале - либо BOM, либо ошибка ввода. */
+static int skip_bom(void) {
     int symbol = getchar();
     if (symbol == 0xEF) {
         if (getchar() != 0xBB || getchar() != 0xBF) {
@@ -262,8 +261,20 @@ static int read_matrix(int **matrix, int *rows, int *cols) {
             return 1;
         }
     } else if (symbol != EOF) {
-        /* это не BOM - возвращаем символ во ввод, его прочитает read_number */
+        /* это не BOM - возвращаем символ во ввод, его прочитают дальше */
         ungetc(symbol, stdin);
+    }
+    return 0;
+}
+
+/*
+ * Прочитать матрицу со стандартного ввода: "строки столбцы", затем строки*столбцы целых чисел.
+ * Память под матрицу выделяется здесь (malloc), освобождает вызывающий.
+ * Возвращает 0 - успех, 1 - ошибка (сообщение уже напечатано).
+ */
+static int read_matrix(int **matrix, int *rows, int *cols) {
+    if (skip_bom() != 0) {
+        return 1;
     }
 
     long long value = 0;
@@ -943,6 +954,12 @@ static int run_dialog_mode(void) {
     if (line == NULL) {
         fprintf(stderr, "Error: not enough memory\n");
         wait_for_enter(console);
+        return 1;
+    }
+    /* BOM бывает только у файла или канала. С клавиатуры его нет, а getchar здесь ждал бы ввода
+       ещё до первого вопроса - поэтому для консоли не проверяем */
+    if (!console && skip_bom() != 0) {
+        free(line);
         return 1;
     }
     if (ask_threads_or_keys(console, &opts, &keys_given, &line, &capacity) != 0) {

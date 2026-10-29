@@ -492,3 +492,10 @@ err: Usage: median_filter -t THREADS -w WINDOW -k TIMES [-g ROWS COLS SEED [-b]]
 err: Error: the window size must be odd
 err: Error: the number of threads must be a number from 1 to 64, not '-5', try again
 code: 0
+
+name: вопросы: ответы из файла Блокнота (BOM и \r\n)
+infile: tests/data/dialog_bom.txt
+out: 1 1 1
+out: 1 1 1
+out: 1 1 1
+code: 0
