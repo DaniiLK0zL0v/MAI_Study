@@ -241,9 +241,8 @@ code: 0
 # Ошибки в ключах
 # ============================================================
 
-name: без ключей
-err: Error: keys -t, -w and -k are required
-err: Usage: median_filter -t THREADS -w WINDOW -k TIMES [-g ROWS COLS SEED [-b]]
+name: без ключей и без ввода - программа спрашивает число потоков, а ввода нет
+err: Error: the input ended, the number of threads expected
 code: 1
 
 name: нет ключа -k
@@ -380,4 +379,81 @@ args: -t 1 -w 3 -k 1
 input: 1 1
 input: 123456789012345678901234567890123456789
 err: Error: a matrix element is too long: '12345678901234567890123456789012...'
+code: 1
+
+# ============================================================
+# Режим вопросов: запуск без ключей (двойной щелчок по exe)
+# Ответы - по одному на строку: T, W, K, "строки столбцы", затем строки матрицы.
+# Вопросы печатаются только при вводе с клавиатуры, поэтому в тестах их нет.
+# ============================================================
+
+name: вопросы: тот же пример 3x4, что и с ключами - тот же ответ
+input: 2
+input: 3
+input: 1
+input: 3 4
+input: 1 2 3 4
+input: 5 6 7 8
+input: 9 10 11 12
+out: 2 3 4 4
+out: 5 6 7 8
+out: 9 9 10 11
+code: 0
+
+name: вопросы: выброс в центре пропадает
+input: 1
+input: 3
+input: 1
+input: 3 3
+input: 1 1 1
+input: 1 100 1
+input: 1 1 1
+out: 1 1 1
+out: 1 1 1
+out: 1 1 1
+code: 0
+
+name: вопросы: неправильные ответы - сообщение и тот же вопрос снова
+input: abc
+input: 2
+input: 4
+input: 3
+input: -1
+input: 1
+input: 2
+input: 2 2 2
+input: 2 2
+input: 1 2
+input: 3 x
+input: 3
+input: 3 4
+out: 2 2
+out: 3 3
+err: Error: the number of threads must be a number from 1 to 64, not 'abc', try again
+err: Error: the window size must be odd, try again
+err: Error: K must be a number from 0 to 1000, not '-1', try again
+err: Error: too few numbers, enter 2, try again
+err: Error: too many numbers, enter 2, try again
+err: Error: a matrix element must be a number from -2147483648 to 2147483647, not 'x', try again
+err: Error: too few numbers, enter 2, try again
+code: 0
+
+name: вопросы: слишком большая матрица - спросить размеры снова
+input: 1
+input: 1
+input: 0
+input: 20000 20000
+input: 1 1
+input: 7
+out: 7
+err: Error: the matrix is too big (more than 25000000 elements), try again
+code: 0
+
+name: вопросы: ввод кончился посреди матрицы
+input: 1
+input: 3
+input: 1
+input: 2 2
+input: 1 2
+err: Error: the input ended, a matrix element expected
 code: 1

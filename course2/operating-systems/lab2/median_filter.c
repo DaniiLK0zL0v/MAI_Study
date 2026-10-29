@@ -16,6 +16,9 @@
  *                                                   генератора); печатаются время и контрольная сумма
  *   median_filter -t T -w W -k K -g R C SEED -b     замер для 1, 2, ..., T потоков:
  *                                                   время, ускорение и эффективность
+ *   median_filter                                   без ключей (двойной щелчок по exe): программа
+ *                                                   сама спрашивает T, W, K, размеры и матрицу
+ *                                                   (каждая строка матрицы - отдельной строкой)
  *
  * Модель параллельности - Fork & Join (лекция 3): на каждом из K проходов создаются T потоков
  * (CreateThread), каждый обрабатывает свой отрезок строк, затем главный поток ждёт их всех
@@ -628,7 +631,266 @@ static int run_generate_mode(const options *opts) {
     return result;
 }
 
+/* ===================================================================== */
+/* Режим вопросов: запуск без ключей (например, двойным щелчком по exe)    */
+/* ===================================================================== */
+
+/* Ввод идёт с клавиатуры? GetConsoleMode удаётся только для настоящей консоли
+   (для файла, канала и устройства NUL - нет; _isatty считает NUL терминалом, поэтому он не подходит) */
+static int input_is_console(void) {
+    DWORD mode = 0;
+    return GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), &mode) ? 1 : 0;
+}
+
+/*
+ * Прочитать одну строку ввода (без '\n') в буфер *line; буфер растёт вдвое через realloc.
+ * Возвращает 0 - строка прочитана, 1 - ввод закончился (строки нет), 2 - не хватило памяти.
+ */
+static int read_input_line(char **line, size_t *capacity) {
+    size_t length = 0;
+    int symbol = getchar();
+    if (symbol == EOF) {
+        return 1;
+    }
+    while (symbol != EOF && symbol != '\n') {
+        /* +1 - место для '\0' в конце строки */
+        if (length + 1 >= *capacity) {
+            size_t new_capacity = *capacity * 2;
+            char *tmp = realloc(*line, new_capacity);
+            if (tmp == NULL) {
+                return 2;
+            }
+            *line = tmp;
+            *capacity = new_capacity;
+        }
+        (*line)[length++] = (char)symbol;
+        symbol = getchar();
+    }
+    (*line)[length] = '\0';
+    return 0;
+}
+
+/*
+ * Разобрать строку line: в ней должно быть ровно count чисел от low до high (через пробелы).
+ * Числа записываются в values. Строка портится: после каждого числа ставится '\0'.
+ * Возвращает 0 - успех, 1 - ошибка (сообщение уже напечатано, строку введут заново).
+ */
+static int parse_line(char *line, int count, long long low, long long high, const char *what,
+                      long long *values) {
+    int found = 0;
+    char *p = line;
+    while (1) {
+        /* пропускаем пробелы перед числом; '\r' - остаток конца строки Windows */
+        while (*p == ' ' || *p == '\t' || *p == '\r') {
+            p++;
+        }
+        if (*p == '\0') {
+            break;   /* строка кончилась */
+        }
+        /* число - до следующего пробела или до конца строки */
+        char *start = p;
+        while (*p != '\0' && *p != ' ' && *p != '\t' && *p != '\r') {
+            p++;
+        }
+        int last = (*p == '\0');
+        *p = '\0';
+        if (found == count) {
+            fprintf(stderr, "Error: too many numbers, enter %d, try again\n", count);
+            return 1;
+        }
+        if (parse_number(start, low, high, &values[found]) != 0) {
+            fprintf(stderr, "Error: %s must be a number from %lld to %lld, not '%s', try again\n",
+                    what, low, high, start);
+            return 1;
+        }
+        found++;
+        if (!last) {
+            p++;     /* за поставленный '\0' - к следующему числу */
+        }
+    }
+    if (found < count) {
+        fprintf(stderr, "Error: too few numbers, enter %d, try again\n", count);
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ * Задать вопрос question (только если ввод с клавиатуры) и прочитать ответ - строку из count чисел
+ * от low до high. Неправильный ответ - сообщение и тот же вопрос ещё раз.
+ * line, capacity - общий буфер для строк ввода.
+ * Возвращает 0 - успех, 1 - ввод закончился или не хватило памяти (сообщение уже напечатано).
+ */
+static int ask_numbers(int console, const char *question, int count, long long low, long long high,
+                       const char *what, long long *values, char **line, size_t *capacity) {
+    while (1) {
+        if (console) {
+            fprintf(stderr, "%s", question);
+        }
+        int st = read_input_line(line, capacity);
+        if (st == 1) {
+            fprintf(stderr, "Error: the input ended, %s expected\n", what);
+            return 1;
+        }
+        if (st == 2) {
+            fprintf(stderr, "Error: not enough memory for the line\n");
+            return 1;
+        }
+        if (parse_line(*line, count, low, high, what, values) == 0) {
+            return 0;
+        }
+    }
+}
+
+/*
+ * Спросить число потоков, окно, K и размеры матрицы - всё, что в обычном режиме задают ключи.
+ * Возвращает 0 - успех, 1 - ввод закончился или не хватило памяти (сообщение уже напечатано).
+ */
+static int ask_settings(int console, options *opts, int *rows, int *cols, char **line, size_t *capacity) {
+    long long values[2];
+    if (ask_numbers(console, "Number of threads (1..64): ", 1, 1, MAX_THREADS,
+                    "the number of threads", values, line, capacity) != 0) {
+        return 1;
+    }
+    opts->threads = (int)values[0];
+
+    /* окно: число от 1 до 99, и обязательно нечётное (иначе нет центрального элемента) */
+    while (1) {
+        if (ask_numbers(console, "Window size (odd number 1..99): ", 1, 1, MAX_WINDOW,
+                        "the window size", values, line, capacity) != 0) {
+            return 1;
+        }
+        if (values[0] % 2 != 0) {
+            break;
+        }
+        fprintf(stderr, "Error: the window size must be odd, try again\n");
+    }
+    opts->window = (int)values[0];
+
+    if (ask_numbers(console, "How many times to apply the filter, K (0..1000): ", 1, 0, MAX_TIMES,
+                    "K", values, line, capacity) != 0) {
+        return 1;
+    }
+    opts->times = (int)values[0];
+
+    /* размеры - два числа в одной строке; слишком большую матрицу просим ввести заново */
+    while (1) {
+        if (ask_numbers(console, "Number of rows and columns (two numbers): ", 2, 1, MAX_SIDE,
+                        "the size of the matrix", values, line, capacity) != 0) {
+            return 1;
+        }
+        if (values[0] * values[1] <= MAX_CELLS) {
+            break;
+        }
+        fprintf(stderr, "Error: the matrix is too big (more than %d elements), try again\n", MAX_CELLS);
+    }
+    *rows = (int)values[0];
+    *cols = (int)values[1];
+    return 0;
+}
+
+/*
+ * Спросить матрицу: каждая строка матрицы - отдельная строка ввода из cols чисел.
+ * Ошибка в строке - вводится заново только эта строка.
+ * Возвращает 0 - успех, 1 - ввод закончился или не хватило памяти (сообщение уже напечатано).
+ */
+static int ask_matrix(int console, int *matrix, int rows, int cols, char **line, size_t *capacity) {
+    long long *values = malloc((size_t)cols * sizeof(long long));
+    if (values == NULL) {
+        fprintf(stderr, "Error: not enough memory for the matrix\n");
+        return 1;
+    }
+    int result = 0;
+    for (int i = 0; i < rows && result == 0; i++) {
+        /* вопрос с номером строки: "Row 2 of 3: " */
+        char question[64];
+        snprintf(question, sizeof(question), "Row %d of %d: ", i + 1, rows);
+        result = ask_numbers(console, question, cols, INT_MIN, INT_MAX, "a matrix element", values,
+                             line, capacity);
+        for (int j = 0; j < cols && result == 0; j++) {
+            matrix[(size_t)i * cols + j] = (int)values[j];
+        }
+    }
+    free(values);
+    return result;
+}
+
+/* Не дать окну закрыться сразу: при запуске двойным щелчком окно закрывается вместе с программой */
+static void wait_for_enter(int console) {
+    if (!console) {
+        return;
+    }
+    fprintf(stderr, "\nPress Enter to exit\n");
+    clearerr(stdin);   /* после Ctrl+Z ввод помечен как законченный - снимаем отметку */
+    int symbol;
+    while ((symbol = getchar()) != EOF && symbol != '\n') {
+    }
+}
+
+/*
+ * Запуск без ключей: программа сама спрашивает число потоков, окно, K, размеры и матрицу
+ * (вопросы печатаются, только если ввод с клавиатуры), накладывает фильтр и печатает результат.
+ */
+static int run_dialog_mode(void) {
+    int console = input_is_console();
+    if (console) {
+        fprintf(stderr, "Median filter (lab 2, variant 11). Type the answers and press Enter.\n");
+        fprintf(stderr, "Keys for the command line: median_filter -t THREADS -w WINDOW -k TIMES "
+                        "[-g ROWS COLS SEED [-b]]\n\n");
+    }
+
+    int result = 0;
+    options opts;
+    int rows = 0;
+    int cols = 0;
+    int *matrix = NULL;
+    int *spare = NULL;
+    size_t capacity = 64;      /* начальный размер буфера строки ввода; дальше растёт вдвое */
+    char *line = malloc(capacity);
+    if (line == NULL) {
+        fprintf(stderr, "Error: not enough memory\n");
+        result = 1;
+    } else if (ask_settings(console, &opts, &rows, &cols, &line, &capacity) != 0) {
+        result = 1;            /* сообщение уже напечатано */
+    } else {
+        /* две матрицы: на каждом проходе одна - исходная, другая - результат */
+        matrix = malloc((size_t)rows * (size_t)cols * sizeof(int));
+        spare = malloc((size_t)rows * (size_t)cols * sizeof(int));
+        if (matrix == NULL || spare == NULL) {
+            fprintf(stderr, "Error: not enough memory for the matrix\n");
+            result = 1;
+        } else if (ask_matrix(console, matrix, rows, cols, &line, &capacity) != 0) {
+            result = 1;
+        }
+    }
+
+    if (result == 0) {
+        double start = now_seconds();
+        result = apply_filter(matrix, spare, rows, cols, opts.window, opts.times, opts.threads);
+        double seconds = now_seconds() - start;
+        if (result == 0) {
+            /* время и число потоков - только человеку: в тестах время каждый раз разное */
+            if (console) {
+                int used = opts.threads < rows ? opts.threads : rows;
+                fprintf(stderr, "\nResult (threads: %d, time: %.4f s):\n", used, seconds);
+            }
+            print_matrix(matrix, rows, cols);
+            fflush(stdout);
+        }
+    }
+
+    free(line);
+    free(matrix);
+    free(spare);
+    wait_for_enter(console);
+    return result;
+}
+
 int main(int argc, char *argv[]) {
+    /* без ключей (например, двойной щелчок по exe) - программа сама спрашивает всё нужное */
+    if (argc == 1) {
+        return run_dialog_mode();
+    }
     options opts;
     if (parse_options(argc, argv, &opts) != 0) {
         return 1;
