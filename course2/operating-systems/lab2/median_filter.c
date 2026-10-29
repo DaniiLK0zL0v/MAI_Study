@@ -41,6 +41,7 @@
 #define MAX_SIDE 20000          /* наибольшее число строк и столбцов */
 #define MAX_CELLS 25000000      /* наибольшее число элементов (100 МБ на одну матрицу) */
 #define MAX_TOKEN 32            /* самое длинное число во вводе (в символах) */
+#define MAX_WORDS 32            /* сколько слов может быть в строке с ключами (режим вопросов) */
 
 /* Что передаётся одному потоку: откуда читать, куда писать и какие строки - его */
 typedef struct {
@@ -742,17 +743,108 @@ static int ask_numbers(int console, const char *question, int count, long long l
     }
 }
 
+/* Ответ похож на строку с ключами: начинается с '-' (но не "-5" - это отрицательное число)
+   или со слова median_filter */
+static int looks_like_keys(const char *line) {
+    while (*line == ' ' || *line == '\t') {
+        line++;
+    }
+    if (line[0] == '-') {
+        return !(line[1] >= '0' && line[1] <= '9');
+    }
+    return strncmp(line, "median_filter", strlen("median_filter")) == 0;
+}
+
 /*
- * Спросить число потоков, окно, K и размеры матрицы - всё, что в обычном режиме задают ключи.
+ * Разрезать строку на слова (по пробелам): в конец каждого слова ставится '\0', адреса слов - в words.
+ * Возвращает число слов или -1, если слов больше max.
+ */
+static int split_words(char *line, char *words[], int max) {
+    int count = 0;
+    char *p = line;
+    while (1) {
+        while (*p == ' ' || *p == '\t' || *p == '\r') {
+            p++;
+        }
+        if (*p == '\0') {
+            return count;
+        }
+        if (count == max) {
+            return -1;
+        }
+        words[count++] = p;
+        while (*p != '\0' && *p != ' ' && *p != '\t' && *p != '\r') {
+            p++;
+        }
+        if (*p != '\0') {
+            *p = '\0';
+            p++;
+        }
+    }
+}
+
+/*
+ * Первый вопрос: число потоков. Вместо числа можно ввести всю строку с ключами, как в командной
+ * строке ("-t 4 -w 3 -k 1 -g 1500 1500 1 -b" или "median_filter -t ..."); тогда *keys_given = 1,
+ * и все настройки уже в opts. Неправильный ответ - сообщение и тот же вопрос снова.
+ * Возвращает 0 - успех, 1 - ввод закончился или не хватило памяти (сообщение уже напечатано).
+ */
+static int ask_threads_or_keys(int console, options *opts, int *keys_given, char **line, size_t *capacity) {
+    *keys_given = 0;
+    while (1) {
+        if (console) {
+            fprintf(stderr, "Number of threads (1..64) or the keys (for example: -t 4 -w 3 -k 1): ");
+        }
+        int st = read_input_line(line, capacity);
+        if (st == 1) {
+            fprintf(stderr, "Error: the input ended, the number of threads expected\n");
+            return 1;
+        }
+        if (st == 2) {
+            fprintf(stderr, "Error: not enough memory for the line\n");
+            return 1;
+        }
+
+        if (looks_like_keys(*line)) {
+            /* words[0] - имя программы, как argv[0] у настоящего запуска; ключи - с words[1] */
+            char *words[MAX_WORDS + 1];
+            int count = split_words(*line, words + 1, MAX_WORDS);
+            if (count < 0) {
+                fprintf(stderr, "Error: too many words (more than %d), try again\n", MAX_WORDS);
+                continue;
+            }
+            char program[] = "median_filter";
+            char **argv = words;
+            int argc = count + 1;
+            /* слово median_filter (или median_filter.exe) в начале - это и есть имя программы */
+            if (strncmp(words[1], "median_filter", strlen("median_filter")) == 0) {
+                argv = words + 1;
+                argc = count;
+            } else {
+                words[0] = program;
+            }
+            /* разбор - та же функция, что для настоящих ключей; ошибку она печатает сама */
+            if (parse_options(argc, argv, opts) == 0) {
+                *keys_given = 1;
+                return 0;
+            }
+            continue;
+        }
+
+        long long value = 0;
+        if (parse_line(*line, 1, 1, MAX_THREADS, "the number of threads", &value) == 0) {
+            opts->threads = (int)value;
+            return 0;
+        }
+    }
+}
+
+/*
+ * Спросить окно, K и размеры матрицы (число потоков уже спросила ask_threads_or_keys).
  * Возвращает 0 - успех, 1 - ввод закончился или не хватило памяти (сообщение уже напечатано).
  */
 static int ask_settings(int console, options *opts, int *rows, int *cols, char **line, size_t *capacity) {
     long long values[2];
-    if (ask_numbers(console, "Number of threads (1..64): ", 1, 1, MAX_THREADS,
-                    "the number of threads", values, line, capacity) != 0) {
-        return 1;
-    }
-    opts->threads = (int)values[0];
 
     /* окно: число от 1 до 99, и обязательно нечётное (иначе нет центрального элемента) */
     while (1) {
@@ -835,12 +927,13 @@ static int run_dialog_mode(void) {
     int console = input_is_console();
     if (console) {
         fprintf(stderr, "Median filter (lab 2, variant 11). Type the answers and press Enter.\n");
-        fprintf(stderr, "Keys for the command line: median_filter -t THREADS -w WINDOW -k TIMES "
-                        "[-g ROWS COLS SEED [-b]]\n\n");
+        fprintf(stderr, "Instead of the number of threads you can type the keys: "
+                        "-t THREADS -w WINDOW -k TIMES [-g ROWS COLS SEED [-b]]\n\n");
     }
 
     int result = 0;
     options opts;
+    int keys_given = 0;
     int rows = 0;
     int cols = 0;
     int *matrix = NULL;
@@ -849,8 +942,31 @@ static int run_dialog_mode(void) {
     char *line = malloc(capacity);
     if (line == NULL) {
         fprintf(stderr, "Error: not enough memory\n");
-        result = 1;
-    } else if (ask_settings(console, &opts, &rows, &cols, &line, &capacity) != 0) {
+        wait_for_enter(console);
+        return 1;
+    }
+    if (ask_threads_or_keys(console, &opts, &keys_given, &line, &capacity) != 0) {
+        free(line);
+        wait_for_enter(console);
+        return 1;
+    }
+    /* ввели ключи - работаем так же, как при запуске с этими ключами */
+    if (keys_given) {
+        free(line);
+        if (opts.generate) {
+            result = run_generate_mode(&opts);
+        } else {
+            if (console) {
+                fprintf(stderr, "Enter the matrix: rows, columns, then all the numbers; "
+                                "finish with Ctrl+Z and Enter\n");
+            }
+            result = run_input_mode(&opts);
+        }
+        wait_for_enter(console);
+        return result;
+    }
+
+    if (ask_settings(console, &opts, &rows, &cols, &line, &capacity) != 0) {
         result = 1;            /* сообщение уже напечатано */
     } else {
         /* две матрицы: на каждом проходе одна - исходная, другая - результат */

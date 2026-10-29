@@ -457,3 +457,38 @@ input: 2 2
 input: 1 2
 err: Error: the input ended, a matrix element expected
 code: 1
+
+name: вопросы: вместо числа потоков - строка с ключами, матрица потом со ввода
+input: -t 2 -w 3 -k 1
+input: 3 4
+input: 1 2 3 4
+input: 5 6 7 8
+input: 9 10 11 12
+out: 2 3 4 4
+out: 5 6 7 8
+out: 9 9 10 11
+code: 0
+
+name: вопросы: строка с ключами вместе с именем программы, случайная матрица
+input: median_filter -t 8 -w 3 -k 2 -g 200 150 42
+outre: matrix: 200 x 150, window: 3, K: 2, logical processors: [0-9]+
+outre: process id: [0-9]+, threads: 8
+outre: time: [0-9]+\.[0-9]{4} s
+out: checksum: 9325105597167613885
+code: 0
+
+name: вопросы: ошибка в ключах - сообщение и тот же вопрос снова; -5 - это число, а не ключ
+input: median_filter
+input: -t 2 -w 4 -k 1
+input: -5
+input: 1
+input: 1
+input: 0
+input: 1 2
+input: 8 9
+out: 8 9
+err: Error: keys -t, -w and -k are required
+err: Usage: median_filter -t THREADS -w WINDOW -k TIMES [-g ROWS COLS SEED [-b]]
+err: Error: the window size must be odd
+err: Error: the number of threads must be a number from 1 to 64, not '-5', try again
+code: 0
