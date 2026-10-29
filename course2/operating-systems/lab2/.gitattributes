@@ -3,3 +3,4 @@
 *.bat   text eol=crlf
 # тестовый файл с BOM и концами строк Windows (CR LF) хранится как есть: тест проверяет именно их
 tests/data/bom_matrix.txt -text
+tests/data/dialog_bom.txt -text
