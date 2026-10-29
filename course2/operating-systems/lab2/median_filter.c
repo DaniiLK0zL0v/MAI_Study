@@ -28,6 +28,7 @@
  */
 
 #include <windows.h>
+#include <conio.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -269,10 +270,12 @@ static int skip_bom(void) {
 
 /*
  * Прочитать матрицу со стандартного ввода: "строки столбцы", затем строки*столбцы целых чисел.
+ * from_keyboard = 1 - матрицу вводит человек: после последнего числа сразу заканчиваем
+ * (иначе пришлось бы ещё нажимать Ctrl+Z, чтобы программа убедилась, что больше ничего нет).
  * Память под матрицу выделяется здесь (malloc), освобождает вызывающий.
  * Возвращает 0 - успех, 1 - ошибка (сообщение уже напечатано).
  */
-static int read_matrix(int **matrix, int *rows, int *cols) {
+static int read_matrix(int **matrix, int *rows, int *cols, int from_keyboard) {
     if (skip_bom() != 0) {
         return 1;
     }
@@ -308,6 +311,9 @@ static int read_matrix(int **matrix, int *rows, int *cols) {
         (*matrix)[i] = (int)value;
     }
 
+    if (from_keyboard) {
+        return 0;
+    }
     /* после матрицы ничего быть не должно: иначе размеры, скорее всего, указаны неверно */
     char token[MAX_TOKEN + 1];
     int found = 0;
@@ -549,13 +555,17 @@ static int timed_run(const options *opts, const int *original, int *work, int *s
 /* Три режима работы                                                      */
 /* ===================================================================== */
 
-/* Матрица со стандартного ввода -> фильтр -> результат на стандартный вывод */
-static int run_input_mode(const options *opts) {
+/* Матрица со стандартного ввода -> фильтр -> результат на стандартный вывод.
+   from_keyboard = 1 - матрицу вводит человек (см. read_matrix); тогда перед ответом - заголовок */
+static int run_input_mode(const options *opts, int from_keyboard) {
     int *matrix = NULL;
     int rows = 0;
     int cols = 0;
-    if (read_matrix(&matrix, &rows, &cols) != 0) {
+    if (read_matrix(&matrix, &rows, &cols, from_keyboard) != 0) {
         return 1;
+    }
+    if (from_keyboard) {
+        fprintf(stderr, "\nResult:\n");
     }
     int *spare = malloc((size_t)rows * (size_t)cols * sizeof(int));
     if (spare == NULL) {
@@ -918,16 +928,20 @@ static int ask_matrix(int console, int *matrix, int rows, int cols, char **line,
     return result;
 }
 
-/* Не дать окну закрыться сразу: при запуске двойным щелчком окно закрывается вместе с программой */
-static void wait_for_enter(int console) {
+/*
+ * Не дать окну закрыться сразу: при запуске двойным щелчком окно закрывается вместе с программой.
+ * Ждём нажатия клавиши через _getch: она читает клавишу прямо из консоли, мимо буфера stdin.
+ * Через getchar нельзя: в буфере мог остаться конец строки после последнего числа,
+ * getchar сразу вернул бы его, и окно закрылось бы, не показав результат.
+ */
+static void wait_for_key(int console) {
     if (!console) {
         return;
     }
-    fprintf(stderr, "\nPress Enter to exit\n");
-    clearerr(stdin);   /* после Ctrl+Z ввод помечен как законченный - снимаем отметку */
-    int symbol;
-    while ((symbol = getchar()) != EOF && symbol != '\n') {
-    }
+    fprintf(stderr, "\nPress any key to exit\n");
+    /* выбросить клавиши, нажатые раньше (например, лишний Enter), - ждём именно новое нажатие */
+    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+    _getch();
 }
 
 /*
@@ -953,7 +967,7 @@ static int run_dialog_mode(void) {
     char *line = malloc(capacity);
     if (line == NULL) {
         fprintf(stderr, "Error: not enough memory\n");
-        wait_for_enter(console);
+        wait_for_key(console);
         return 1;
     }
     /* BOM бывает только у файла или канала. С клавиатуры его нет, а getchar здесь ждал бы ввода
@@ -964,7 +978,7 @@ static int run_dialog_mode(void) {
     }
     if (ask_threads_or_keys(console, &opts, &keys_given, &line, &capacity) != 0) {
         free(line);
-        wait_for_enter(console);
+        wait_for_key(console);
         return 1;
     }
     /* ввели ключи - работаем так же, как при запуске с этими ключами */
@@ -974,12 +988,12 @@ static int run_dialog_mode(void) {
             result = run_generate_mode(&opts);
         } else {
             if (console) {
-                fprintf(stderr, "Enter the matrix: rows, columns, then all the numbers; "
-                                "finish with Ctrl+Z and Enter\n");
+                fprintf(stderr, "Enter the matrix: the number of rows and columns, then all the numbers "
+                                "(in one line or in several):\n");
             }
-            result = run_input_mode(&opts);
+            result = run_input_mode(&opts, console);
         }
-        wait_for_enter(console);
+        wait_for_key(console);
         return result;
     }
 
@@ -1015,7 +1029,7 @@ static int run_dialog_mode(void) {
     free(line);
     free(matrix);
     free(spare);
-    wait_for_enter(console);
+    wait_for_key(console);
     return result;
 }
 
@@ -1032,5 +1046,6 @@ int main(int argc, char *argv[]) {
     if (opts.generate) {
         return run_generate_mode(&opts);
     }
-    return run_input_mode(&opts);
+    /* запуск с ключами: ввод может быть из файла, поэтому проверяем, что после матрицы ничего нет */
+    return run_input_mode(&opts, 0);
 }
