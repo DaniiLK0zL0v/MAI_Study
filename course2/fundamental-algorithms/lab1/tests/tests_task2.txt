@@ -17,8 +17,8 @@
 # Чтобы добавить свой тест - скопируй любой блок и поменяй значения.
 #
 # Вещественные числа здесь посчитаны программой, собранной zig на Windows.
-# При сборке gcc на Linux последняя цифра может отличаться - тогда тест
-# покажет FAIL с почти одинаковыми числами, это не ошибка программы.
+# Если последняя цифра числа - шум округления (она разная на разных процессорах
+# и компиляторах), строка проверяется шаблоном outre, который допускает этот шум.
 
 program: lab1_task2
 
@@ -50,6 +50,10 @@ out:
 out: error = |value - real value|, real value is taken from a table
 code: 0
 
+# gamma limit при m = 32 складывает слагаемые до 6e8 с разными знаками: ошибка округления
+# около 1e-7, поэтому 7-я цифра - шум (gcc и Python: 0.5705359, zig на другом процессоре:
+# 0.5705360). Программа сама пишет для этой строки "eps is too small for this method",
+# поэтому шаблон принимает любое число от 0.5705350 до 0.5705369 (две последние цифры - шум).
 name: eps = 1e-6
 args: 1e-6
 out: eps = 1e-06
@@ -67,7 +71,7 @@ out: ln 2    equation  0.6931472            1.90e-09
 out: sqrt 2  limit     1.4142137            1.78e-07
 out: sqrt 2  series    1.4142126            9.35e-07
 out: sqrt 2  equation  1.4142137            9.50e-08
-out: gamma   limit     0.5705359            6.68e-03     eps is too small for this method
+outre: ^gamma   limit     0\.57053[56][0-9]            6\.68e-03     eps is too small for this method$
 out: gamma   series    0.5772158            1.59e-07
 out: gamma   equation  0.5772271            1.15e-05     eps is too small for this method
 out:
