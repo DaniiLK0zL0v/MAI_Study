@@ -4,3 +4,7 @@ build/
 # файлы, которые программы создают во время тестов
 tests/data/out_*
 tests/data/res*.txt
+tests/data/*_errors.txt
+# задание 5 (--table): таблицы пишутся рядом с исходным файлом под случайными именами
+tests/data/t5tab/*
+!tests/data/t5tab/task5_*.txt

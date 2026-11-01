@@ -1,0 +1,459 @@
+# Тесты задания 5. Ожидаемый вывод - эталон docs/src/эталоны/t5.py.
+# --calculate: файл ошибок <имя>_errors.txt; --table: таблицы в файле со случайным именем
+# в tests/data/t5tab (имя зависит от --seed, эталон считает его тем же генератором).
+
+program: lab4_task5
+
+name: выражения: приоритеты, унарный минус, деление и остаток со знаком, ошибки
+args: --calculate tests/data/task5_calc.txt
+input: 4
+input: 5
+out: File: tests/data/task5_calc.txt
+out: 0: 2+3*x
+out:    tree: (2 + (3 * x))
+out:    postfix: 2 3 x * +
+out:    value: 14
+out: 1: (1+2
+out:    error: unbalanced brackets
+out: 2: -2^2
+out:    tree: (-(2 ^ 2))
+out:    postfix: 2 2 ^ neg
+out:    value: -4
+out: 3: 2^-1
+out:    tree: (2 ^ (-1))
+out:    postfix: 2 1 neg ^
+out:    error: negative power
+out: 4: 10/(5-5)
+out:    tree: (10 / (5 - 5))
+out:    postfix: 10 5 5 - /
+out:    error: division by zero
+out: 6: x*y - 7 % 3
+out:    tree: ((x * y) - (7 % 3))
+out:    postfix: x y * 7 3 % -
+out:    value: 19
+out: 7: 2 3
+out:    error: an operation is expected at position 3
+out: 8: 9223372036854775807+1
+out:    tree: (9223372036854775807 + 1)
+out:    postfix: 9223372036854775807 1 +
+out:    error: overflow (the result does not fit in long long)
+out: 9: (-(x))
+out:    tree: (-x)
+out:    postfix: x neg
+out:    value: -4
+out: 10: ((((1))))
+out:    tree: 1
+out:    postfix: 1
+out:    value: 1
+out: 11: -7/2
+out:    tree: ((-7) / 2)
+out:    postfix: 7 neg 2 /
+out:    value: -3
+out: 12: -7%2
+out:    tree: ((-7) % 2)
+out:    postfix: 7 neg 2 %
+out:    value: -1
+out: 13: 7%-2
+out:    tree: (7 % (-2))
+out:    postfix: 7 2 neg %
+out:    value: 1
+out: 14: 2^62+2^62
+out:    tree: ((2 ^ 62) + (2 ^ 62))
+out:    postfix: 2 62 ^ 2 62 ^ +
+out:    error: overflow (the result does not fit in long long)
+out: 15: 0^0
+out:    tree: (0 ^ 0)
+out:    postfix: 0 0 ^
+out:    value: 1
+out: 16: (2+3)*(4-1)^2
+out:    tree: ((2 + 3) * ((4 - 1) ^ 2))
+out:    postfix: 2 3 + 4 1 - 2 ^ *
+out:    value: 45
+out: Errors are written to tests/data/task5_calc_errors.txt
+code: 0
+file: tests/data/task5_calc_errors.txt
+fout: expression: (1+2
+fout: index: 1
+fout: reason: unbalanced brackets
+fout: 
+fout: expression: 2^-1
+fout: index: 3
+fout: reason: negative power
+fout: 
+fout: expression: 10/(5-5)
+fout: index: 4
+fout: reason: division by zero
+fout: 
+fout: expression: 2 3
+fout: index: 7
+fout: reason: an operation is expected at position 3
+fout: 
+fout: expression: 9223372036854775807+1
+fout: index: 8
+fout: reason: overflow (the result does not fit in long long)
+fout: 
+fout: expression: 2^62+2^62
+fout: index: 14
+fout: reason: overflow (the result does not fit in long long)
+
+name: демонстрация (переменные со стандартного ввода)
+args: --calculate tests/data/task5_demo.txt
+input: 2
+input: 3
+input: 4
+input: 10
+out: File: tests/data/task5_demo.txt
+out: 0: (a + b) * c
+out:    tree: ((a + b) * c)
+out:    postfix: a b + c *
+out:    value: 20
+out: 1:  a - b - c
+out:    tree: ((a - b) - c)
+out:    postfix: a b - c -
+out:    value: -5
+out: 2: 2 ^ 3 ^ 2
+out:    tree: (2 ^ (3 ^ 2))
+out:    postfix: 2 3 2 ^ ^
+out:    value: 512
+out: 3: (2 ^ 3) ^ 2
+out:    tree: ((2 ^ 3) ^ 2)
+out:    postfix: 2 3 ^ 2 ^
+out:    value: 64
+out: 4: -a^2 + --b
+out:    tree: ((-(a ^ 2)) + (-(-b)))
+out:    postfix: a 2 ^ neg b neg neg +
+out:    value: -1
+out: 5: 100 / 7 % 4
+out:    tree: ((100 / 7) % 4)
+out:    postfix: 100 7 / 4 %
+out:    value: 2
+out: 6: value1 * 2
+out:    tree: (value1 * 2)
+out:    postfix: value1 2 *
+out:    value: 20
+code: 0
+
+name: ошибки записи и вычисления - в файл task5_errors_errors.txt
+args: --calculate tests/data/task5_errors.txt
+out: File: tests/data/task5_errors.txt
+out: 0: ()
+out:    error: an operand is expected at position 2
+out: 1: 2 +
+out:    error: an operand is expected at position 4
+out: 2: * 3
+out:    error: an operand is expected at position 1
+out: 3: (2))(
+out:    error: unbalanced brackets
+out: 4: 1 $ 2
+out:    error: unknown symbol at position 3
+out: 5: 99999999999999999999
+out:    error: a number is too big at position 1
+out: 6: 3 4 5
+out:    error: an operation is expected at position 3
+out: 7: x y
+out:    error: an operation is expected at position 3
+out: 8: 2 ^ (1 - 2)
+out:    tree: (2 ^ (1 - 2))
+out:    postfix: 2 1 2 - ^
+out:    error: negative power
+out: 9: 9223372036854775807 * 2
+out:    tree: (9223372036854775807 * 2)
+out:    postfix: 9223372036854775807 2 *
+out:    error: overflow (the result does not fit in long long)
+out: 10: -9223372036854775807 - 2
+out:    tree: ((-9223372036854775807) - 2)
+out:    postfix: 9223372036854775807 neg 2 -
+out:    error: overflow (the result does not fit in long long)
+out: 11: 12 % 0
+out:    tree: (12 % 0)
+out:    postfix: 12 0 %
+out:    error: division by zero
+out: Errors are written to tests/data/task5_errors_errors.txt
+code: 0
+file: tests/data/task5_errors_errors.txt
+fout: expression: ()
+fout: index: 0
+fout: reason: an operand is expected at position 2
+fout: 
+fout: expression: 2 +
+fout: index: 1
+fout: reason: an operand is expected at position 4
+fout: 
+fout: expression: * 3
+fout: index: 2
+fout: reason: an operand is expected at position 1
+fout: 
+fout: expression: (2))(
+fout: index: 3
+fout: reason: unbalanced brackets
+fout: 
+fout: expression: 1 $ 2
+fout: index: 4
+fout: reason: unknown symbol at position 3
+fout: 
+fout: expression: 99999999999999999999
+fout: index: 5
+fout: reason: a number is too big at position 1
+fout: 
+fout: expression: 3 4 5
+fout: index: 6
+fout: reason: an operation is expected at position 3
+fout: 
+fout: expression: x y
+fout: index: 7
+fout: reason: an operation is expected at position 3
+fout: 
+fout: expression: 2 ^ (1 - 2)
+fout: index: 8
+fout: reason: negative power
+fout: 
+fout: expression: 9223372036854775807 * 2
+fout: index: 9
+fout: reason: overflow (the result does not fit in long long)
+fout: 
+fout: expression: -9223372036854775807 - 2
+fout: index: 10
+fout: reason: overflow (the result does not fit in long long)
+fout: 
+fout: expression: 12 % 0
+fout: index: 11
+fout: reason: division by zero
+
+name: значение переменной: не введено и введено неправильно
+args: --calculate tests/data/task5_novalue.txt
+input: 7
+input: 1x
+out: File: tests/data/task5_novalue.txt
+out: 0: a + 1
+out:    tree: (a + 1)
+out:    postfix: a 1 +
+out:    value: 8
+out: 1: b + 1
+out:    tree: (b + 1)
+out:    postfix: b 1 +
+out:    error: wrong value for the variable b
+out: 2: c + a
+out:    tree: (c + a)
+out:    postfix: c a +
+out:    error: no value for the variable c
+out: Errors are written to tests/data/task5_novalue_errors.txt
+code: 0
+file: tests/data/task5_novalue_errors.txt
+fout: expression: b + 1
+fout: index: 1
+fout: reason: wrong value for the variable b
+fout: 
+fout: expression: c + a
+fout: index: 2
+fout: reason: no value for the variable c
+
+name: файл с концами строк Windows
+args: --calculate tests/data/task5_crlf.txt
+out: File: tests/data/task5_crlf.txt
+out: 0: 1 + 2
+out:    tree: (1 + 2)
+out:    postfix: 1 2 +
+out:    value: 3
+out: 1: 3 * 4
+out:    tree: (3 * 4)
+out:    postfix: 3 4 *
+out:    value: 12
+code: 0
+
+name: пустой файл - ошибок нет, файл ошибок не создаётся
+args: --calculate tests/data/task5_empty.txt
+out: File: tests/data/task5_empty.txt
+code: 0
+
+name: два файла: значения переменных первого помнятся во втором
+args: --calculate tests/data/task5_demo.txt tests/data/task5_novalue.txt
+input: 2
+input: 3
+input: 4
+input: 10
+input: 8
+out: File: tests/data/task5_demo.txt
+out: 0: (a + b) * c
+out:    tree: ((a + b) * c)
+out:    postfix: a b + c *
+out:    value: 20
+out: 1:  a - b - c
+out:    tree: ((a - b) - c)
+out:    postfix: a b - c -
+out:    value: -5
+out: 2: 2 ^ 3 ^ 2
+out:    tree: (2 ^ (3 ^ 2))
+out:    postfix: 2 3 2 ^ ^
+out:    value: 512
+out: 3: (2 ^ 3) ^ 2
+out:    tree: ((2 ^ 3) ^ 2)
+out:    postfix: 2 3 ^ 2 ^
+out:    value: 64
+out: 4: -a^2 + --b
+out:    tree: ((-(a ^ 2)) + (-(-b)))
+out:    postfix: a 2 ^ neg b neg neg +
+out:    value: -1
+out: 5: 100 / 7 % 4
+out:    tree: ((100 / 7) % 4)
+out:    postfix: 100 7 / 4 %
+out:    value: 2
+out: 6: value1 * 2
+out:    tree: (value1 * 2)
+out:    postfix: value1 2 *
+out:    value: 20
+out: File: tests/data/task5_novalue.txt
+out: 0: a + 1
+out:    tree: (a + 1)
+out:    postfix: a 1 +
+out:    value: 3
+out: 1: b + 1
+out:    tree: (b + 1)
+out:    postfix: b 1 +
+out:    value: 4
+out: 2: c + a
+out:    tree: (c + a)
+out:    postfix: c a +
+out:    value: 6
+code: 0
+
+name: таблицы истинности: все операции, приоритеты, ошибки
+args: --table --seed 5 tests/data/t5tab/task5_formulas.txt
+out: Truth tables for tests/data/t5tab/task5_formulas.txt: tests/data/t5tab/O7jPGRvueg.txt
+code: 0
+file: tests/data/t5tab/O7jPGRvueg.txt
+fout: Formula 0: A & (B | ~C)
+fout: tree: (A & (B | (~C)))
+fout: A B C | result
+fout: 0 0 0 | 0
+fout: 0 0 1 | 0
+fout: 0 1 0 | 0
+fout: 0 1 1 | 0
+fout: 1 0 0 | 1
+fout: 1 0 1 | 0
+fout: 1 1 0 | 1
+fout: 1 1 1 | 1
+fout: 
+fout: Formula 1: A -> B -> C
+fout: tree: ((A -> B) -> C)
+fout: A B C | result
+fout: 0 0 0 | 0
+fout: 0 0 1 | 1
+fout: 0 1 0 | 0
+fout: 0 1 1 | 1
+fout: 1 0 0 | 1
+fout: 1 0 1 | 1
+fout: 1 1 0 | 0
+fout: 1 1 1 | 1
+fout: 
+fout: Formula 2: (A
+fout: error: unbalanced brackets
+fout: 
+fout: Formula 3: ~~A = 1
+fout: tree: ((~(~A)) = 1)
+fout: A | result
+fout: 0 | 0
+fout: 1 | 1
+fout: 
+fout: Formula 4: A ? B ! C +> D
+fout: tree: (((A ? B) ! C) +> D)
+fout: A B C D | result
+fout: 0 0 0 0 | 0
+fout: 0 0 0 1 | 0
+fout: 0 0 1 0 | 0
+fout: 0 0 1 1 | 0
+fout: 0 1 0 0 | 0
+fout: 0 1 0 1 | 0
+fout: 0 1 1 0 | 0
+fout: 0 1 1 1 | 0
+fout: 1 0 0 0 | 0
+fout: 1 0 0 1 | 0
+fout: 1 0 1 0 | 0
+fout: 1 0 1 1 | 0
+fout: 1 1 0 0 | 1
+fout: 1 1 0 1 | 0
+fout: 1 1 1 0 | 0
+fout: 1 1 1 1 | 0
+fout: 
+fout: Formula 5: A <> B = A | B
+fout: tree: (((A <> B) = A) | B)
+fout: A B | result
+fout: 0 0 | 1
+fout: 0 1 | 1
+fout: 1 0 | 1
+fout: 1 1 | 1
+fout: 
+fout: Formula 6: 0 | 1 & 0
+fout: tree: (0 | (1 & 0))
+fout: | result
+fout: | 0
+fout: 
+fout: Formula 7: a & A
+fout: tree: (a & A)
+fout: A a | result
+fout: 0 0 | 0
+fout: 0 1 | 0
+fout: 1 0 | 0
+fout: 1 1 | 1
+fout: 
+fout: Formula 8: A2
+fout: error: unknown symbol at position 2
+fout: 
+fout: Formula 9: ~
+fout: error: an operand is expected at position 2
+fout: 
+fout: Formula 10: A B
+fout: error: an operation is expected at position 3
+fout: 
+fout: Formula 11: x -> y
+fout: tree: (x -> y)
+fout: x y | result
+fout: 0 0 | 1
+fout: 0 1 | 1
+fout: 1 0 | 0
+fout: 1 1 | 1
+
+name: 17 переменных - ошибка (больше 16)
+args: --table --seed 5 tests/data/t5tab/task5_many.txt
+out: Truth tables for tests/data/t5tab/task5_many.txt: tests/data/t5tab/O7jPGRvueg.txt
+code: 0
+file: tests/data/t5tab/O7jPGRvueg.txt
+fout: Formula 0: A & B & C & D & E & F & G & H & I & J & K & L & M & N & O & P & Q
+fout: tree: ((((((((((((((((A & B) & C) & D) & E) & F) & G) & H) & I) & J) & K) & L) & M) & N) & O) & P) & Q)
+fout: error: too many variables (more than 16)
+
+name: нет аргументов
+err: Usage: lab4_task5 --calculate <file> [<file> ...]
+err:        lab4_task5 --table [--seed N] <file> [<file> ...]
+code: 1
+
+name: нет режима
+args: tests/data/task5_calc.txt
+err: Usage: lab4_task5 --calculate <file> [<file> ...]
+err:        lab4_task5 --table [--seed N] <file> [<file> ...]
+code: 1
+
+name: два режима
+args: --table --calculate tests/data/task5_calc.txt
+err: Usage: lab4_task5 --calculate <file> [<file> ...]
+err:        lab4_task5 --table [--seed N] <file> [<file> ...]
+code: 1
+
+name: --seed только для --table
+args: --calculate --seed 1 tests/data/task5_calc.txt
+err: Usage: lab4_task5 --calculate <file> [<file> ...]
+err:        lab4_task5 --table [--seed N] <file> [<file> ...]
+code: 1
+
+name: файла нет - сообщение, следующий файл обрабатывается
+args: --calculate tests/data/task5_none.txt tests/data/task5_crlf.txt
+out: File: tests/data/task5_crlf.txt
+out: 0: 1 + 2
+out:    tree: (1 + 2)
+out:    postfix: 1 2 +
+out:    value: 3
+out: 1: 3 * 4
+out:    tree: (3 * 4)
+out:    postfix: 3 4 *
+out:    value: 12
+err: Error: can not read or write files for 'tests/data/task5_none.txt'
+code: 1
