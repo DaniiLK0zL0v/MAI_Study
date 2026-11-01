@@ -1,0 +1,319 @@
+# Тесты задания 8 (планировщик). --fast: время идёт командой !step и после конца ввода.
+# Ожидаемый вывод - модель docs/src/эталоны/t8.py.
+
+program: lab4_task8
+
+name: демонстрация: вытеснение новым процессом и !edit, дочерний процесс, !exec 2
+args: --fast
+input: !np editor 1 5 3
+input: !np backup 2 1 2
+input: !step 1
+input: !np urgent 3 9 1
+input: !step 1
+input: !list
+input: !pp 1 helper 4 5 2
+input: !step 1
+input: !edit 2 20
+input: !step 2
+input: !all
+input: !exec 2
+input: !np a 5 1 2
+input: !np b 6 1 2
+out: [tick 0] process 1 (editor) added to the queue
+out: [tick 0] process 2 (backup) added to the queue
+out: [tick 1] process 1 (editor) started
+out: [tick 1] process 3 (urgent) added to the queue
+out: [tick 2] process 1 (editor) stopped (preempted)
+out: [tick 2] process 3 (urgent) started
+out: [tick 2] process 3 (urgent) finished
+out: pid 1 (editor): priority 5, time left 2 of 3, ready
+out: pid 2 (backup): priority 1, time left 2 of 2, ready
+out: [tick 2] process 4 (helper) added to the queue (child)
+out: [tick 3] process 1 (editor) started
+out: [tick 4] process 1 (editor) stopped (preempted)
+out: [tick 4] process 2 (backup) started
+out: [tick 5] process 2 (backup) finished
+out: pid 1 (editor): priority 5, time left 1 of 3, ready
+out: pid 2 (backup): priority 20, time left 0 of 2, finished
+out: pid 3 (urgent): priority 9, time left 0 of 1, finished
+out: pid 4 (helper): priority 5, time left 2 of 2, ready, parent 1
+out: [tick 5] process 5 (a) added to the queue
+out: [tick 5] process 6 (b) added to the queue
+out: [tick 6] process 1 (editor) started
+out: [tick 6] process 4 (helper) started
+out: [tick 6] process 1 (editor) has done its work and waits for its children
+out: [tick 7] process 5 (a) started
+out: [tick 7] process 4 (helper) finished
+out: [tick 7] process 1 (editor) finished
+out: [tick 8] process 6 (b) started
+out: [tick 8] process 5 (a) finished
+out: [tick 9] process 6 (b) finished
+code: 0
+
+name: равный приоритет - раньше добавленный
+args: --fast
+input: !np first 10 3 2
+input: !np second 5 3 2
+input: !np third 7 3 1
+input: !list
+out: [tick 0] process 10 (first) added to the queue
+out: [tick 0] process 5 (second) added to the queue
+out: [tick 0] process 7 (third) added to the queue
+out: pid 5 (second): priority 3, time left 2 of 2, ready
+out: pid 7 (third): priority 3, time left 1 of 1, ready
+out: pid 10 (first): priority 3, time left 2 of 2, ready
+out: [tick 1] process 10 (first) started
+out: [tick 2] process 10 (first) finished
+out: [tick 3] process 5 (second) started
+out: [tick 4] process 5 (second) finished
+out: [tick 5] process 7 (third) started
+out: [tick 5] process 7 (third) finished
+code: 0
+
+name: !wait: процесс пропускает такты, потом снова готов; ошибка для неисполняемого
+args: --fast
+input: !np worker 1 2 4
+input: !np idle 2 1 3
+input: !step 1
+input: !wait 1 2
+input: !list
+input: !step 1
+input: !list
+input: !wait 1 1
+input: !wait 2 1
+input: !step 3
+input: !all
+out: [tick 0] process 1 (worker) added to the queue
+out: [tick 0] process 2 (idle) added to the queue
+out: [tick 1] process 1 (worker) started
+out: [tick 1] process 1 (worker) stopped (waiting)
+out: pid 1 (worker): priority 2, time left 3 of 4, waiting until tick 4
+out: pid 2 (idle): priority 1, time left 3 of 3, ready
+out: [tick 2] process 2 (idle) started
+out: pid 1 (worker): priority 2, time left 3 of 4, waiting until tick 4
+out: pid 2 (idle): priority 1, time left 2 of 3, running
+out: [tick 2] process 2 (idle) stopped (waiting)
+out: [tick 4] process 1 (worker) has finished waiting
+out: [tick 4] process 2 (idle) has finished waiting
+out: [tick 4] process 1 (worker) started
+out: pid 1 (worker): priority 2, time left 1 of 4, running
+out: pid 2 (idle): priority 1, time left 2 of 3, ready
+out: [tick 6] process 1 (worker) finished
+out: [tick 7] process 2 (idle) started
+out: [tick 8] process 2 (idle) finished
+err: Error in command 8: the process is not running now
+code: 0
+
+name: родитель ждёт завершения всех дочерних (и внуков); дочерний к завершённому - ошибка
+args: --fast
+input: !np root 1 1 1
+input: !pp 1 kid 2 1 3
+input: !pp 2 grandkid 3 1 2
+input: !step 2
+input: !all
+input: !pp 1 late 4 9 1
+input: !step 10
+input: !pp 1 tooLate 5 1 1
+input: !all
+out: [tick 0] process 1 (root) added to the queue
+out: [tick 0] process 2 (kid) added to the queue (child)
+out: [tick 0] process 3 (grandkid) added to the queue (child)
+out: [tick 1] process 1 (root) started
+out: [tick 1] process 1 (root) has done its work and waits for its children
+out: [tick 2] process 2 (kid) started
+out: pid 1 (root): priority 1, time left 0 of 1, waiting for its children
+out: pid 2 (kid): priority 1, time left 2 of 3, running, parent 1
+out: pid 3 (grandkid): priority 1, time left 2 of 2, ready, parent 2
+out: [tick 2] process 4 (late) added to the queue (child)
+out: [tick 3] process 2 (kid) stopped (preempted)
+out: [tick 3] process 4 (late) started
+out: [tick 3] process 4 (late) finished
+out: [tick 4] process 2 (kid) started
+out: [tick 5] process 2 (kid) has done its work and waits for its children
+out: [tick 6] process 3 (grandkid) started
+out: [tick 7] process 3 (grandkid) finished
+out: [tick 7] process 2 (kid) finished
+out: [tick 7] process 1 (root) finished
+out: pid 1 (root): priority 1, time left 0 of 1, finished
+out: pid 2 (kid): priority 1, time left 0 of 3, finished, parent 1
+out: pid 3 (grandkid): priority 1, time left 0 of 2, finished, parent 2
+out: pid 4 (late): priority 9, time left 0 of 1, finished, parent 1
+err: Error in command 8: the parent process has already finished
+code: 0
+
+name: !exec: сколько процессов исполняется одновременно
+args: --fast
+input: !exec 3
+input: !np a 1 1 2
+input: !np b 2 2 2
+input: !np c 3 3 2
+input: !np d 4 4 2
+input: !step 1
+input: !exec 1
+input: !step 1
+input: !list
+out: [tick 0] process 1 (a) added to the queue
+out: [tick 0] process 2 (b) added to the queue
+out: [tick 0] process 3 (c) added to the queue
+out: [tick 0] process 4 (d) added to the queue
+out: [tick 1] process 2 (b) started
+out: [tick 1] process 3 (c) started
+out: [tick 1] process 4 (d) started
+out: [tick 2] process 2 (b) stopped (preempted)
+out: [tick 2] process 3 (c) stopped (preempted)
+out: [tick 2] process 4 (d) finished
+out: pid 1 (a): priority 1, time left 2 of 2, ready
+out: pid 2 (b): priority 2, time left 1 of 2, ready
+out: pid 3 (c): priority 3, time left 1 of 2, ready
+out: [tick 3] process 3 (c) started
+out: [tick 3] process 3 (c) finished
+out: [tick 4] process 2 (b) started
+out: [tick 4] process 2 (b) finished
+out: [tick 5] process 1 (a) started
+out: [tick 6] process 1 (a) finished
+code: 0
+
+name: !edit: больший приоритет вытесняет, меньший - уступает
+args: --fast
+input: !np low 1 1 3
+input: !np high 2 5 3
+input: !step 1
+input: !edit 1 9
+input: !step 1
+input: !edit 1 -5
+input: !step 1
+input: !list
+out: [tick 0] process 1 (low) added to the queue
+out: [tick 0] process 2 (high) added to the queue
+out: [tick 1] process 2 (high) started
+out: [tick 2] process 2 (high) stopped (preempted)
+out: [tick 2] process 1 (low) started
+out: [tick 3] process 1 (low) stopped (preempted)
+out: [tick 3] process 2 (high) started
+out: pid 1 (low): priority -5, time left 2 of 3, ready
+out: pid 2 (high): priority 5, time left 1 of 3, running
+out: [tick 4] process 2 (high) finished
+out: [tick 5] process 1 (low) started
+out: [tick 6] process 1 (low) finished
+code: 0
+
+name: имена в боре: одинаковые, префиксы, регистр
+args: --fast
+input: !np same 1 1 1
+input: !np same 2 1 1
+input: !np sam 3 1 1
+input: !np samey 4 1 1
+input: !np Same 5 1 1
+input: !all
+out: [tick 0] process 1 (same) added to the queue
+out: [tick 0] process 2 (same) added to the queue
+out: [tick 0] process 3 (sam) added to the queue
+out: [tick 0] process 4 (samey) added to the queue
+out: [tick 0] process 5 (Same) added to the queue
+out: pid 1 (same): priority 1, time left 1 of 1, ready
+out: pid 2 (same): priority 1, time left 1 of 1, ready
+out: pid 3 (sam): priority 1, time left 1 of 1, ready
+out: pid 4 (samey): priority 1, time left 1 of 1, ready
+out: pid 5 (Same): priority 1, time left 1 of 1, ready
+out: [tick 1] process 1 (same) started
+out: [tick 1] process 1 (same) finished
+out: [tick 2] process 2 (same) started
+out: [tick 2] process 2 (same) finished
+out: [tick 3] process 3 (sam) started
+out: [tick 3] process 3 (sam) finished
+out: [tick 4] process 4 (samey) started
+out: [tick 4] process 4 (samey) finished
+out: [tick 5] process 5 (Same) started
+out: [tick 5] process 5 (Same) finished
+code: 0
+
+name: ошибки команд - сообщение, работа продолжается
+args: --fast
+input: !np
+input: !np a b 1 1
+input: !np a 1 1 0
+input: !np a 1 1 2
+input: !np a 1 1 2
+input: !pp 9 kid 2 1 1
+input: !wait 1 1
+input: !wait 9 1
+input: !wait 1 0
+input: !exec 0
+input: !edit 9 1
+input: !step -1
+input: np x 2 1 1
+input: !list extra
+input:    
+input: !step 1
+input: !wait 1 x
+out: [tick 0] process 1 (a) added to the queue
+out: [tick 1] process 1 (a) started
+out: [tick 2] process 1 (a) finished
+err: Error in command 1: wrong command
+err: Error in command 2: wrong command
+err: Error in command 3: wrong command
+err: Error in command 5: a process with this pid already exists
+err: Error in command 6: there is no process with this pid
+err: Error in command 7: the process is not running now
+err: Error in command 8: there is no process with this pid
+err: Error in command 9: wrong command
+err: Error in command 10: wrong command
+err: Error in command 11: there is no process with this pid
+err: Error in command 12: wrong command
+err: Error in command 13: wrong command
+err: Error in command 14: wrong command
+err: Error in command 17: wrong command
+code: 0
+
+name: пустой ввод
+args: --fast
+code: 0
+
+name: команды из файла (--input), события в файл (--output); списки - на экран
+args: --input tests/data/task8_demo.txt --output tests/data/res8.txt --fast
+out: pid 1 (editor): priority 5, time left 2 of 3, ready
+out: pid 2 (backup): priority 1, time left 2 of 2, ready
+out: pid 1 (editor): priority 5, time left 1 of 3, ready
+out: pid 2 (backup): priority 20, time left 0 of 2, finished
+out: pid 3 (urgent): priority 9, time left 0 of 1, finished
+out: pid 4 (helper): priority 5, time left 2 of 2, ready, parent 1
+code: 0
+file: tests/data/res8.txt
+fout: [tick 0] process 1 (editor) added to the queue
+fout: [tick 0] process 2 (backup) added to the queue
+fout: [tick 1] process 1 (editor) started
+fout: [tick 1] process 3 (urgent) added to the queue
+fout: [tick 2] process 1 (editor) stopped (preempted)
+fout: [tick 2] process 3 (urgent) started
+fout: [tick 2] process 3 (urgent) finished
+fout: [tick 2] process 4 (helper) added to the queue (child)
+fout: [tick 3] process 1 (editor) started
+fout: [tick 4] process 1 (editor) stopped (preempted)
+fout: [tick 4] process 2 (backup) started
+fout: [tick 5] process 2 (backup) finished
+fout: [tick 5] process 5 (a) added to the queue
+fout: [tick 5] process 6 (b) added to the queue
+fout: [tick 6] process 1 (editor) started
+fout: [tick 6] process 4 (helper) started
+fout: [tick 6] process 1 (editor) has done its work and waits for its children
+fout: [tick 7] process 5 (a) started
+fout: [tick 7] process 4 (helper) finished
+fout: [tick 7] process 1 (editor) finished
+fout: [tick 8] process 6 (b) started
+fout: [tick 8] process 5 (a) finished
+fout: [tick 9] process 6 (b) finished
+
+name: неизвестный аргумент
+args: --slow
+err: Usage: lab4_task8 [--input <file>] [--output <file>] [--fast]
+code: 1
+
+name: --input без файла
+args: --input
+err: Usage: lab4_task8 [--input <file>] [--output <file>] [--fast]
+code: 1
+
+name: файла команд нет
+args: --input tests/data/task8_none.txt --fast
+err: Error: can not read file 'tests/data/task8_none.txt'
+code: 1

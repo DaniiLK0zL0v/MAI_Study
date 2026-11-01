@@ -1,0 +1,14 @@
+!np editor 1 5 3
+!np backup 2 1 2
+!step 1
+!np urgent 3 9 1
+!step 1
+!list
+!pp 1 helper 4 5 2
+!step 1
+!edit 2 20
+!step 2
+!all
+!exec 2
+!np a 5 1 2
+!np b 6 1 2
