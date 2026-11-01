@@ -1,0 +1,6 @@
+Cmps(x^3+x, x, y+1);
+Cmps(x*y+x^2, x, 2*z-1);
+Cmps(x^2, y, 5);
+Cmps(a^2*b, a, 0);
+Cmps(x^2+1, x, x^2+1);
+Cmps(x, x^2);

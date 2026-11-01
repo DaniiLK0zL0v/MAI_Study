@@ -1,0 +1,4 @@
+Add ( X ^ 2 + y
+ , x ^2 ) ;
+  Mult(  2 , XY_x ) ;
+Add(ABC12, abc12);

@@ -1,0 +1,12 @@
+Eval(x^2+y^2, {x:3, y:4});
+Eval(1.5*a^3-2*b, {a:-0.5, b:0.25, c:100});
+Eval(7, {});
+Eval(x-x+y, {y:1e3});
+Eval(x^2, {x:1e200});
+Eval(x, {x:1, x:2});
+Eval(x*y, {x:1});
+Eval(x, {X:2.5});
+Eval(0.1+0.2-0.3, {});
+Grad(x^2*y+y^3, {x:-1, y:0.5});
+Grad(5, {});
+Grad(x*y, {x:2});

@@ -1,0 +1,18 @@
+Add(x, x);
+Sub(x, x);
+Add(0, 0);
+Mult(0, x^5+y);
+Mult(-x, -x);
+Sub(1, -1);
+Add(x^3+x^2*y+x*y^2+y^3+z, x^2+y^2+x*y);
+Mult(x+y+z, x+y+z);
+Mult(x+y+z);
+Mult(x_y_z, x^2+1);
+PartDeriv(x^3*y^2+y, y);
+PartDeriv(5, x);
+PartDeriv(x^2+y, z);
+PartInteg(3*x^2, x);
+PartInteg(7, q);
+PartInteg(x^2*y^3, y);
+Add(1+2-0.5_x, 2-x);
+Add(2x_3+x, 0.5y-1.5);

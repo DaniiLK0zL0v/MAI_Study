@@ -1,0 +1,181 @@
+# Тесты задания 3 (многочлены от нескольких переменных). Ожидаемый вывод - эталон
+# docs/src/эталоны/t3.py (повторяет программу шаг в шаг, числа совпадают до цифры).
+
+program: lab4_task3
+
+name: пример из условия: комментарии внутри инструкций, сумматор вместо первого параметра
+args: tests/data/task3_example.txt
+out: Add: x^2*y^3 + x*y^2 + 4*x^2 + y^2 + 1
+out: Mult: 12*x^4*y^5 + 8*x^3*y^5 + 4*x^2*y^6 - 16*x^3*y^4 + 12*x^2*xy*y^2 + 20*x^2*y^3 + 3*x^2*y^2 + 8*x*xy*y^2 + 4*xy*y^3 - 16*x*xy*y + 2*x*y^2 + y^3 - 4*x*y + 20*xy + 5
+out: Mult: x^5 + 3*x^4 + x^3 + 6*x^2 - 2*x
+out: Add: x^5 + 3*x^4 + x^3 + 4.8*x*y^2 + 6*x^2 - 2*x - 8*z
+out: Eval: -18.86235793
+code: 0
+
+name: одночлен из условия (повторы имён, отрицательная степень внутри), регистр имён
+args: tests/data/task3_monomial.txt
+out: Add: 10.7394*x^2*x1^2*y12^3*y333^4*z
+out: Add: 2*x^2*y
+out: Sub: 0
+err: Error in instruction 4 (line 5): syntax error
+code: 1
+
+name: демонстрация всех инструкций (файл для показа на защите)
+args: tests/data/task3_demo.txt
+out: Add: x^2 + 2*x*y + y^2 - 1
+out: Mult: x^3 + x^2*y - x*y^2 - y^3 - x + y
+out: Sub: x^3 - 1
+out: PartDeriv: 3*x^2
+out: PartInteg: 3*x^2*y
+out: Grad: (d/dx = 12, d/dy = 3)
+out: Cmps: x^2 + 2*x + y + 1
+out: Cmps: x^2 + z^2 + 2*x + 1
+out: Eval: 18
+out: Add: 19
+out: PartInteg: 19*t
+code: 0
+
+name: сложение, вычитание, умножение, производная и первообразная; нулевые результаты
+args: tests/data/task3_ops.txt
+out: Add: 2*x
+out: Sub: 0
+out: Add: 0
+out: Mult: 0
+out: Mult: x^2
+out: Sub: 2
+out: Add: x^3 + x^2*y + x*y^2 + y^3 + x^2 + x*y + y^2 + z
+out: Mult: x^2 + 2*x*y + 2*x*z + y^2 + 2*y*z + z^2
+out: Mult: x^3 + 3*x^2*y + 3*x^2*z + 3*x*y^2 + 6*x*y*z + 3*x*z^2 + y^3 + 3*y^2*z + 3*y*z^2 + z^3
+out: Mult: x^3*y*z + x*y*z
+out: PartDeriv: 2*x^3*y + 1
+out: PartDeriv: 0
+out: PartDeriv: 0
+out: PartInteg: x^3
+out: PartInteg: 7*q
+out: PartInteg: 0.25*x^2*y^4
+out: Add: -1.5*x + 5
+out: Add: 7*x + 0.5*y - 1.5
+code: 0
+
+name: композиция: подстановка многочлена, числа, нуля; Cmps без первого параметра
+args: tests/data/task3_compose.txt
+out: Cmps: y^3 + 3*y^2 + 4*y + 2
+out: Cmps: 2*y*z + 4*z^2 - y - 4*z + 1
+out: Cmps: x^2
+out: Cmps: 0
+out: Cmps: x^4 + 2*x^2 + 2
+out: Cmps: x^8 + 2*x^4 + 2
+code: 0
+
+name: значение и градиент в точке: лишние переменные, пустая точка, ошибки точки
+args: tests/data/task3_eval.txt
+out: Eval: 25
+out: Eval: -0.6875
+out: Eval: 7
+out: Eval: 1000
+out: Eval: 2.5
+out: Eval: 0
+out: Grad: (d/dx = -1, d/dy = 1.75)
+out: Grad: ()
+err: Error in instruction 5 (line 5): the number is too big
+err: Error in instruction 6 (line 6): a variable is given twice in the point
+err: Error in instruction 7 (line 7): no value for the variable y
+err: Error in instruction 12 (line 12): no value for the variable y
+code: 1
+
+name: пробелы и переносы строк внутри инструкции, регистр имён переменных
+args: tests/data/task3_case_spaces.txt
+out: Add: 2*x^2 + y
+out: Mult: 2*x*xy
+out: Add: 2*abc12
+code: 0
+
+name: ошибки записи и выполнения - сообщение, сумматор не меняется
+args: tests/data/task3_errors.txt
+out: Add: x2 + 1
+out: PartDeriv: 0
+err: Error in instruction 1 (line 1): unknown instruction
+err: Error in instruction 2 (line 2): unknown instruction
+err: Error in instruction 3 (line 3): wrong number of parameters
+err: Error in instruction 4 (line 4): wrong number of parameters
+err: Error in instruction 5 (line 5): syntax error
+err: Error in instruction 6 (line 6): syntax error
+err: Error in instruction 7 (line 7): the degree of a variable is negative
+err: Error in instruction 8 (line 8): the degree is too big (more than 10000)
+err: Error in instruction 9 (line 9): the degree is too big (more than 10000)
+err: Error in instruction 10 (line 10): syntax error
+err: Error in instruction 12 (line 12): syntax error
+err: Error in instruction 13 (line 13): syntax error
+err: Error in instruction 14 (line 14): syntax error
+err: Error in instruction 15 (line 15): syntax error
+err: Error in instruction 16 (line 16): syntax error
+err: Error in instruction 18 (line 18): syntax error
+err: Error in instruction 19 (line 19): the degree is too big (more than 10000)
+err: Error in instruction 20 (line 20): syntax error
+code: 1
+
+name: комментарии % и [ ] (вложенные), пустые строки
+args: tests/data/task3_comments.txt
+out: Add: 3
+out: Add: x + 3
+code: 0
+
+name: ошибка: [ без ]
+args: tests/data/task3_bad_comment_open.txt
+err: Error: wrong brackets of a comment in line 2
+code: 1
+
+name: ошибка: ] без [
+args: tests/data/task3_bad_comment_close.txt
+err: Error: wrong brackets of a comment in line 2
+code: 1
+
+name: пустой файл
+args: tests/data/task3_empty.txt
+code: 0
+
+name: eps = 0.5 (коэффициенты меньше 0.5 по модулю - нули)
+args: tests/data/task3_ops.txt 0.5
+out: Add: 2*x
+out: Sub: 0
+out: Add: 0
+out: Mult: 0
+out: Mult: x^2
+out: Sub: 2
+out: Add: x^3 + x^2*y + x*y^2 + y^3 + x^2 + x*y + y^2 + z
+out: Mult: x^2 + 2*x*y + 2*x*z + y^2 + 2*y*z + z^2
+out: Mult: x^3 + 3*x^2*y + 3*x^2*z + 3*x*y^2 + 6*x*y*z + 3*x*z^2 + y^3 + 3*y^2*z + 3*y*z^2 + z^3
+out: Mult: x^3*y*z + x*y*z
+out: PartDeriv: 2*x^3*y + 1
+out: PartDeriv: 0
+out: PartDeriv: 0
+out: PartInteg: x^3
+out: PartInteg: 7*q
+out: PartInteg: 0
+out: Add: -1.5*x + 5
+out: Add: 7*x + 0.5*y - 1.5
+code: 0
+
+name: нет аргументов
+err: Usage: lab4_task3 <instructions file> [eps]
+code: 1
+
+name: лишний аргумент
+args: tests/data/task3_demo.txt 0.1 x
+err: Usage: lab4_task3 <instructions file> [eps]
+code: 1
+
+name: eps не число
+args: tests/data/task3_demo.txt 1e-9x
+err: Error: eps must be a number between 0 and 1
+code: 1
+
+name: eps <= 0
+args: tests/data/task3_demo.txt 0
+err: Error: eps must be a number between 0 and 1
+code: 1
+
+name: файла нет
+args: tests/data/task3_none.txt
+err: Error: can not read file 'tests/data/task3_none.txt'
+code: 1

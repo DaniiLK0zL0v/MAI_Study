@@ -1,0 +1,20 @@
+add(x, y);
+Foo(x);
+Add(x, y, z);
+Add();
+Add(x+, y);
+Add(x^, 1);
+Add(x^-2, 1);
+Add(x^10001, 1);
+Add(x^5000_x^5001, 1);
+Add(2x, 3.4.5);
+Add(1x2, 1);
+Add(x, {y:1});
+Eval({x:});
+Eval({1x:2});
+Eval({x:1,});
+PartDeriv(x, 1y);
+PartDeriv(x, y z);
+Cmps(x, 1, y);
+Mult(x^6000, x^5000);
+Add(x)
