@@ -1,0 +1,5 @@
+x=1;
+X=2;
+print x;
+print X;
+print;

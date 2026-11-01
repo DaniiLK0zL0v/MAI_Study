@@ -1,0 +1,414 @@
+# Тесты задания 7 (MemoryCell). Ожидаемый вывод - эталон docs/src/эталоны/t7.py.
+
+program: lab4_task7
+
+name: пример из условия
+args: tests/data/task7_example.txt
+out: 36
+out: bg = 1296
+out: ccc = 36
+out: myvar = 36
+code: 0
+
+name: демонстрация: все операции, отрицательные числа, порядок по имени
+args: tests/data/task7_demo.txt
+out: a = 10
+out: b = 3
+out: diff = 7
+out: prod = 30
+out: quot = 3
+out: rem = 1
+out: sum = 13
+out: -3
+out: -1
+out: A = 1
+out: Z = 2
+out: a = 10
+out: b = 3
+out: diff = 7
+out: neg = -7
+out: prod = 30
+out: q = -3
+out: quot = 3
+out: r = -1
+out: rem = 1
+out: sum = 13
+out: z = 3
+code: 0
+
+name: прописные и строчные буквы различаются
+args: tests/data/task7_case.txt
+out: 1
+out: 2
+out: X = 2
+out: x = 1
+code: 0
+
+name: пробелы, пустые строки; переменная print
+args: tests/data/task7_spaces.txt
+out: -36
+out: 5
+code: 0
+
+name: 300 переменных - массив растёт, всегда упорядочен (qsort), поиск дихотомией
+args: tests/data/task7_many.txt
+out: vaaa = 0
+out: vaba = 26
+out: vaca = 52
+out: vada = 78
+out: vaea = 104
+out: vafa = 130
+out: vaga = 156
+out: vaha = 182
+out: vaia = 208
+out: vaja = 234
+out: vaka = 260
+out: vala = 286
+out: vbaa = 1
+out: vbba = 27
+out: vbca = 53
+out: vbda = 79
+out: vbea = 105
+out: vbfa = 131
+out: vbga = 157
+out: vbha = 183
+out: vbia = 209
+out: vbja = 235
+out: vbka = 261
+out: vbla = 287
+out: vcaa = 2
+out: vcba = 28
+out: vcca = 54
+out: vcda = 80
+out: vcea = 106
+out: vcfa = 132
+out: vcga = 158
+out: vcha = 184
+out: vcia = 210
+out: vcja = 236
+out: vcka = 262
+out: vcla = 288
+out: vdaa = 3
+out: vdba = 29
+out: vdca = 55
+out: vdda = 81
+out: vdea = 107
+out: vdfa = 133
+out: vdga = 159
+out: vdha = 185
+out: vdia = 211
+out: vdja = 237
+out: vdka = 263
+out: vdla = 289
+out: veaa = 4
+out: veba = 30
+out: veca = 56
+out: veda = 82
+out: veea = 108
+out: vefa = 134
+out: vega = 160
+out: veha = 186
+out: veia = 212
+out: veja = 238
+out: veka = 264
+out: vela = 290
+out: vfaa = 5
+out: vfba = 31
+out: vfca = 57
+out: vfda = 83
+out: vfea = 109
+out: vffa = 135
+out: vfga = 161
+out: vfha = 187
+out: vfia = 213
+out: vfja = 239
+out: vfka = 265
+out: vfla = 291
+out: vgaa = 6
+out: vgba = 32
+out: vgca = 58
+out: vgda = 84
+out: vgea = 110
+out: vgfa = 136
+out: vgga = 162
+out: vgha = 188
+out: vgia = 214
+out: vgja = 240
+out: vgka = 266
+out: vgla = 292
+out: vhaa = 7
+out: vhba = 33
+out: vhca = 59
+out: vhda = 85
+out: vhea = 111
+out: vhfa = 137
+out: vhga = 163
+out: vhha = 189
+out: vhia = 215
+out: vhja = 241
+out: vhka = 267
+out: vhla = 293
+out: viaa = 8
+out: viba = 34
+out: vica = 60
+out: vida = 86
+out: viea = 112
+out: vifa = 138
+out: viga = 164
+out: viha = 190
+out: viia = 216
+out: vija = 242
+out: vika = 268
+out: vila = 294
+out: vjaa = 9
+out: vjba = 35
+out: vjca = 61
+out: vjda = 87
+out: vjea = 113
+out: vjfa = 139
+out: vjga = 165
+out: vjha = 191
+out: vjia = 217
+out: vjja = 243
+out: vjka = 269
+out: vjla = 295
+out: vkaa = 10
+out: vkba = 36
+out: vkca = 62
+out: vkda = 88
+out: vkea = 114
+out: vkfa = 140
+out: vkga = 166
+out: vkha = 192
+out: vkia = 218
+out: vkja = 244
+out: vkka = 270
+out: vkla = 296
+out: vlaa = 11
+out: vlba = 37
+out: vlca = 63
+out: vlda = 89
+out: vlea = 115
+out: vlfa = 141
+out: vlga = 167
+out: vlha = 193
+out: vlia = 219
+out: vlja = 245
+out: vlka = 271
+out: vlla = 297
+out: vmaa = 12
+out: vmba = 38
+out: vmca = 64
+out: vmda = 90
+out: vmea = 116
+out: vmfa = 142
+out: vmga = 168
+out: vmha = 194
+out: vmia = 220
+out: vmja = 246
+out: vmka = 272
+out: vmla = 298
+out: vnaa = 13
+out: vnba = 39
+out: vnca = 65
+out: vnda = 91
+out: vnea = 117
+out: vnfa = 143
+out: vnga = 169
+out: vnha = 195
+out: vnia = 221
+out: vnja = 247
+out: vnka = 273
+out: vnla = 299
+out: voaa = 14
+out: voba = 40
+out: voca = 66
+out: voda = 92
+out: voea = 118
+out: vofa = 144
+out: voga = 170
+out: voha = 196
+out: voia = 222
+out: voja = 248
+out: voka = 274
+out: vpaa = 15
+out: vpba = 41
+out: vpca = 67
+out: vpda = 93
+out: vpea = 119
+out: vpfa = 145
+out: vpga = 171
+out: vpha = 197
+out: vpia = 223
+out: vpja = 249
+out: vpka = 275
+out: vqaa = 16
+out: vqba = 42
+out: vqca = 68
+out: vqda = 94
+out: vqea = 120
+out: vqfa = 146
+out: vqga = 172
+out: vqha = 198
+out: vqia = 224
+out: vqja = 250
+out: vqka = 276
+out: vraa = 17
+out: vrba = 43
+out: vrca = 69
+out: vrda = 95
+out: vrea = 121
+out: vrfa = 147
+out: vrga = 173
+out: vrha = 199
+out: vria = 225
+out: vrja = 251
+out: vrka = 277
+out: vsaa = 18
+out: vsba = 44
+out: vsca = 70
+out: vsda = 96
+out: vsea = 122
+out: vsfa = 148
+out: vsga = 174
+out: vsha = 200
+out: vsia = 226
+out: vsja = 252
+out: vska = 278
+out: vtaa = 19
+out: vtba = 45
+out: vtca = 71
+out: vtda = 97
+out: vtea = 123
+out: vtfa = 149
+out: vtga = 175
+out: vtha = 201
+out: vtia = 227
+out: vtja = 253
+out: vtka = 279
+out: vuaa = 20
+out: vuba = 46
+out: vuca = 72
+out: vuda = 98
+out: vuea = 124
+out: vufa = 150
+out: vuga = 176
+out: vuha = 202
+out: vuia = 228
+out: vuja = 254
+out: vuka = 280
+out: vvaa = 21
+out: vvba = 47
+out: vvca = 73
+out: vvda = 99
+out: vvea = 125
+out: vvfa = 151
+out: vvga = 177
+out: vvha = 203
+out: vvia = 229
+out: vvja = 255
+out: vvka = 281
+out: vwaa = 22
+out: vwba = 48
+out: vwca = 74
+out: vwda = 100
+out: vwea = 126
+out: vwfa = 152
+out: vwga = 178
+out: vwha = 204
+out: vwia = 230
+out: vwja = 256
+out: vwka = 282
+out: vxaa = 23
+out: vxba = 49
+out: vxca = 75
+out: vxda = 101
+out: vxea = 127
+out: vxfa = 153
+out: vxga = 179
+out: vxha = 205
+out: vxia = 231
+out: vxja = 257
+out: vxka = 283
+out: vyaa = 24
+out: vyba = 50
+out: vyca = 76
+out: vyda = 102
+out: vyea = 128
+out: vyfa = 154
+out: vyga = 180
+out: vyha = 206
+out: vyia = 232
+out: vyja = 258
+out: vyka = 284
+out: vzaa = 25
+out: vzba = 51
+out: vzca = 77
+out: vzda = 103
+out: vzea = 129
+out: vzfa = 155
+out: vzga = 181
+out: vzha = 207
+out: vzia = 233
+out: vzja = 259
+out: vzka = 285
+code: 0
+
+name: необъявленная переменная в выражении - сообщение и остановка
+args: tests/data/task7_undeclared.txt
+out: Error in instruction 2: the variable is not declared: c
+code: 1
+
+name: print необъявленной переменной - остановка
+args: tests/data/task7_undeclared_print.txt
+out: Error in instruction 2: the variable is not declared: b
+code: 1
+
+name: деление на 0 - остановка
+args: tests/data/task7_division.txt
+out: Error in instruction 3: division by zero
+code: 1
+
+name: переполнение - остановка
+args: tests/data/task7_overflow.txt
+out: Error in instruction 2: the number does not fit in long long
+code: 1
+
+name: LLONG_MIN % -1 = 0, LLONG_MIN / -1 - переполнение
+args: tests/data/task7_limits.txt
+out: 0
+out: Error in instruction 4: the number does not fit in long long
+code: 1
+
+name: число больше long long
+args: tests/data/task7_big_number.txt
+out: Error in instruction 1: the number does not fit in long long
+code: 1
+
+name: ошибка записи
+args: tests/data/task7_syntax.txt
+out: Error in instruction 2: wrong instruction
+code: 1
+
+name: две операции в инструкции - ошибка
+args: tests/data/task7_two_ops.txt
+out: Error in instruction 2: wrong instruction
+code: 1
+
+name: последняя инструкция без ;
+args: tests/data/task7_no_semicolon.txt
+out: Error in instruction 2: wrong instruction
+code: 1
+
+name: пустой файл
+args: tests/data/task7_empty.txt
+code: 0
+
+name: нет аргументов
+err: Usage: lab4_task7 <instructions file>
+code: 1
+
+name: файла нет
+args: tests/data/task7_none.txt
+err: Error: can not read file 'tests/data/task7_none.txt'
+code: 1

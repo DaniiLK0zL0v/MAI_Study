@@ -1,0 +1,5 @@
+a=10; b=3;
+sum=a+b; diff=a-b; prod=a*b; quot=a/b; rem=a%b;
+print;
+neg=-7; q=neg/2; r=neg%2; print q; print r;
+A=1; Z=2; z=3; print;
