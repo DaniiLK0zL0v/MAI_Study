@@ -133,9 +133,9 @@ out:    postfix: value1 2 *
 out:    value: 20
 code: 0
 
-name: ошибки записи и вычисления - в файл task5_errors_errors.txt
-args: --calculate tests/data/task5_errors.txt
-out: File: tests/data/task5_errors.txt
+name: ошибки записи и вычисления - в файл task5_bad_errors.txt
+args: --calculate tests/data/task5_bad.txt
+out: File: tests/data/task5_bad.txt
 out: 0: ()
 out:    error: an operand is expected at position 2
 out: 1: 2 +
@@ -168,9 +168,9 @@ out: 11: 12 % 0
 out:    tree: (12 % 0)
 out:    postfix: 12 0 %
 out:    error: division by zero
-out: Errors are written to tests/data/task5_errors_errors.txt
+out: Errors are written to tests/data/task5_bad_errors.txt
 code: 0
-file: tests/data/task5_errors_errors.txt
+file: tests/data/task5_bad_errors.txt
 fout: expression: ()
 fout: index: 0
 fout: reason: an operand is expected at position 2
