@@ -1,0 +1,10 @@
+2026-12-31T23:58:00 1 1 "on time"
+2026-12-31T23:58:01 3 1 "one second later"
+   2026-12-31T23:59:59  2   1   "with spaces"   
+
+2027-01-01T00:04:00 0 1 "will not finish"
+2027-01-01T00:05:00 0 1 "at the very end"
+2027-01-01T00:05:01 1 1 "after the end"
+2028-02-29T10:00 1 1 "leap day"
+2027-01-01T00:00:30 4 1 "quotes "inside" the text"
+2027-01-01T00:01:00 4 1 ""

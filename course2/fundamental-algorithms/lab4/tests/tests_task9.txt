@@ -1,0 +1,2139 @@
+# Тесты задания 9: 9.1 (lab4_task9), 9.2 (lab4_task9_config), 9.3 (lab4_task9_generate).
+# Ожидаемый вывод - эталон docs/src/эталоны/t9.py (модель на Python).
+
+program: lab4_task9
+
+name: демонстрация: два файла заявок от генератора 9.3, журнал в файл (--log)
+args: 5 tests/data/task9_demo_config.txt tests/data/task9_demo_requests1.txt tests/data/task9_demo_requests2.txt --seed 3 --log tests/data/res9_demo.log
+code: 0
+file: tests/data/res9_demo.log
+fout: [2026-11-02T09:00:00] [MODELING_STARTED]: departments: 3; requests are kept in BinomialHeap, departments in Trie
+fout: [2026-11-02T09:00:00] [NEW_REQUEST]: request 1 to department 2
+fout: [2026-11-02T09:00:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator upEETPn (department 2)
+fout: [2026-11-02T09:00:00] [NEW_REQUEST]: request 2 to department 1
+fout: [2026-11-02T09:00:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator kBbTnFbs (department 1)
+fout: [2026-11-02T09:00:00] [NEW_REQUEST]: request 3 to department 1
+fout: [2026-11-02T09:00:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator ICrUn (department 1)
+fout: [2026-11-02T09:00:00] [NEW_REQUEST]: request 4 to department 1
+fout: [2026-11-02T09:00:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator OxuLrRQ (department 1)
+fout: [2026-11-02T09:00:00] [NEW_REQUEST]: request 5 to department 3
+fout: [2026-11-02T09:00:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator zZFsL (department 3)
+fout: [2026-11-02T09:00:00] [NEW_REQUEST]: request 6 to department 1
+fout: [2026-11-02T09:00:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator XsVK (department 1)
+fout: [2026-11-02T09:01:00] [NEW_REQUEST]: request 7 to department 1
+fout: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator bPpyT (department 1)
+fout: [2026-11-02T09:01:00] [NEW_REQUEST]: request 8 to department 1
+fout: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator ZQaTH (department 1)
+fout: [2026-11-02T09:01:00] [NEW_REQUEST]: request 9 to department 2
+fout: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator aVSZv (department 2)
+fout: [2026-11-02T09:01:00] [NEW_REQUEST]: request 10 to department 2
+fout: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator vePEa (department 2)
+fout: [2026-11-02T09:01:00] [NEW_REQUEST]: request 11 to department 2
+fout: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator KAFTAKSR (department 2)
+fout: [2026-11-02T09:01:00] [NEW_REQUEST]: request 12 to department 2
+fout: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator LpQvyE (department 2)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 13 to department 2
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator rfBhtbR (department 2)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 14 to department 3
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator pRBLiE (department 3)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 15 to department 3
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator EadULqd (department 3)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 16 to department 2
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator JmFfeTsd (department 2)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 17 to department 1
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator fczwO (department 1)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 18 to department 2
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator MbRB (department 2)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 19 to department 3
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator hLBbvVlq (department 3)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 20 to department 2
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator cbLbzokB (department 2)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 21 to department 3
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator nWgyE (department 3)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 22 to department 1
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator xClwZvUb (department 1)
+fout: [2026-11-02T09:02:00] [NEW_REQUEST]: request 23 to department 1
+fout: [2026-11-02T09:02:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator pvGO (department 1)
+fout: [2026-11-02T09:03:00] [NEW_REQUEST]: request 24 to department 3
+fout: [2026-11-02T09:03:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator UGFBmkV (department 3)
+fout: [2026-11-02T09:03:00] [NEW_REQUEST]: request 25 to department 2
+fout: [2026-11-02T09:03:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator UqXGwt (department 2)
+fout: [2026-11-02T09:03:00] [NEW_REQUEST]: request 26 to department 2
+fout: [2026-11-02T09:03:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator SmtRUz (department 2)
+fout: [2026-11-02T09:03:00] [NEW_REQUEST]: request 27 to department 2
+fout: [2026-11-02T09:03:00] [REQUEST_HANDLING_STARTED]: request 27 taken by operator RyPHFG (department 2)
+fout: [2026-11-02T09:04:00] [NEW_REQUEST]: request 28 to department 3
+fout: [2026-11-02T09:04:00] [REQUEST_HANDLING_STARTED]: request 28 taken by operator aJcmBykL (department 3)
+fout: [2026-11-02T09:04:00] [NEW_REQUEST]: request 29 to department 1
+fout: [2026-11-02T09:04:00] [REQUEST_HANDLING_STARTED]: request 29 taken by operator hJFGFTt (department 1)
+fout: [2026-11-02T09:04:00] [NEW_REQUEST]: request 30 to department 2
+fout: [2026-11-02T09:04:00] [REQUEST_HANDLING_STARTED]: request 30 taken by operator QCvOKuW (department 2)
+fout: [2026-11-02T09:04:00] [NEW_REQUEST]: request 31 to department 3
+fout: [2026-11-02T09:04:00] [REQUEST_HANDLING_STARTED]: request 31 taken by operator BrzPi (department 3)
+fout: [2026-11-02T09:04:00] [NEW_REQUEST]: request 32 to department 3
+fout: [2026-11-02T09:04:00] [REQUEST_HANDLING_STARTED]: request 32 taken by operator aIqAOblQ (department 3)
+fout: [2026-11-02T09:04:00] [NEW_REQUEST]: request 33 to department 3
+fout: [2026-11-02T09:04:00] [REQUEST_HANDLING_STARTED]: request 33 taken by operator HHtVo (department 3)
+fout: [2026-11-02T09:04:00] [NEW_REQUEST]: request 34 to department 1
+fout: [2026-11-02T09:04:00] [NEW_REQUEST]: request 35 to department 3
+fout: [2026-11-02T09:05:00] [NEW_REQUEST]: request 36 to department 3
+fout: [2026-11-02T09:06:00] [NEW_REQUEST]: request 37 to department 2
+fout: [2026-11-02T09:06:00] [REQUEST_HANDLING_STARTED]: request 37 taken by operator oimfiu (department 2)
+fout: [2026-11-02T09:06:00] [NEW_REQUEST]: request 38 to department 3
+fout: [2026-11-02T09:06:00] [NEW_REQUEST]: request 39 to department 3
+fout: [2026-11-02T09:06:00] [NEW_REQUEST]: request 40 to department 1
+fout: [2026-11-02T09:06:00] [NEW_REQUEST]: request 41 to department 1
+fout: [2026-11-02T09:06:00] [NEW_REQUEST]: request 42 to department 1
+fout: [2026-11-02T09:07:00] [NEW_REQUEST]: request 43 to department 2
+fout: [2026-11-02T09:07:00] [REQUEST_HANDLING_STARTED]: request 43 taken by operator azRB (department 2)
+fout: [2026-11-02T09:07:00] [NEW_REQUEST]: request 44 to department 3
+fout: [2026-11-02T09:07:00] [NEW_REQUEST]: request 45 to department 1
+fout: [2026-11-02T09:07:00] [NEW_REQUEST]: request 46 to department 3
+fout: [2026-11-02T09:08:00] [NEW_REQUEST]: request 47 to department 1
+fout: [2026-11-02T09:08:00] [NEW_REQUEST]: request 48 to department 2
+fout: [2026-11-02T09:08:00] [REQUEST_HANDLING_STARTED]: request 48 taken by operator wmOaESW (department 2)
+fout: [2026-11-02T09:08:00] [NEW_REQUEST]: request 49 to department 2
+fout: [2026-11-02T09:08:00] [REQUEST_HANDLING_STARTED]: request 49 taken by operator GtBysf (department 2)
+fout: [2026-11-02T09:08:00] [NEW_REQUEST]: request 50 to department 2
+fout: [2026-11-02T09:08:00] [REQUEST_HANDLING_STARTED]: request 50 taken by operator GievS (department 2)
+fout: [2026-11-02T09:08:00] [NEW_REQUEST]: request 51 to department 1
+fout: [2026-11-02T09:09:00] [NEW_REQUEST]: request 52 to department 3
+fout: [2026-11-02T09:09:00] [NEW_REQUEST]: request 53 to department 3
+fout: [2026-11-02T09:09:00] [NEW_REQUEST]: request 54 to department 1
+fout: [2026-11-02T09:09:00] [NEW_REQUEST]: request 55 to department 3
+fout: [2026-11-02T09:09:00] [NEW_REQUEST]: request 56 to department 3
+fout: [2026-11-02T09:09:00] [NEW_REQUEST]: request 57 to department 3
+fout: [2026-11-02T09:09:00] [NEW_REQUEST]: request 58 to department 1
+fout: [2026-11-02T09:10:00] [NEW_REQUEST]: request 59 to department 1
+fout: [2026-11-02T09:10:00] [NEW_REQUEST]: request 60 to department 2
+fout: [2026-11-02T09:10:00] [REQUEST_HANDLING_STARTED]: request 60 taken by operator IlYl (department 2)
+fout: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 10 min by operator KAFTAKSR (department 2)
+fout: [2026-11-02T09:11:00] [NEW_REQUEST]: request 61 to department 2
+fout: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 61 taken by operator KAFTAKSR (department 2)
+fout: [2026-11-02T09:11:00] [NEW_REQUEST]: request 62 to department 1
+fout: [2026-11-02T09:11:00] [NEW_REQUEST]: request 63 to department 2
+fout: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 63 taken by operator npmEnt (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 12 min by operator ICrUn (department 1)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 10 min by operator MbRB (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 45 taken by operator ICrUn (department 1)
+fout: [2026-11-02T09:12:00] [NEW_REQUEST]: request 64 to department 1
+fout: [2026-11-02T09:12:00] [NEW_REQUEST]: request 65 to department 2
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 65 taken by operator MbRB (department 2)
+fout: [2026-11-02T09:12:00] [NEW_REQUEST]: request 66 to department 3
+fout: [2026-11-02T09:12:00] [DEPARTMENT_OVERLOADED]: request 66 overloaded department 3 (12 requests in the queue, 10 operators); all of them moved to department 2
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 39 taken by operator fQBZZdT (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 56 taken by operator EoXE (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 44 taken by operator xtvpZFSA (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 52 taken by operator gRZixwXM (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 35 taken by operator CFNxsvww (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 55 taken by operator eIBSPT (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 36 taken by operator PxMUFT (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 38 taken by operator CgRjP (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 46 taken by operator GzFZuP (department 2)
+fout: [2026-11-02T09:12:00] [REQUEST_HANDLING_STARTED]: request 53 taken by operator BasGBZsS (department 2)
+fout: [2026-11-02T09:12:00] [NEW_REQUEST]: request 67 to department 3
+fout: [2026-11-02T09:12:00] [NEW_REQUEST]: request 68 to department 2
+fout: [2026-11-02T09:12:00] [NEW_REQUEST]: request 69 to department 2
+fout: [2026-11-02T09:12:00] [NEW_REQUEST]: request 70 to department 3
+fout: [2026-11-02T09:13:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 13 min by operator XsVK (department 1)
+fout: [2026-11-02T09:13:00] [REQUEST_HANDLING_STARTED]: request 62 taken by operator XsVK (department 1)
+fout: [2026-11-02T09:13:00] [NEW_REQUEST]: request 71 to department 2
+fout: [2026-11-02T09:13:00] [NEW_REQUEST]: request 72 to department 1
+fout: [2026-11-02T09:13:00] [NEW_REQUEST]: request 73 to department 1
+fout: [2026-11-02T09:13:00] [DEPARTMENT_OVERLOADED]: request 73 overloaded department 1 (12 requests in the queue, 10 operators); all of them moved to department 2
+fout: [2026-11-02T09:13:00] [NEW_REQUEST]: request 74 to department 3
+fout: [2026-11-02T09:14:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 12 min by operator JmFfeTsd (department 2)
+fout: [2026-11-02T09:14:00] [REQUEST_HANDLING_FINISHED]: request 27 handled in 11 min by operator RyPHFG (department 2)
+fout: [2026-11-02T09:14:00] [REQUEST_HANDLING_FINISHED]: request 31 handled in 10 min by operator BrzPi (department 3)
+fout: [2026-11-02T09:14:00] [REQUEST_HANDLING_STARTED]: request 40 taken by operator JmFfeTsd (department 2)
+fout: [2026-11-02T09:14:00] [REQUEST_HANDLING_STARTED]: request 47 taken by operator RyPHFG (department 2)
+fout: [2026-11-02T09:14:00] [REQUEST_HANDLING_STARTED]: request 74 taken by operator BrzPi (department 3)
+fout: [2026-11-02T09:14:00] [NEW_REQUEST]: request 75 to department 3
+fout: [2026-11-02T09:14:00] [NEW_REQUEST]: request 76 to department 3
+fout: [2026-11-02T09:14:00] [NEW_REQUEST]: request 77 to department 1
+fout: [2026-11-02T09:14:00] [NEW_REQUEST]: request 78 to department 2
+fout: [2026-11-02T09:15:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 14 min by operator bPpyT (department 1)
+fout: [2026-11-02T09:15:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 14 min by operator ZQaTH (department 1)
+fout: [2026-11-02T09:15:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 13 min by operator xClwZvUb (department 1)
+fout: [2026-11-02T09:15:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 13 min by operator hLBbvVlq (department 3)
+fout: [2026-11-02T09:15:00] [REQUEST_HANDLING_STARTED]: request 77 taken by operator bPpyT (department 1)
+fout: [2026-11-02T09:15:00] [REQUEST_HANDLING_STARTED]: request 67 taken by operator hLBbvVlq (department 3)
+fout: [2026-11-02T09:15:00] [NEW_REQUEST]: request 79 to department 1
+fout: [2026-11-02T09:15:00] [REQUEST_HANDLING_STARTED]: request 79 taken by operator ZQaTH (department 1)
+fout: [2026-11-02T09:15:00] [NEW_REQUEST]: request 80 to department 1
+fout: [2026-11-02T09:15:00] [REQUEST_HANDLING_STARTED]: request 80 taken by operator xClwZvUb (department 1)
+fout: [2026-11-02T09:15:00] [NEW_REQUEST]: request 81 to department 2
+fout: [2026-11-02T09:15:00] [NEW_REQUEST]: request 82 to department 1
+fout: [2026-11-02T09:15:00] [NEW_REQUEST]: request 83 to department 1
+fout: [2026-11-02T09:15:00] [NEW_REQUEST]: request 84 to department 2
+fout: [2026-11-02T09:15:00] [NEW_REQUEST]: request 85 to department 3
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 16 min by operator OxuLrRQ (department 1)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_FINISHED]: request 29 handled in 12 min by operator hJFGFTt (department 1)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 15 min by operator vePEa (department 2)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 13 min by operator UqXGwt (department 2)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 13 min by operator SmtRUz (department 2)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 14 min by operator pRBLiE (department 3)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_STARTED]: request 82 taken by operator OxuLrRQ (department 1)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_STARTED]: request 83 taken by operator hJFGFTt (department 1)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_STARTED]: request 58 taken by operator vePEa (department 2)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_STARTED]: request 78 taken by operator UqXGwt (department 2)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_STARTED]: request 34 taken by operator SmtRUz (department 2)
+fout: [2026-11-02T09:16:00] [REQUEST_HANDLING_STARTED]: request 70 taken by operator pRBLiE (department 3)
+fout: [2026-11-02T09:16:00] [NEW_REQUEST]: request 86 to department 3
+fout: [2026-11-02T09:16:00] [NEW_REQUEST]: request 87 to department 3
+fout: [2026-11-02T09:16:00] [NEW_REQUEST]: request 88 to department 1
+fout: [2026-11-02T09:16:00] [NEW_REQUEST]: request 89 to department 3
+fout: [2026-11-02T09:16:00] [NEW_REQUEST]: request 90 to department 3
+fout: [2026-11-02T09:16:00] [NEW_REQUEST]: request 91 to department 2
+fout: [2026-11-02T09:17:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 15 min by operator pvGO (department 1)
+fout: [2026-11-02T09:17:00] [REQUEST_HANDLING_STARTED]: request 88 taken by operator pvGO (department 1)
+fout: [2026-11-02T09:17:00] [NEW_REQUEST]: request 92 to department 3
+fout: [2026-11-02T09:17:00] [NEW_REQUEST]: request 93 to department 1
+fout: [2026-11-02T09:17:00] [NEW_REQUEST]: request 94 to department 1
+fout: [2026-11-02T09:17:00] [NEW_REQUEST]: request 95 to department 3
+fout: [2026-11-02T09:18:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 17 min by operator LpQvyE (department 2)
+fout: [2026-11-02T09:18:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 18 min by operator zZFsL (department 3)
+fout: [2026-11-02T09:18:00] [REQUEST_HANDLING_STARTED]: request 91 taken by operator LpQvyE (department 2)
+fout: [2026-11-02T09:18:00] [REQUEST_HANDLING_STARTED]: request 90 taken by operator zZFsL (department 3)
+fout: [2026-11-02T09:18:00] [NEW_REQUEST]: request 96 to department 3
+fout: [2026-11-02T09:18:00] [NEW_REQUEST]: request 97 to department 1
+fout: [2026-11-02T09:18:00] [NEW_REQUEST]: request 98 to department 1
+fout: [2026-11-02T09:18:00] [NEW_REQUEST]: request 99 to department 1
+fout: [2026-11-02T09:18:00] [NEW_REQUEST]: request 100 to department 3
+fout: [2026-11-02T09:18:00] [NEW_REQUEST]: request 101 to department 1
+fout: [2026-11-02T09:19:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 19 min by operator kBbTnFbs (department 1)
+fout: [2026-11-02T09:19:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 19 min by operator upEETPn (department 2)
+fout: [2026-11-02T09:19:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 17 min by operator rfBhtbR (department 2)
+fout: [2026-11-02T09:19:00] [REQUEST_HANDLING_FINISHED]: request 49 handled in 11 min by operator GtBysf (department 2)
+fout: [2026-11-02T09:19:00] [REQUEST_HANDLING_FINISHED]: request 32 handled in 15 min by operator aIqAOblQ (department 3)
+fout: [2026-11-02T09:19:00] [REQUEST_HANDLING_STARTED]: request 94 taken by operator kBbTnFbs (department 1)
+fout: [2026-11-02T09:19:00] [REQUEST_HANDLING_STARTED]: request 41 taken by operator upEETPn (department 2)
+fout: [2026-11-02T09:19:00] [REQUEST_HANDLING_STARTED]: request 42 taken by operator rfBhtbR (department 2)
+fout: [2026-11-02T09:19:00] [REQUEST_HANDLING_STARTED]: request 59 taken by operator GtBysf (department 2)
+fout: [2026-11-02T09:19:00] [REQUEST_HANDLING_STARTED]: request 100 taken by operator aIqAOblQ (department 3)
+fout: [2026-11-02T09:19:00] [NEW_REQUEST]: request 102 to department 1
+fout: [2026-11-02T09:19:00] [NEW_REQUEST]: request 103 to department 3
+fout: [2026-11-02T09:19:00] [NEW_REQUEST]: request 104 to department 2
+fout: [2026-11-02T09:19:00] [NEW_REQUEST]: request 105 to department 1
+fout: [2026-11-02T09:19:00] [NEW_REQUEST]: request 106 to department 3
+fout: [2026-11-02T09:20:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 18 min by operator fczwO (department 1)
+fout: [2026-11-02T09:20:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 18 min by operator cbLbzokB (department 2)
+fout: [2026-11-02T09:20:00] [REQUEST_HANDLING_FINISHED]: request 30 handled in 16 min by operator QCvOKuW (department 2)
+fout: [2026-11-02T09:20:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 18 min by operator nWgyE (department 3)
+fout: [2026-11-02T09:20:00] [REQUEST_HANDLING_STARTED]: request 102 taken by operator fczwO (department 1)
+fout: [2026-11-02T09:20:00] [REQUEST_HANDLING_STARTED]: request 71 taken by operator cbLbzokB (department 2)
+fout: [2026-11-02T09:20:00] [REQUEST_HANDLING_STARTED]: request 73 taken by operator QCvOKuW (department 2)
+fout: [2026-11-02T09:20:00] [REQUEST_HANDLING_STARTED]: request 92 taken by operator nWgyE (department 3)
+fout: [2026-11-02T09:20:00] [NEW_REQUEST]: request 107 to department 3
+fout: [2026-11-02T09:20:00] [NEW_REQUEST]: request 108 to department 3
+fout: [2026-11-02T09:20:00] [DEPARTMENT_OVERLOADED]: request 108 overloaded department 3 (12 requests in the queue, 10 operators); all of them moved to department 2
+fout: [2026-11-02T09:20:00] [NEW_REQUEST]: request 109 to department 3
+fout: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 20 min by operator aVSZv (department 2)
+fout: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 19 min by operator EadULqd (department 3)
+fout: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 18 min by operator UGFBmkV (department 3)
+fout: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 107 taken by operator aVSZv (department 2)
+fout: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 109 taken by operator EadULqd (department 3)
+fout: [2026-11-02T09:21:00] [NEW_REQUEST]: request 110 to department 3
+fout: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 110 taken by operator UGFBmkV (department 3)
+fout: [2026-11-02T09:21:00] [NEW_REQUEST]: request 111 to department 1
+fout: [2026-11-02T09:21:00] [NEW_REQUEST]: request 112 to department 1
+fout: [2026-11-02T09:21:00] [NEW_REQUEST]: request 113 to department 1
+fout: [2026-11-02T09:21:00] [NEW_REQUEST]: request 114 to department 3
+fout: [2026-11-02T09:21:00] [NEW_REQUEST]: request 115 to department 3
+fout: [2026-11-02T09:21:00] [NEW_REQUEST]: request 116 to department 2
+fout: [2026-11-02T09:21:00] [NEW_REQUEST]: request 117 to department 2
+fout: [2026-11-02T09:22:00] [REQUEST_HANDLING_FINISHED]: request 28 handled in 18 min by operator aJcmBykL (department 3)
+fout: [2026-11-02T09:22:00] [REQUEST_HANDLING_STARTED]: request 115 taken by operator aJcmBykL (department 3)
+fout: [2026-11-02T09:22:00] [NEW_REQUEST]: request 118 to department 2
+fout: [2026-11-02T09:22:00] [NEW_REQUEST]: request 119 to department 3
+fout: [2026-11-02T09:22:00] [NEW_REQUEST]: request 120 to department 3
+fout: [2026-11-02T09:22:00] [NEW_REQUEST]: request 121 to department 1
+fout: [2026-11-02T09:22:00] [NEW_REQUEST]: request 122 to department 2
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_FINISHED]: request 39 handled in 11 min by operator fQBZZdT (department 2)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_FINISHED]: request 35 handled in 11 min by operator CFNxsvww (department 2)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_FINISHED]: request 55 handled in 11 min by operator eIBSPT (department 2)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_FINISHED]: request 38 handled in 11 min by operator CgRjP (department 2)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_FINISHED]: request 46 handled in 11 min by operator GzFZuP (department 2)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_FINISHED]: request 33 handled in 19 min by operator HHtVo (department 3)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_STARTED]: request 103 taken by operator fQBZZdT (department 2)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_STARTED]: request 106 taken by operator CFNxsvww (department 2)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_STARTED]: request 84 taken by operator eIBSPT (department 2)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_STARTED]: request 87 taken by operator CgRjP (department 2)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_STARTED]: request 95 taken by operator GzFZuP (department 2)
+fout: [2026-11-02T09:23:00] [REQUEST_HANDLING_STARTED]: request 114 taken by operator HHtVo (department 3)
+fout: [2026-11-02T09:23:00] [NEW_REQUEST]: request 123 to department 2
+fout: [2026-11-02T09:23:00] [NEW_REQUEST]: request 124 to department 2
+fout: [2026-11-02T09:23:00] [NEW_REQUEST]: request 125 to department 1
+fout: [2026-11-02T09:24:00] [REQUEST_HANDLING_FINISHED]: request 43 handled in 17 min by operator azRB (department 2)
+fout: [2026-11-02T09:24:00] [REQUEST_HANDLING_FINISHED]: request 48 handled in 16 min by operator wmOaESW (department 2)
+fout: [2026-11-02T09:24:00] [REQUEST_HANDLING_FINISHED]: request 60 handled in 14 min by operator IlYl (department 2)
+fout: [2026-11-02T09:24:00] [REQUEST_HANDLING_FINISHED]: request 44 handled in 12 min by operator xtvpZFSA (department 2)
+fout: [2026-11-02T09:24:00] [REQUEST_HANDLING_FINISHED]: request 36 handled in 12 min by operator PxMUFT (department 2)
+fout: [2026-11-02T09:24:00] [REQUEST_HANDLING_STARTED]: request 123 taken by operator azRB (department 2)
+fout: [2026-11-02T09:24:00] [REQUEST_HANDLING_STARTED]: request 124 taken by operator wmOaESW (department 2)
+fout: [2026-11-02T09:24:00] [REQUEST_HANDLING_STARTED]: request 117 taken by operator IlYl (department 2)
+fout: [2026-11-02T09:24:00] [REQUEST_HANDLING_STARTED]: request 122 taken by operator xtvpZFSA (department 2)
+fout: [2026-11-02T09:24:00] [REQUEST_HANDLING_STARTED]: request 54 taken by operator PxMUFT (department 2)
+fout: [2026-11-02T09:24:00] [NEW_REQUEST]: request 126 to department 2
+fout: [2026-11-02T09:24:00] [NEW_REQUEST]: request 127 to department 3
+fout: [2026-11-02T09:25:00] [REQUEST_HANDLING_FINISHED]: request 45 handled in 13 min by operator ICrUn (department 1)
+fout: [2026-11-02T09:25:00] [REQUEST_HANDLING_FINISHED]: request 37 handled in 19 min by operator oimfiu (department 2)
+fout: [2026-11-02T09:25:00] [REQUEST_HANDLING_STARTED]: request 113 taken by operator ICrUn (department 1)
+fout: [2026-11-02T09:25:00] [REQUEST_HANDLING_STARTED]: request 126 taken by operator oimfiu (department 2)
+fout: [2026-11-02T09:25:00] [NEW_REQUEST]: request 128 to department 2
+fout: [2026-11-02T09:25:00] [NEW_REQUEST]: request 129 to department 1
+fout: [2026-11-02T09:25:00] [NEW_REQUEST]: request 130 to department 3
+fout: [2026-11-02T09:25:00] [NEW_REQUEST]: request 131 to department 2
+fout: [2026-11-02T09:25:00] [NEW_REQUEST]: request 132 to department 3
+fout: [2026-11-02T09:25:00] [NEW_REQUEST]: request 133 to department 3
+fout: [2026-11-02T09:26:00] [REQUEST_HANDLING_FINISHED]: request 58 handled in 10 min by operator vePEa (department 2)
+fout: [2026-11-02T09:26:00] [REQUEST_HANDLING_FINISHED]: request 63 handled in 15 min by operator npmEnt (department 2)
+fout: [2026-11-02T09:26:00] [REQUEST_HANDLING_STARTED]: request 128 taken by operator vePEa (department 2)
+fout: [2026-11-02T09:26:00] [REQUEST_HANDLING_STARTED]: request 131 taken by operator npmEnt (department 2)
+fout: [2026-11-02T09:26:00] [NEW_REQUEST]: request 134 to department 2
+fout: [2026-11-02T09:26:00] [NEW_REQUEST]: request 135 to department 2
+fout: [2026-11-02T09:27:00] [REQUEST_HANDLING_FINISHED]: request 40 handled in 13 min by operator JmFfeTsd (department 2)
+fout: [2026-11-02T09:27:00] [REQUEST_HANDLING_FINISHED]: request 78 handled in 11 min by operator UqXGwt (department 2)
+fout: [2026-11-02T09:27:00] [REQUEST_HANDLING_FINISHED]: request 53 handled in 15 min by operator BasGBZsS (department 2)
+fout: [2026-11-02T09:27:00] [REQUEST_HANDLING_FINISHED]: request 70 handled in 11 min by operator pRBLiE (department 3)
+fout: [2026-11-02T09:27:00] [REQUEST_HANDLING_STARTED]: request 68 taken by operator JmFfeTsd (department 2)
+fout: [2026-11-02T09:27:00] [REQUEST_HANDLING_STARTED]: request 81 taken by operator UqXGwt (department 2)
+fout: [2026-11-02T09:27:00] [REQUEST_HANDLING_STARTED]: request 116 taken by operator BasGBZsS (department 2)
+fout: [2026-11-02T09:27:00] [REQUEST_HANDLING_STARTED]: request 120 taken by operator pRBLiE (department 3)
+fout: [2026-11-02T09:27:00] [NEW_REQUEST]: request 136 to department 1
+fout: [2026-11-02T09:27:00] [DEPARTMENT_OVERLOADED]: request 136 overloaded department 1 (12 requests in the queue, 10 operators); all of them moved to department 2
+fout: [2026-11-02T09:27:00] [NEW_REQUEST]: request 137 to department 3
+fout: [2026-11-02T09:27:00] [NEW_REQUEST]: request 138 to department 1
+fout: [2026-11-02T09:27:00] [NEW_REQUEST]: request 139 to department 2
+fout: [2026-11-02T09:27:00] [NEW_REQUEST]: request 140 to department 3
+fout: [2026-11-02T09:28:00] [REQUEST_HANDLING_FINISHED]: request 50 handled in 20 min by operator GievS (department 2)
+fout: [2026-11-02T09:28:00] [REQUEST_HANDLING_STARTED]: request 121 taken by operator GievS (department 2)
+fout: [2026-11-02T09:28:00] [NEW_REQUEST]: request 141 to department 2
+fout: [2026-11-02T09:28:00] [NEW_REQUEST]: request 142 to department 2
+fout: [2026-11-02T09:29:00] [REQUEST_HANDLING_FINISHED]: request 77 handled in 14 min by operator bPpyT (department 1)
+fout: [2026-11-02T09:29:00] [REQUEST_HANDLING_FINISHED]: request 88 handled in 12 min by operator pvGO (department 1)
+fout: [2026-11-02T09:29:00] [REQUEST_HANDLING_FINISHED]: request 52 handled in 17 min by operator gRZixwXM (department 2)
+fout: [2026-11-02T09:29:00] [REQUEST_HANDLING_STARTED]: request 138 taken by operator bPpyT (department 1)
+fout: [2026-11-02T09:29:00] [REQUEST_HANDLING_STARTED]: request 136 taken by operator gRZixwXM (department 2)
+fout: [2026-11-02T09:29:00] [NEW_REQUEST]: request 143 to department 3
+fout: [2026-11-02T09:29:00] [NEW_REQUEST]: request 144 to department 1
+fout: [2026-11-02T09:29:00] [REQUEST_HANDLING_STARTED]: request 144 taken by operator pvGO (department 1)
+fout: [2026-11-02T09:30:00] [REQUEST_HANDLING_FINISHED]: request 79 handled in 15 min by operator ZQaTH (department 1)
+fout: [2026-11-02T09:30:00] [REQUEST_HANDLING_FINISHED]: request 83 handled in 14 min by operator hJFGFTt (department 1)
+fout: [2026-11-02T09:30:00] [REQUEST_HANDLING_FINISHED]: request 34 handled in 14 min by operator SmtRUz (department 2)
+fout: [2026-11-02T09:30:00] [REQUEST_HANDLING_FINISHED]: request 47 handled in 16 min by operator RyPHFG (department 2)
+fout: [2026-11-02T09:30:00] [REQUEST_HANDLING_STARTED]: request 139 taken by operator SmtRUz (department 2)
+fout: [2026-11-02T09:30:00] [REQUEST_HANDLING_STARTED]: request 141 taken by operator RyPHFG (department 2)
+fout: [2026-11-02T09:30:00] [NEW_REQUEST]: request 145 to department 3
+fout: [2026-11-02T09:30:00] [NEW_REQUEST]: request 146 to department 2
+fout: [2026-11-02T09:30:00] [NEW_REQUEST]: request 147 to department 1
+fout: [2026-11-02T09:30:00] [REQUEST_HANDLING_STARTED]: request 147 taken by operator ZQaTH (department 1)
+fout: [2026-11-02T09:30:00] [NEW_REQUEST]: request 148 to department 3
+fout: [2026-11-02T09:30:00] [NEW_REQUEST]: request 149 to department 3
+fout: [2026-11-02T09:30:00] [NEW_REQUEST]: request 150 to department 3
+fout: [2026-11-02T09:30:00] [DEPARTMENT_OVERLOADED]: request 150 overloaded department 3 (12 requests in the queue, 10 operators); all of them moved to department 1
+fout: [2026-11-02T09:30:00] [REQUEST_HANDLING_STARTED]: request 149 taken by operator hJFGFTt (department 1)
+fout: [2026-11-02T09:30:00] [NEW_REQUEST]: request 151 to department 1
+fout: [2026-11-02T09:30:00] [DEPARTMENT_OVERLOADED]: request 151 overloaded department 1 (12 requests in the queue, 10 operators); no department can take them
+fout: [2026-11-02T09:30:00] [MODELING_FINISHED]: 151 requests received, 60 handled, 50 in progress, 41 waiting in queues, 0 after the end of the model
+
+name: BinaryHeap: заявки берутся по приоритету, при равном - раньше поступившая
+args: 9 tests/data/task9_order_BinaryHeap.txt tests/data/task9_order_requests.txt --seed 2
+out: [2026-11-02T09:00:00] [MODELING_STARTED]: departments: 1; requests are kept in BinaryHeap, departments in HashSet
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator lYGm (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 3 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 4 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 5 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 6 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 7 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 8 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 9 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 10 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 11 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 12 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 13 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 14 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 15 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 16 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 17 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 18 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 19 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 20 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 20 overloaded department 1 (10 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 21 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 21 overloaded department 1 (11 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 22 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 22 overloaded department 1 (12 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 23 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 23 overloaded department 1 (13 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 24 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 24 overloaded department 1 (14 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 25 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 25 overloaded department 1 (15 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 26 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 26 overloaded department 1 (16 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T12:00:00] [MODELING_FINISHED]: 26 requests received, 26 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: BinomialHeap: заявки берутся по приоритету, при равном - раньше поступившая
+args: 9 tests/data/task9_order_BinomialHeap.txt tests/data/task9_order_requests.txt --seed 2
+out: [2026-11-02T09:00:00] [MODELING_STARTED]: departments: 1; requests are kept in BinomialHeap, departments in DynamicArray
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator lYGm (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 3 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 4 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 5 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 6 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 7 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 8 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 9 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 10 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 11 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 12 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 13 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 14 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 15 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 16 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 17 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 18 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 19 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 20 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 20 overloaded department 1 (10 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 21 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 21 overloaded department 1 (11 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 22 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 22 overloaded department 1 (12 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 23 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 23 overloaded department 1 (13 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 24 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 24 overloaded department 1 (14 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 25 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 25 overloaded department 1 (15 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 26 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 26 overloaded department 1 (16 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T12:00:00] [MODELING_FINISHED]: 26 requests received, 26 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: FibonacciHeap: заявки берутся по приоритету, при равном - раньше поступившая
+args: 9 tests/data/task9_order_FibonacciHeap.txt tests/data/task9_order_requests.txt --seed 2
+out: [2026-11-02T09:00:00] [MODELING_STARTED]: departments: 1; requests are kept in FibonacciHeap, departments in BinarySearchTree
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator lYGm (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 3 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 4 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 5 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 6 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 7 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 8 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 9 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 10 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 11 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 12 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 13 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 14 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 15 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 16 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 17 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 18 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 19 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 20 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 20 overloaded department 1 (10 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 21 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 21 overloaded department 1 (11 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 22 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 22 overloaded department 1 (12 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 23 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 23 overloaded department 1 (13 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 24 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 24 overloaded department 1 (14 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 25 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 25 overloaded department 1 (15 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 26 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 26 overloaded department 1 (16 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T12:00:00] [MODELING_FINISHED]: 26 requests received, 26 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: SkewHeap: заявки берутся по приоритету, при равном - раньше поступившая
+args: 9 tests/data/task9_order_SkewHeap.txt tests/data/task9_order_requests.txt --seed 2
+out: [2026-11-02T09:00:00] [MODELING_STARTED]: departments: 1; requests are kept in SkewHeap, departments in Trie
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator lYGm (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 3 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 4 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 5 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 6 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 7 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 8 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 9 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 10 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 11 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 12 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 13 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 14 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 15 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 16 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 17 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 18 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 19 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 20 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 20 overloaded department 1 (10 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 21 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 21 overloaded department 1 (11 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 22 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 22 overloaded department 1 (12 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 23 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 23 overloaded department 1 (13 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 24 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 24 overloaded department 1 (14 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 25 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 25 overloaded department 1 (15 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 26 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 26 overloaded department 1 (16 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T12:00:00] [MODELING_FINISHED]: 26 requests received, 26 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: LeftistHeap: заявки берутся по приоритету, при равном - раньше поступившая
+args: 9 tests/data/task9_order_LeftistHeap.txt tests/data/task9_order_requests.txt --seed 2
+out: [2026-11-02T09:00:00] [MODELING_STARTED]: departments: 1; requests are kept in LeftistHeap, departments in HashSet
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator lYGm (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 3 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 4 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 5 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 6 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 7 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 8 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 9 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 10 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 11 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 12 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 13 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 14 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 15 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 16 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 17 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 18 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 19 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 20 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 20 overloaded department 1 (10 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 21 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 21 overloaded department 1 (11 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 22 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 22 overloaded department 1 (12 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 23 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 23 overloaded department 1 (13 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 24 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 24 overloaded department 1 (14 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 25 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 25 overloaded department 1 (15 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 26 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 26 overloaded department 1 (16 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T12:00:00] [MODELING_FINISHED]: 26 requests received, 26 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: Treap: заявки берутся по приоритету, при равном - раньше поступившая
+args: 9 tests/data/task9_order_Treap.txt tests/data/task9_order_requests.txt --seed 2
+out: [2026-11-02T09:00:00] [MODELING_STARTED]: departments: 1; requests are kept in Treap, departments in DynamicArray
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator lYGm (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 3 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 4 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 5 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 6 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 7 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 8 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 9 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 10 to department 1
+out: [2026-11-02T09:01:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 11 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 12 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 13 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 14 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 15 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 16 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 17 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 18 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 19 to department 1
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 20 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 20 overloaded department 1 (10 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 21 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 21 overloaded department 1 (11 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 22 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 22 overloaded department 1 (12 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 23 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 23 overloaded department 1 (13 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 24 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 24 overloaded department 1 (14 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 25 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 25 overloaded department 1 (15 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:01:00] [NEW_REQUEST]: request 26 to department 1
+out: [2026-11-02T09:01:00] [DEPARTMENT_OVERLOADED]: request 26 overloaded department 1 (16 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator lYGm (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator txAHzJr (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator bWtLxIi (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:11:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 10 min by operator txAHzJr (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 10 min by operator bWtLxIi (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 10 min by operator oGDhzuYY (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 10 min by operator qTpMyAER (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator lYGm (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator EaLDMbx (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator zuzMp (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator zUWiJo (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator RRXbhCv (department 1)
+out: [2026-11-02T09:21:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator sKyQsPq (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 10 min by operator lYGm (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 10 min by operator EaLDMbx (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 10 min by operator zuzMp (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 10 min by operator zUWiJo (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 10 min by operator RRXbhCv (department 1)
+out: [2026-11-02T09:31:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 10 min by operator sKyQsPq (department 1)
+out: [2026-11-02T12:00:00] [MODELING_FINISHED]: 26 requests received, 26 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: HashSet: 12 отделений; перегрузка - очередь передаётся наименее загруженному
+args: 3 tests/data/task9_overload_HashSet.txt tests/data/task9_overload_requests.txt --seed 4
+out: [2026-11-02T10:00:00] [MODELING_STARTED]: departments: 12; requests are kept in FibonacciHeap, departments in HashSet
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator wGAtGAPj (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator tITd (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 3 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator JokTI (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 4 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator pFkkx (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 5 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator mtWLCZXM (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 6 to department 4
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator eDqtX (department 4)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 7 to department 4
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator UeIeYZI (department 4)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 8 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator AWwe (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 9 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator LbmHZP (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 10 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator SbigWN (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 11 to department 6
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator uoKVYi (department 6)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 12 to department 7
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator GKDlTns (department 7)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 13 to department 7
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator reIPU (department 7)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 14 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator rsKxREGl (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 15 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator bqvzYCWU (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 16 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator KYbx (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 17 to department 9
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator dORcv (department 9)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 18 to department 10
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator gUKarZcG (department 10)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 19 to department 10
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator vQUIXAtp (department 10)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 20 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator hXryV (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 21 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator JMysSCC (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 22 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator qDKa (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 23 to department 12
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator JUXghXM (department 12)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 24 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator ZTLEer (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 25 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator tHxBjBMd (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 26 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 27 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 27 taken by operator RgkL (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 28 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 28 taken by operator Kyuqe (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 29 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 29 taken by operator yywtOu (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 30 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 30 taken by operator xJVyeS (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 31 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 31 taken by operator GNLwYyP (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 32 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 32 taken by operator KcWCmXhy (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 33 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 33 taken by operator DjTCU (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 34 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 35 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 36 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 37 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 38 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 39 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 40 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 41 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 42 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 43 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 44 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 45 to department 3
+out: [2026-11-02T10:00:00] [DEPARTMENT_OVERLOADED]: request 45 overloaded department 3 (12 requests in the queue, 10 operators); all of them moved to department 9
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 35 taken by operator qdNNb (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 39 taken by operator Lnmg (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 43 taken by operator rvDBte (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 34 taken by operator bjbdVpu (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 38 taken by operator WLytlGsA (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 42 taken by operator yuwlf (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 37 taken by operator rvUK (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 41 taken by operator oeSCu (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 45 taken by operator wnamx (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 36 taken by operator ewpnJtw (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 40 taken by operator RrsZ (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 44 taken by operator WJsUzcQn (department 9)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 46 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 47 to department 3
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 48 to department 1
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 48 taken by operator pLlfU (department 1)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 49 to department 2
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 49 taken by operator xVHbYh (department 2)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 50 to department 11
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 50 taken by operator Ihiw (department 11)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 51 to department 12
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 51 taken by operator boDhu (department 12)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 52 to department 10
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 52 taken by operator LpgycQ (department 10)
+out: [2026-11-02T10:02:00] [NEW_REQUEST]: request 53 to department 3
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 5 min by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 28 handled in 5 min by operator Kyuqe (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 30 handled in 5 min by operator xJVyeS (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 31 handled in 5 min by operator GNLwYyP (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 5 min by operator uoKVYi (department 6)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 5 min by operator reIPU (department 7)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 43 handled in 5 min by operator rvDBte (department 9)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 5 min by operator vQUIXAtp (department 10)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 5 min by operator qDKa (department 11)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 47 taken by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 46 taken by operator Kyuqe (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 53 taken by operator xJVyeS (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 6 min by operator tITd (department 1)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 6 min by operator JokTI (department 2)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 49 handled in 5 min by operator xVHbYh (department 2)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 27 handled in 6 min by operator RgkL (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 29 handled in 6 min by operator yywtOu (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 32 handled in 6 min by operator KcWCmXhy (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 6 min by operator AWwe (department 5)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 6 min by operator GKDlTns (department 7)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 6 min by operator bqvzYCWU (department 8)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 39 handled in 6 min by operator Lnmg (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 42 handled in 6 min by operator yuwlf (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 36 handled in 6 min by operator ewpnJtw (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 6 min by operator gUKarZcG (department 10)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 6 min by operator hXryV (department 11)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 51 handled in 5 min by operator boDhu (department 12)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 7 min by operator wGAtGAPj (department 1)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 7 min by operator pFkkx (department 2)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 7 min by operator mtWLCZXM (department 2)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 7 min by operator ZTLEer (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 7 min by operator tHxBjBMd (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 33 handled in 7 min by operator DjTCU (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 7 min by operator LbmHZP (department 5)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 34 handled in 7 min by operator bjbdVpu (department 9)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 40 handled in 7 min by operator RrsZ (department 9)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 44 handled in 7 min by operator WJsUzcQn (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 48 handled in 7 min by operator pLlfU (department 1)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 8 min by operator eDqtX (department 4)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 8 min by operator UeIeYZI (department 4)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 8 min by operator SbigWN (department 5)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 8 min by operator rsKxREGl (department 8)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 8 min by operator KYbx (department 8)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 8 min by operator dORcv (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 35 handled in 8 min by operator qdNNb (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 38 handled in 8 min by operator WLytlGsA (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 37 handled in 8 min by operator rvUK (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 41 handled in 8 min by operator oeSCu (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 45 handled in 8 min by operator wnamx (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 52 handled in 7 min by operator LpgycQ (department 10)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 8 min by operator JMysSCC (department 11)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 50 handled in 7 min by operator Ihiw (department 11)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 8 min by operator JUXghXM (department 12)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 47 handled in 7 min by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 46 handled in 7 min by operator Kyuqe (department 3)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 53 handled in 7 min by operator xJVyeS (department 3)
+out: [2026-11-02T10:30:00] [MODELING_FINISHED]: 53 requests received, 53 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: DynamicArray: 12 отделений; перегрузка - очередь передаётся наименее загруженному
+args: 3 tests/data/task9_overload_DynamicArray.txt tests/data/task9_overload_requests.txt --seed 4
+out: [2026-11-02T10:00:00] [MODELING_STARTED]: departments: 12; requests are kept in SkewHeap, departments in DynamicArray
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator wGAtGAPj (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator tITd (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 3 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator JokTI (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 4 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator pFkkx (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 5 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator mtWLCZXM (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 6 to department 4
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator eDqtX (department 4)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 7 to department 4
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator UeIeYZI (department 4)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 8 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator AWwe (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 9 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator LbmHZP (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 10 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator SbigWN (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 11 to department 6
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator uoKVYi (department 6)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 12 to department 7
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator GKDlTns (department 7)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 13 to department 7
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator reIPU (department 7)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 14 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator rsKxREGl (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 15 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator bqvzYCWU (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 16 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator KYbx (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 17 to department 9
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator dORcv (department 9)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 18 to department 10
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator gUKarZcG (department 10)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 19 to department 10
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator vQUIXAtp (department 10)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 20 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator hXryV (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 21 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator JMysSCC (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 22 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator qDKa (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 23 to department 12
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator JUXghXM (department 12)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 24 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator ZTLEer (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 25 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator tHxBjBMd (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 26 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 27 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 27 taken by operator RgkL (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 28 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 28 taken by operator Kyuqe (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 29 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 29 taken by operator yywtOu (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 30 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 30 taken by operator xJVyeS (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 31 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 31 taken by operator GNLwYyP (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 32 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 32 taken by operator KcWCmXhy (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 33 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 33 taken by operator DjTCU (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 34 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 35 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 36 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 37 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 38 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 39 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 40 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 41 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 42 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 43 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 44 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 45 to department 3
+out: [2026-11-02T10:00:00] [DEPARTMENT_OVERLOADED]: request 45 overloaded department 3 (12 requests in the queue, 10 operators); all of them moved to department 9
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 35 taken by operator qdNNb (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 39 taken by operator Lnmg (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 43 taken by operator rvDBte (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 34 taken by operator bjbdVpu (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 38 taken by operator WLytlGsA (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 42 taken by operator yuwlf (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 37 taken by operator rvUK (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 41 taken by operator oeSCu (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 45 taken by operator wnamx (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 36 taken by operator ewpnJtw (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 40 taken by operator RrsZ (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 44 taken by operator WJsUzcQn (department 9)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 46 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 47 to department 3
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 48 to department 1
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 48 taken by operator pLlfU (department 1)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 49 to department 2
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 49 taken by operator xVHbYh (department 2)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 50 to department 11
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 50 taken by operator Ihiw (department 11)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 51 to department 12
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 51 taken by operator boDhu (department 12)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 52 to department 10
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 52 taken by operator LpgycQ (department 10)
+out: [2026-11-02T10:02:00] [NEW_REQUEST]: request 53 to department 3
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 5 min by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 28 handled in 5 min by operator Kyuqe (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 30 handled in 5 min by operator xJVyeS (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 31 handled in 5 min by operator GNLwYyP (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 5 min by operator uoKVYi (department 6)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 5 min by operator reIPU (department 7)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 43 handled in 5 min by operator rvDBte (department 9)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 5 min by operator vQUIXAtp (department 10)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 5 min by operator qDKa (department 11)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 47 taken by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 46 taken by operator Kyuqe (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 53 taken by operator xJVyeS (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 6 min by operator tITd (department 1)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 6 min by operator JokTI (department 2)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 49 handled in 5 min by operator xVHbYh (department 2)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 27 handled in 6 min by operator RgkL (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 29 handled in 6 min by operator yywtOu (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 32 handled in 6 min by operator KcWCmXhy (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 6 min by operator AWwe (department 5)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 6 min by operator GKDlTns (department 7)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 6 min by operator bqvzYCWU (department 8)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 39 handled in 6 min by operator Lnmg (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 42 handled in 6 min by operator yuwlf (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 36 handled in 6 min by operator ewpnJtw (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 6 min by operator gUKarZcG (department 10)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 6 min by operator hXryV (department 11)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 51 handled in 5 min by operator boDhu (department 12)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 7 min by operator wGAtGAPj (department 1)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 7 min by operator pFkkx (department 2)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 7 min by operator mtWLCZXM (department 2)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 7 min by operator ZTLEer (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 7 min by operator tHxBjBMd (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 33 handled in 7 min by operator DjTCU (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 7 min by operator LbmHZP (department 5)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 34 handled in 7 min by operator bjbdVpu (department 9)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 40 handled in 7 min by operator RrsZ (department 9)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 44 handled in 7 min by operator WJsUzcQn (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 48 handled in 7 min by operator pLlfU (department 1)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 8 min by operator eDqtX (department 4)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 8 min by operator UeIeYZI (department 4)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 8 min by operator SbigWN (department 5)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 8 min by operator rsKxREGl (department 8)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 8 min by operator KYbx (department 8)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 8 min by operator dORcv (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 35 handled in 8 min by operator qdNNb (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 38 handled in 8 min by operator WLytlGsA (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 37 handled in 8 min by operator rvUK (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 41 handled in 8 min by operator oeSCu (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 45 handled in 8 min by operator wnamx (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 52 handled in 7 min by operator LpgycQ (department 10)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 8 min by operator JMysSCC (department 11)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 50 handled in 7 min by operator Ihiw (department 11)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 8 min by operator JUXghXM (department 12)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 47 handled in 7 min by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 46 handled in 7 min by operator Kyuqe (department 3)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 53 handled in 7 min by operator xJVyeS (department 3)
+out: [2026-11-02T10:30:00] [MODELING_FINISHED]: 53 requests received, 53 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: BinarySearchTree: 12 отделений; перегрузка - очередь передаётся наименее загруженному
+args: 3 tests/data/task9_overload_BinarySearchTree.txt tests/data/task9_overload_requests.txt --seed 4
+out: [2026-11-02T10:00:00] [MODELING_STARTED]: departments: 12; requests are kept in LeftistHeap, departments in BinarySearchTree
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator wGAtGAPj (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator tITd (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 3 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator JokTI (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 4 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator pFkkx (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 5 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator mtWLCZXM (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 6 to department 4
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator eDqtX (department 4)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 7 to department 4
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator UeIeYZI (department 4)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 8 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator AWwe (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 9 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator LbmHZP (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 10 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator SbigWN (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 11 to department 6
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator uoKVYi (department 6)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 12 to department 7
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator GKDlTns (department 7)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 13 to department 7
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator reIPU (department 7)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 14 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator rsKxREGl (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 15 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator bqvzYCWU (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 16 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator KYbx (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 17 to department 9
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator dORcv (department 9)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 18 to department 10
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator gUKarZcG (department 10)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 19 to department 10
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator vQUIXAtp (department 10)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 20 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator hXryV (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 21 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator JMysSCC (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 22 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator qDKa (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 23 to department 12
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator JUXghXM (department 12)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 24 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator ZTLEer (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 25 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator tHxBjBMd (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 26 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 27 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 27 taken by operator RgkL (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 28 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 28 taken by operator Kyuqe (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 29 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 29 taken by operator yywtOu (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 30 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 30 taken by operator xJVyeS (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 31 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 31 taken by operator GNLwYyP (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 32 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 32 taken by operator KcWCmXhy (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 33 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 33 taken by operator DjTCU (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 34 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 35 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 36 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 37 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 38 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 39 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 40 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 41 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 42 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 43 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 44 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 45 to department 3
+out: [2026-11-02T10:00:00] [DEPARTMENT_OVERLOADED]: request 45 overloaded department 3 (12 requests in the queue, 10 operators); all of them moved to department 9
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 35 taken by operator qdNNb (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 39 taken by operator Lnmg (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 43 taken by operator rvDBte (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 34 taken by operator bjbdVpu (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 38 taken by operator WLytlGsA (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 42 taken by operator yuwlf (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 37 taken by operator rvUK (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 41 taken by operator oeSCu (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 45 taken by operator wnamx (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 36 taken by operator ewpnJtw (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 40 taken by operator RrsZ (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 44 taken by operator WJsUzcQn (department 9)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 46 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 47 to department 3
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 48 to department 1
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 48 taken by operator pLlfU (department 1)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 49 to department 2
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 49 taken by operator xVHbYh (department 2)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 50 to department 11
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 50 taken by operator Ihiw (department 11)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 51 to department 12
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 51 taken by operator boDhu (department 12)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 52 to department 10
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 52 taken by operator LpgycQ (department 10)
+out: [2026-11-02T10:02:00] [NEW_REQUEST]: request 53 to department 3
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 5 min by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 28 handled in 5 min by operator Kyuqe (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 30 handled in 5 min by operator xJVyeS (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 31 handled in 5 min by operator GNLwYyP (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 5 min by operator uoKVYi (department 6)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 5 min by operator reIPU (department 7)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 43 handled in 5 min by operator rvDBte (department 9)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 5 min by operator vQUIXAtp (department 10)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 5 min by operator qDKa (department 11)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 47 taken by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 46 taken by operator Kyuqe (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 53 taken by operator xJVyeS (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 6 min by operator tITd (department 1)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 6 min by operator JokTI (department 2)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 49 handled in 5 min by operator xVHbYh (department 2)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 27 handled in 6 min by operator RgkL (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 29 handled in 6 min by operator yywtOu (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 32 handled in 6 min by operator KcWCmXhy (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 6 min by operator AWwe (department 5)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 6 min by operator GKDlTns (department 7)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 6 min by operator bqvzYCWU (department 8)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 39 handled in 6 min by operator Lnmg (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 42 handled in 6 min by operator yuwlf (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 36 handled in 6 min by operator ewpnJtw (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 6 min by operator gUKarZcG (department 10)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 6 min by operator hXryV (department 11)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 51 handled in 5 min by operator boDhu (department 12)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 7 min by operator wGAtGAPj (department 1)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 7 min by operator pFkkx (department 2)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 7 min by operator mtWLCZXM (department 2)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 7 min by operator ZTLEer (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 7 min by operator tHxBjBMd (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 33 handled in 7 min by operator DjTCU (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 7 min by operator LbmHZP (department 5)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 34 handled in 7 min by operator bjbdVpu (department 9)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 40 handled in 7 min by operator RrsZ (department 9)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 44 handled in 7 min by operator WJsUzcQn (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 48 handled in 7 min by operator pLlfU (department 1)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 8 min by operator eDqtX (department 4)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 8 min by operator UeIeYZI (department 4)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 8 min by operator SbigWN (department 5)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 8 min by operator rsKxREGl (department 8)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 8 min by operator KYbx (department 8)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 8 min by operator dORcv (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 35 handled in 8 min by operator qdNNb (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 38 handled in 8 min by operator WLytlGsA (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 37 handled in 8 min by operator rvUK (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 41 handled in 8 min by operator oeSCu (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 45 handled in 8 min by operator wnamx (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 52 handled in 7 min by operator LpgycQ (department 10)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 8 min by operator JMysSCC (department 11)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 50 handled in 7 min by operator Ihiw (department 11)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 8 min by operator JUXghXM (department 12)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 47 handled in 7 min by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 46 handled in 7 min by operator Kyuqe (department 3)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 53 handled in 7 min by operator xJVyeS (department 3)
+out: [2026-11-02T10:30:00] [MODELING_FINISHED]: 53 requests received, 53 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: Trie: 12 отделений; перегрузка - очередь передаётся наименее загруженному
+args: 3 tests/data/task9_overload_Trie.txt tests/data/task9_overload_requests.txt --seed 4
+out: [2026-11-02T10:00:00] [MODELING_STARTED]: departments: 12; requests are kept in Treap, departments in Trie
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator wGAtGAPj (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator tITd (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 3 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator JokTI (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 4 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator pFkkx (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 5 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator mtWLCZXM (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 6 to department 4
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator eDqtX (department 4)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 7 to department 4
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator UeIeYZI (department 4)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 8 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator AWwe (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 9 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator LbmHZP (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 10 to department 5
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator SbigWN (department 5)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 11 to department 6
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator uoKVYi (department 6)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 12 to department 7
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator GKDlTns (department 7)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 13 to department 7
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator reIPU (department 7)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 14 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator rsKxREGl (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 15 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator bqvzYCWU (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 16 to department 8
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator KYbx (department 8)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 17 to department 9
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator dORcv (department 9)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 18 to department 10
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator gUKarZcG (department 10)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 19 to department 10
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator vQUIXAtp (department 10)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 20 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator hXryV (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 21 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator JMysSCC (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 22 to department 11
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator qDKa (department 11)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 23 to department 12
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator JUXghXM (department 12)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 24 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator ZTLEer (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 25 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator tHxBjBMd (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 26 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 27 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 27 taken by operator RgkL (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 28 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 28 taken by operator Kyuqe (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 29 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 29 taken by operator yywtOu (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 30 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 30 taken by operator xJVyeS (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 31 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 31 taken by operator GNLwYyP (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 32 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 32 taken by operator KcWCmXhy (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 33 to department 3
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 33 taken by operator DjTCU (department 3)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 34 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 35 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 36 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 37 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 38 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 39 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 40 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 41 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 42 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 43 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 44 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 45 to department 3
+out: [2026-11-02T10:00:00] [DEPARTMENT_OVERLOADED]: request 45 overloaded department 3 (12 requests in the queue, 10 operators); all of them moved to department 9
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 35 taken by operator qdNNb (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 39 taken by operator Lnmg (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 43 taken by operator rvDBte (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 34 taken by operator bjbdVpu (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 38 taken by operator WLytlGsA (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 42 taken by operator yuwlf (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 37 taken by operator rvUK (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 41 taken by operator oeSCu (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 45 taken by operator wnamx (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 36 taken by operator ewpnJtw (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 40 taken by operator RrsZ (department 9)
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 44 taken by operator WJsUzcQn (department 9)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 46 to department 3
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 47 to department 3
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 48 to department 1
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 48 taken by operator pLlfU (department 1)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 49 to department 2
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 49 taken by operator xVHbYh (department 2)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 50 to department 11
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 50 taken by operator Ihiw (department 11)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 51 to department 12
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 51 taken by operator boDhu (department 12)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 52 to department 10
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 52 taken by operator LpgycQ (department 10)
+out: [2026-11-02T10:02:00] [NEW_REQUEST]: request 53 to department 3
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 26 handled in 5 min by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 28 handled in 5 min by operator Kyuqe (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 30 handled in 5 min by operator xJVyeS (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 31 handled in 5 min by operator GNLwYyP (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 5 min by operator uoKVYi (department 6)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 5 min by operator reIPU (department 7)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 43 handled in 5 min by operator rvDBte (department 9)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 5 min by operator vQUIXAtp (department 10)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_FINISHED]: request 22 handled in 5 min by operator qDKa (department 11)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 47 taken by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 46 taken by operator Kyuqe (department 3)
+out: [2026-11-02T10:05:00] [REQUEST_HANDLING_STARTED]: request 53 taken by operator xJVyeS (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 6 min by operator tITd (department 1)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 6 min by operator JokTI (department 2)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 49 handled in 5 min by operator xVHbYh (department 2)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 27 handled in 6 min by operator RgkL (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 29 handled in 6 min by operator yywtOu (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 32 handled in 6 min by operator KcWCmXhy (department 3)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 6 min by operator AWwe (department 5)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 6 min by operator GKDlTns (department 7)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 6 min by operator bqvzYCWU (department 8)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 39 handled in 6 min by operator Lnmg (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 42 handled in 6 min by operator yuwlf (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 36 handled in 6 min by operator ewpnJtw (department 9)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 6 min by operator gUKarZcG (department 10)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 6 min by operator hXryV (department 11)
+out: [2026-11-02T10:06:00] [REQUEST_HANDLING_FINISHED]: request 51 handled in 5 min by operator boDhu (department 12)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 7 min by operator wGAtGAPj (department 1)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 7 min by operator pFkkx (department 2)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 7 min by operator mtWLCZXM (department 2)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 24 handled in 7 min by operator ZTLEer (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 25 handled in 7 min by operator tHxBjBMd (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 33 handled in 7 min by operator DjTCU (department 3)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 7 min by operator LbmHZP (department 5)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 34 handled in 7 min by operator bjbdVpu (department 9)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 40 handled in 7 min by operator RrsZ (department 9)
+out: [2026-11-02T10:07:00] [REQUEST_HANDLING_FINISHED]: request 44 handled in 7 min by operator WJsUzcQn (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 48 handled in 7 min by operator pLlfU (department 1)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 8 min by operator eDqtX (department 4)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 8 min by operator UeIeYZI (department 4)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 8 min by operator SbigWN (department 5)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 8 min by operator rsKxREGl (department 8)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 8 min by operator KYbx (department 8)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 8 min by operator dORcv (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 35 handled in 8 min by operator qdNNb (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 38 handled in 8 min by operator WLytlGsA (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 37 handled in 8 min by operator rvUK (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 41 handled in 8 min by operator oeSCu (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 45 handled in 8 min by operator wnamx (department 9)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 52 handled in 7 min by operator LpgycQ (department 10)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 21 handled in 8 min by operator JMysSCC (department 11)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 50 handled in 7 min by operator Ihiw (department 11)
+out: [2026-11-02T10:08:00] [REQUEST_HANDLING_FINISHED]: request 23 handled in 8 min by operator JUXghXM (department 12)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 47 handled in 7 min by operator FHgIMeGf (department 3)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 46 handled in 7 min by operator Kyuqe (department 3)
+out: [2026-11-02T10:12:00] [REQUEST_HANDLING_FINISHED]: request 53 handled in 7 min by operator xJVyeS (department 3)
+out: [2026-11-02T10:30:00] [MODELING_FINISHED]: 53 requests received, 53 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: все отделения загружены - очередь передать некому
+args: 1 tests/data/task9_full_config.txt tests/data/task9_full_requests.txt --seed 5
+out: [2026-11-02T10:00:00] [MODELING_STARTED]: departments: 2; requests are kept in SkewHeap, departments in HashSet
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator FrJkLJO (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 2 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator OPxmqBi (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 3 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator qdNRKt (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 4 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator CwdKp (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 5 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator uQYQQe (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 6 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator KQXTcRk (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 7 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator OiuJYCja (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 8 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 8 taken by operator sWvVRAM (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 9 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 9 taken by operator uDxy (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 10 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 10 taken by operator NqOeBuQ (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 11 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 11 taken by operator cRaNxe (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 12 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 12 taken by operator yGgDteJ (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 13 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 13 taken by operator ANhZ (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 14 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 14 taken by operator Eskq (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 15 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 15 taken by operator XtiJOyj (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 16 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 16 taken by operator GYwk (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 17 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 17 taken by operator rpgumsW (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 18 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 18 taken by operator vrmyVFj (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 19 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 19 taken by operator XgdKA (department 1)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 20 to department 2
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 20 taken by operator xdFsS (department 2)
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 21 to department 1
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 22 to department 2
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 23 to department 1
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 24 to department 2
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 25 to department 1
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 26 to department 2
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 27 to department 1
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 28 to department 2
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 29 to department 1
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 30 to department 2
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 31 to department 1
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 32 to department 2
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 33 to department 1
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 34 to department 2
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 35 to department 1
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 36 to department 2
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 37 to department 1
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 38 to department 2
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 39 to department 1
+out: [2026-11-02T10:00:00] [DEPARTMENT_OVERLOADED]: request 39 overloaded department 1 (10 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 40 to department 2
+out: [2026-11-02T10:00:00] [DEPARTMENT_OVERLOADED]: request 40 overloaded department 2 (10 requests in the queue, 10 operators); no department can take them
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 15 min by operator FrJkLJO (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 15 min by operator qdNRKt (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 15 min by operator uQYQQe (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 7 handled in 15 min by operator OiuJYCja (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 9 handled in 15 min by operator uDxy (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 11 handled in 15 min by operator cRaNxe (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 13 handled in 15 min by operator ANhZ (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 15 handled in 15 min by operator XtiJOyj (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 17 handled in 15 min by operator rpgumsW (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 19 handled in 15 min by operator XgdKA (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 15 min by operator OPxmqBi (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 15 min by operator CwdKp (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 6 handled in 15 min by operator KQXTcRk (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 8 handled in 15 min by operator sWvVRAM (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 10 handled in 15 min by operator NqOeBuQ (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 12 handled in 15 min by operator yGgDteJ (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 14 handled in 15 min by operator Eskq (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 16 handled in 15 min by operator GYwk (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 18 handled in 15 min by operator vrmyVFj (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_FINISHED]: request 20 handled in 15 min by operator xdFsS (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 21 taken by operator FrJkLJO (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 23 taken by operator qdNRKt (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 25 taken by operator uQYQQe (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 27 taken by operator OiuJYCja (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 29 taken by operator uDxy (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 31 taken by operator cRaNxe (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 33 taken by operator ANhZ (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 35 taken by operator XtiJOyj (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 37 taken by operator rpgumsW (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 39 taken by operator XgdKA (department 1)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 22 taken by operator OPxmqBi (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 24 taken by operator CwdKp (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 26 taken by operator KQXTcRk (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 28 taken by operator sWvVRAM (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 30 taken by operator NqOeBuQ (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 32 taken by operator yGgDteJ (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 34 taken by operator Eskq (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 36 taken by operator GYwk (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 38 taken by operator vrmyVFj (department 2)
+out: [2026-11-02T10:15:00] [REQUEST_HANDLING_STARTED]: request 40 taken by operator xdFsS (department 2)
+out: [2026-11-02T10:20:00] [MODELING_FINISHED]: 40 requests received, 20 handled, 20 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: время: секунды округляются вверх до минуты, заявки после конца, в обработке на конец, переход года
+args: 5 tests/data/task9_time_config.txt tests/data/task9_time_requests.txt --seed 6
+out: [2026-12-31T23:58:00] [MODELING_STARTED]: departments: 1; requests are kept in LeftistHeap, departments in DynamicArray
+out: [2026-12-31T23:58:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-12-31T23:58:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator jkiv (department 1)
+out: [2026-12-31T23:59:00] [NEW_REQUEST]: request 2 to department 1
+out: [2026-12-31T23:59:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator fjrBMo (department 1)
+out: [2027-01-01T00:00:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 2 min by operator jkiv (department 1)
+out: [2027-01-01T00:00:00] [NEW_REQUEST]: request 3 to department 1
+out: [2027-01-01T00:00:00] [REQUEST_HANDLING_STARTED]: request 3 taken by operator jkiv (department 1)
+out: [2027-01-01T00:01:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 2 min by operator fjrBMo (department 1)
+out: [2027-01-01T00:01:00] [NEW_REQUEST]: request 4 to department 1
+out: [2027-01-01T00:01:00] [REQUEST_HANDLING_STARTED]: request 4 taken by operator fjrBMo (department 1)
+out: [2027-01-01T00:01:00] [NEW_REQUEST]: request 5 to department 1
+out: [2027-01-01T00:01:00] [REQUEST_HANDLING_STARTED]: request 5 taken by operator spckg (department 1)
+out: [2027-01-01T00:03:00] [REQUEST_HANDLING_FINISHED]: request 3 handled in 3 min by operator jkiv (department 1)
+out: [2027-01-01T00:03:00] [REQUEST_HANDLING_FINISHED]: request 5 handled in 2 min by operator spckg (department 1)
+out: [2027-01-01T00:04:00] [REQUEST_HANDLING_FINISHED]: request 4 handled in 3 min by operator fjrBMo (department 1)
+out: [2027-01-01T00:04:00] [NEW_REQUEST]: request 6 to department 1
+out: [2027-01-01T00:04:00] [REQUEST_HANDLING_STARTED]: request 6 taken by operator jkiv (department 1)
+out: [2027-01-01T00:05:00] [NEW_REQUEST]: request 7 to department 1
+out: [2027-01-01T00:05:00] [REQUEST_HANDLING_STARTED]: request 7 taken by operator fjrBMo (department 1)
+out: [2027-01-01T00:05:00] [MODELING_FINISHED]: 7 requests received, 5 handled, 2 in progress, 0 waiting in queues, 2 after the end of the model
+code: 0
+
+name: ошибки в строках заявок - сообщение и журнал, остальные заявки обрабатываются
+args: 5 tests/data/task9_bad_config_base.txt tests/data/task9_bad_requests.txt --seed 7
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 2: wrong time (need YYYY-MM-DDTHH:MM:SS)
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 3: wrong time (need YYYY-MM-DDTHH:MM:SS)
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 4: wrong time (need YYYY-MM-DDTHH:MM:SS)
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 5: wrong priority (need a number from 0 to max_priority)
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 6: wrong priority (need a number from 0 to max_priority)
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 7: unknown department
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 8: unknown department
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 9: the text must be in double quotes
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 10: the text must be in double quotes
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 11: unknown department
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_bad_requests.txt' line 12: the request comes before the start of the model
+out: [2026-11-02T10:00:00] [MODELING_STARTED]: departments: 2; requests are kept in Treap, departments in BinarySearchTree
+out: [2026-11-02T10:00:00] [NEW_REQUEST]: request 1 to department 1
+out: [2026-11-02T10:00:00] [REQUEST_HANDLING_STARTED]: request 1 taken by operator GxPSkWuU (department 1)
+out: [2026-11-02T10:01:00] [NEW_REQUEST]: request 2 to department 2
+out: [2026-11-02T10:01:00] [REQUEST_HANDLING_STARTED]: request 2 taken by operator TdDr (department 2)
+out: [2026-11-02T10:02:00] [REQUEST_HANDLING_FINISHED]: request 1 handled in 2 min by operator GxPSkWuU (department 1)
+out: [2026-11-02T10:03:00] [REQUEST_HANDLING_FINISHED]: request 2 handled in 2 min by operator TdDr (department 2)
+out: [2026-11-02T11:00:00] [MODELING_FINISHED]: 2 requests received, 2 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+err: Error: file 'tests/data/task9_bad_requests.txt' line 2: wrong time (need YYYY-MM-DDTHH:MM:SS)
+err: Error: file 'tests/data/task9_bad_requests.txt' line 3: wrong time (need YYYY-MM-DDTHH:MM:SS)
+err: Error: file 'tests/data/task9_bad_requests.txt' line 4: wrong time (need YYYY-MM-DDTHH:MM:SS)
+err: Error: file 'tests/data/task9_bad_requests.txt' line 5: wrong priority (need a number from 0 to max_priority)
+err: Error: file 'tests/data/task9_bad_requests.txt' line 6: wrong priority (need a number from 0 to max_priority)
+err: Error: file 'tests/data/task9_bad_requests.txt' line 7: unknown department
+err: Error: file 'tests/data/task9_bad_requests.txt' line 8: unknown department
+err: Error: file 'tests/data/task9_bad_requests.txt' line 9: the text must be in double quotes
+err: Error: file 'tests/data/task9_bad_requests.txt' line 10: the text must be in double quotes
+err: Error: file 'tests/data/task9_bad_requests.txt' line 11: unknown department
+err: Error: file 'tests/data/task9_bad_requests.txt' line 12: the request comes before the start of the model
+code: 1
+
+name: файла заявок нет - ошибка, другой файл обрабатывается
+args: 5 tests/data/task9_bad_config_base.txt tests/data/task9_none.txt tests/data/task9_empty.txt --seed 7
+out: [2026-11-02T10:00:00] [ERROR]: file 'tests/data/task9_none.txt': can not read the file
+out: [2026-11-02T10:00:00] [MODELING_STARTED]: departments: 2; requests are kept in Treap, departments in BinarySearchTree
+out: [2026-11-02T11:00:00] [MODELING_FINISHED]: 0 requests received, 0 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+err: Error: file 'tests/data/task9_none.txt': can not read the file
+code: 1
+
+name: пустой файл заявок
+args: 5 tests/data/task9_bad_config_base.txt tests/data/task9_empty.txt --seed 7
+out: [2026-11-02T10:00:00] [MODELING_STARTED]: departments: 2; requests are kept in Treap, departments in BinarySearchTree
+out: [2026-11-02T11:00:00] [MODELING_FINISHED]: 0 requests received, 0 handled, 0 in progress, 0 waiting in queues, 0 after the end of the model
+code: 0
+
+name: файл параметров: неправильная строка 1 (data structure for requests)
+args: 5 tests/data/task9_bad_config1.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config1.txt' line 2: wrong data structure for requests (BinaryHeap, BinomialHeap, FibonacciHeap, SkewHeap, LeftistHeap or Treap)
+code: 1
+
+name: файл параметров: неправильная строка 2 (data structure for departments)
+args: 5 tests/data/task9_bad_config2.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config2.txt' line 2: wrong data structure for departments (HashSet, DynamicArray, BinarySearchTree or Trie)
+code: 1
+
+name: файл параметров: неправильная строка 3 (start time)
+args: 5 tests/data/task9_bad_config3.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config3.txt' line 3: wrong start time (need YYYY-MM-DDTHH:MM:SS)
+code: 1
+
+name: файл параметров: неправильная строка 4 (end time)
+args: 5 tests/data/task9_bad_config4.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config4.txt' line 4: wrong end time (need YYYY-MM-DDTHH:MM:SS, not before the start)
+code: 1
+
+name: файл параметров: неправильная строка 5 (minimal handling time)
+args: 5 tests/data/task9_bad_config5.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config5.txt' line 5: wrong minimal handling time (need a natural number up to 1000000)
+code: 1
+
+name: файл параметров: неправильная строка 6 (maximal handling time)
+args: 5 tests/data/task9_bad_config6.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config6.txt' line 6: wrong maximal handling time (need a natural number from the minimal time up to 1000000)
+code: 1
+
+name: файл параметров: неправильная строка 7 (number of departments)
+args: 5 tests/data/task9_bad_config7.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config7.txt' line 7: wrong number of departments (need 1..100)
+code: 1
+
+name: файл параметров: неправильная строка 8 (numbers of operators)
+args: 5 tests/data/task9_bad_config8.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config8.txt' line 8: wrong numbers of operators (need one number from 10 to 50 for each department)
+code: 1
+
+name: файл параметров: неправильная строка 9 (overload coefficient)
+args: 5 tests/data/task9_bad_config9.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config9.txt' line 9: wrong overload coefficient (need a number 1.0 or more, up to 6 digits after the point)
+code: 1
+
+name: файл параметров: лишняя строка
+args: 5 tests/data/task9_bad_config10.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config10.txt' line 11: extra line after the overload coefficient
+code: 1
+
+name: файл параметров кончился раньше
+args: 5 tests/data/task9_bad_config11.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config11.txt' ended too early: no the number of departments
+code: 1
+
+name: коэффициент: больше 6 цифр после точки
+args: 5 tests/data/task9_bad_config12.txt tests/data/task9_empty.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config12.txt' line 9: wrong overload coefficient (need a number 1.0 or more, up to 6 digits after the point)
+code: 1
+
+name: файла параметров нет
+args: 5 tests/data/task9_none.txt tests/data/task9_empty.txt --seed 1
+err: Error: can not read file 'tests/data/task9_none.txt'
+code: 1
+
+name: журнал - один из входных файлов (путь записан иначе)
+args: 5 tests/data/task9_bad_config_base.txt tests/data/task9_empty.txt --log ./tests/data/../data/task9_empty.txt
+err: Error: the log file must not be one of the input files
+code: 1
+
+name: неправильные аргументы: '5 tests/data/task9_bad_config_base.txt'
+args: 5 tests/data/task9_bad_config_base.txt
+err: Usage: lab4_task9 <max_priority> <config file> <requests file> ... [--log <file>] [--seed N]
+err:        lab4_task9 --self-test [--seed N]
+code: 1
+
+name: неправильные аргументы: ''
+args: 
+err: Usage: lab4_task9 <max_priority> <config file> <requests file> ... [--log <file>] [--seed N]
+err:        lab4_task9 --self-test [--seed N]
+code: 1
+
+name: неправильные аргументы: '5 a b --log'
+args: 5 a b --log
+err: Usage: lab4_task9 <max_priority> <config file> <requests file> ... [--log <file>] [--seed N]
+err:        lab4_task9 --self-test [--seed N]
+code: 1
+
+name: неправильные аргументы: '5 a b --seed 1 --seed 2'
+args: 5 a b --seed 1 --seed 2
+err: Usage: lab4_task9 <max_priority> <config file> <requests file> ... [--log <file>] [--seed N]
+err:        lab4_task9 --self-test [--seed N]
+code: 1
+
+name: неправильные аргументы: '--self-test 5'
+args: --self-test 5
+err: Usage: lab4_task9 <max_priority> <config file> <requests file> ... [--log <file>] [--seed N]
+err:        lab4_task9 --self-test [--seed N]
+code: 1
+
+name: неправильные аргументы: '--self-test --log x'
+args: --self-test --log x
+err: Usage: lab4_task9 <max_priority> <config file> <requests file> ... [--log <file>] [--seed N]
+err:        lab4_task9 --self-test [--seed N]
+code: 1
+
+name: неправильные аргументы: '--self-test --self-test'
+args: --self-test --self-test
+err: Usage: lab4_task9 <max_priority> <config file> <requests file> ... [--log <file>] [--seed N]
+err:        lab4_task9 --self-test [--seed N]
+code: 1
+
+name: --self-test: все операции шести куч и четырёх словарей (seed 1)
+args: --self-test --seed 1
+out: BinaryHeap: OK
+out: BinomialHeap: OK
+out: FibonacciHeap: OK
+out: SkewHeap: OK
+out: LeftistHeap: OK
+out: Treap: OK
+out: HashSet: OK
+out: DynamicArray: OK
+out: BinarySearchTree: OK
+out: Trie: OK
+code: 0
+
+name: --self-test: все операции шести куч и четырёх словарей (seed 2)
+args: --self-test --seed 2
+out: BinaryHeap: OK
+out: BinomialHeap: OK
+out: FibonacciHeap: OK
+out: SkewHeap: OK
+out: LeftistHeap: OK
+out: Treap: OK
+out: HashSet: OK
+out: DynamicArray: OK
+out: BinarySearchTree: OK
+out: Trie: OK
+code: 0
+
+name: max_priority не натуральное
+args: 0 tests/data/task9_bad_config_base.txt tests/data/task9_empty.txt
+err: Error: max_priority must be a natural number (up to 2147483647)
+code: 1
+
+name: seed не число
+args: 5 tests/data/task9_bad_config_base.txt tests/data/task9_empty.txt --seed x
+err: Error: the seed must be a number
+code: 1
+
+program: lab4_task9_config
+
+name: все ответы правильные с первого раза; структуры - номерами
+args: tests/data/res9_config.txt
+input: 2
+input: 4
+input: 2026-11-02T09:00:00
+input: 2026-11-02T18:00
+input: 3
+input: 12
+input: 3
+input: 10 25 50
+input: 1.5
+out: Config saved to 'tests/data/res9_config.txt'
+code: 0
+file: tests/data/res9_config.txt
+fout: BinomialHeap
+fout: Trie
+fout: 2026-11-02T09:00:00
+fout: 2026-11-02T18:00:00
+fout: 3
+fout: 12
+fout: 3
+fout: 10 25 50
+fout: 1.5
+
+name: структуры - названиями, одно число операторов для всех отделений
+args: tests/data/res9_config.txt
+input:   Treap 
+input: HashSet
+input: 2026-11-02T09:00
+input: 2026-11-02T09:00
+input: 1
+input: 1
+input: 4
+input: 15
+input: 1
+out: Config saved to 'tests/data/res9_config.txt'
+code: 0
+file: tests/data/res9_config.txt
+fout: Treap
+fout: HashSet
+fout: 2026-11-02T09:00:00
+fout: 2026-11-02T09:00:00
+fout: 1
+fout: 1
+fout: 4
+fout: 15 15 15 15
+fout: 1
+
+name: неправильные ответы - сообщение и тот же вопрос снова
+args: tests/data/res9_config.txt
+input: 7
+input: heap
+input: 0
+input: BinaryHeap
+input: trie
+input: 5
+input: Trie
+input: 2026-13-01T09:00:00
+input: 2026-02-29T09:00
+input: 2028-02-29T09:00
+input: 2028-02-28T09:00
+input: 2028-02-29T10:00:00
+input: 0
+input: -5
+input: 5
+input: 4
+input: 1000001
+input: 7
+input: 0
+input: 101
+input: 2
+input: 9 10
+input: 10 20 30
+input: 10 x
+input: 
+input: 10 20
+input: 0.5
+input: 1.
+input: x
+input: 1.0000001
+input: 2.000001
+out: Error: choose a number from 1 to 6 or a name from the list
+out: Error: choose a number from 1 to 6 or a name from the list
+out: Error: choose a number from 1 to 6 or a name from the list
+out: Error: choose a number from 1 to 4 or a name from the list
+out: Error: choose a number from 1 to 4 or a name from the list
+out: Error: wrong time, need YYYY-MM-DDTHH:MM:SS (seconds may be omitted)
+out: Error: wrong time, need YYYY-MM-DDTHH:MM:SS (seconds may be omitted)
+out: Error: the end must not be before the start
+out: Error: need a natural number from 1 to 1000000
+out: Error: need a natural number from 1 to 1000000
+out: Error: need a natural number from 5 to 1000000
+out: Error: need a natural number from 5 to 1000000
+out: Error: need a natural number from 1 to 100
+out: Error: need a natural number from 1 to 100
+out: Error: need one number or 2 numbers from 10 to 50
+out: Error: need one number or 2 numbers from 10 to 50
+out: Error: need one number or 2 numbers from 10 to 50
+out: Error: need one number or 2 numbers from 10 to 50
+out: Error: need a number 1.0 or more (up to 6 digits after the point)
+out: Error: need a number 1.0 or more (up to 6 digits after the point)
+out: Error: need a number 1.0 or more (up to 6 digits after the point)
+out: Error: need a number 1.0 or more (up to 6 digits after the point)
+out: Config saved to 'tests/data/res9_config.txt'
+code: 0
+file: tests/data/res9_config.txt
+fout: BinaryHeap
+fout: Trie
+fout: 2028-02-29T09:00:00
+fout: 2028-02-29T10:00:00
+fout: 5
+fout: 7
+fout: 2
+fout: 10 20
+fout: 2.000001
+
+name: ввод кончился раньше времени
+args: tests/data/res9_config.txt
+input: 1
+input: 1
+input: 2026-11-02T09:00:00
+input: bad
+out: Error: wrong time, need YYYY-MM-DDTHH:MM:SS (seconds may be omitted)
+err: Error: the input ended before all parameters were entered
+code: 1
+
+name: пустой ввод
+args: tests/data/res9_config.txt
+err: Error: the input ended before all parameters were entered
+code: 1
+
+name: без аргументов
+args: 
+err: Usage: lab4_task9_config <config file>
+code: 1
+
+name: файл не записать (нет такой папки)
+args: tests/data/no_such_dir/config.txt
+input: 2
+input: 4
+input: 2026-11-02T09:00:00
+input: 2026-11-02T18:00
+input: 3
+input: 12
+input: 3
+input: 10 25 50
+input: 1.5
+err: Error: can not write file 'tests/data/no_such_dir/config.txt'
+code: 1
+
+program: lab4_task9_generate
+
+name: один файл; seed задан - содержимое повторяется
+args: 5 tests/data/task9_demo_config.txt tests/data/res9_gen1.txt --seed 11
+out: file 'tests/data/res9_gen1.txt': 26 requests
+code: 0
+file: tests/data/res9_gen1.txt
+fout: 2026-11-02T09:00:00 2 1 "the the"
+fout: 2026-11-02T09:02:00 0 1 "internet"
+fout: 2026-11-02T09:03:00 3 3 "does lost work lost"
+fout: 2026-11-02T09:05:00 3 3 "please my is please"
+fout: 2026-11-02T09:08:00 0 3 "work password account"
+fout: 2026-11-02T09:08:00 0 3 "password"
+fout: 2026-11-02T09:08:00 4 3 "internet my work"
+fout: 2026-11-02T09:10:00 1 1 "slow"
+fout: 2026-11-02T09:10:00 5 1 "account please"
+fout: 2026-11-02T09:10:00 4 3 "help the password not"
+fout: 2026-11-02T09:11:00 0 1 "does"
+fout: 2026-11-02T09:11:00 3 3 "password printer"
+fout: 2026-11-02T09:12:00 0 3 "work please my account"
+fout: 2026-11-02T09:14:00 5 1 "printer"
+fout: 2026-11-02T09:17:00 3 2 "work work the"
+fout: 2026-11-02T09:17:00 3 1 "help"
+fout: 2026-11-02T09:19:00 1 1 "is the again"
+fout: 2026-11-02T09:21:00 4 1 "work again"
+fout: 2026-11-02T09:22:00 4 1 "account password"
+fout: 2026-11-02T09:22:00 5 3 "account please again password"
+fout: 2026-11-02T09:23:00 4 2 "again"
+fout: 2026-11-02T09:24:00 0 2 "my does work the"
+fout: 2026-11-02T09:26:00 0 2 "again slow"
+fout: 2026-11-02T09:28:00 3 1 "not work"
+fout: 2026-11-02T09:29:00 0 1 "again the please not"
+fout: 2026-11-02T09:30:00 4 3 "the does"
+
+name: два файла (проверяется второй); время модели - через новый год
+args: --seed 12 100 tests/data/task9_time_config.txt tests/data/res9_gen1.txt tests/data/res9_gen2.txt
+out: file 'tests/data/res9_gen1.txt': 44 requests
+out: file 'tests/data/res9_gen2.txt': 41 requests
+code: 0
+file: tests/data/res9_gen2.txt
+fout: 2026-12-31T23:58:00 65 1 "help printer help help"
+fout: 2026-12-31T23:58:00 100 1 "is again"
+fout: 2026-12-31T23:59:00 99 1 "internet"
+fout: 2026-12-31T23:59:00 12 1 "password blocked blocked"
+fout: 2026-12-31T23:59:00 0 1 "work is lost"
+fout: 2026-12-31T23:59:00 65 1 "the printer work slow"
+fout: 2026-12-31T23:59:00 34 1 "work not"
+fout: 2026-12-31T23:59:00 3 1 "my the printer account"
+fout: 2026-12-31T23:59:00 3 1 "does"
+fout: 2027-01-01T00:00:00 68 1 "not"
+fout: 2027-01-01T00:00:00 16 1 "blocked help is does"
+fout: 2027-01-01T00:00:00 56 1 "help my"
+fout: 2027-01-01T00:00:00 3 1 "printer please printer"
+fout: 2027-01-01T00:00:00 82 1 "account"
+fout: 2027-01-01T00:01:00 1 1 "help the password blocked"
+fout: 2027-01-01T00:01:00 83 1 "slow does"
+fout: 2027-01-01T00:01:00 66 1 "not"
+fout: 2027-01-01T00:01:00 64 1 "the blocked password"
+fout: 2027-01-01T00:01:00 29 1 "again again slow"
+fout: 2027-01-01T00:01:00 76 1 "blocked help"
+fout: 2027-01-01T00:02:00 81 1 "password"
+fout: 2027-01-01T00:02:00 93 1 "help lost work not"
+fout: 2027-01-01T00:02:00 71 1 "internet again"
+fout: 2027-01-01T00:02:00 60 1 "the"
+fout: 2027-01-01T00:02:00 38 1 "help does work"
+fout: 2027-01-01T00:03:00 89 1 "not work lost"
+fout: 2027-01-01T00:03:00 95 1 "does help work"
+fout: 2027-01-01T00:03:00 52 1 "help does"
+fout: 2027-01-01T00:03:00 45 1 "account blocked printer internet"
+fout: 2027-01-01T00:03:00 84 1 "password my lost work"
+fout: 2027-01-01T00:03:00 39 1 "account"
+fout: 2027-01-01T00:03:00 49 1 "password please account does"
+fout: 2027-01-01T00:04:00 40 1 "is printer the"
+fout: 2027-01-01T00:05:00 64 1 "the help lost"
+fout: 2027-01-01T00:05:00 98 1 "again internet"
+fout: 2027-01-01T00:05:00 50 1 "does is"
+fout: 2027-01-01T00:05:00 91 1 "does help password"
+fout: 2027-01-01T00:05:00 35 1 "blocked please password"
+fout: 2027-01-01T00:05:00 41 1 "password the help slow"
+fout: 2027-01-01T00:05:00 75 1 "help password"
+fout: 2027-01-01T00:05:00 5 1 "account blocked internet"
+
+name: файл заявок совпадает с файлом параметров
+args: 5 tests/data/task9_demo_config.txt ./tests/data/task9_demo_config.txt --seed 1
+err: Error: file './tests/data/task9_demo_config.txt' is the config file or is given twice
+code: 1
+
+name: один и тот же файл заявок дважды (первый создаётся)
+args: 5 tests/data/task9_demo_config.txt tests/data/res9_gen1.txt tests/data/../data/res9_gen1.txt --seed 1
+out: file 'tests/data/res9_gen1.txt': 59 requests
+err: Error: file 'tests/data/../data/res9_gen1.txt' is the config file or is given twice
+code: 1
+
+name: ошибка в файле параметров - как в 9.1
+args: 5 tests/data/task9_bad_config3.txt tests/data/res9_gen1.txt --seed 1
+err: Error: config 'tests/data/task9_bad_config3.txt' line 3: wrong start time (need YYYY-MM-DDTHH:MM:SS)
+code: 1
+
+name: неправильные аргументы
+args: 5 tests/data/task9_demo_config.txt
+err: Usage: lab4_task9_generate <max_priority> <config file> <requests file> ... [--seed N]
+code: 1
+
+name: max_priority не натуральное
+args: x tests/data/task9_demo_config.txt tests/data/res9_gen1.txt
+err: Error: max_priority must be a natural number (up to 2147483647)
+code: 1

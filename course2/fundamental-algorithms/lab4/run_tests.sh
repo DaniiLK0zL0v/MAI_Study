@@ -194,6 +194,7 @@ new_test() {
 
 for f in "${files[@]}"; do
     PROGRAM=""
+    PROGRAMS=""   # все программы файла (в файле задания 9 их три) - для итога valgrind
     new_test
     zapuskat=1
     zapuskov=0
@@ -210,6 +211,8 @@ for f in "${files[@]}"; do
         fi
         if [[ $line =~ ^program:[[:space:]]*(.*)$ ]]; then
             PROGRAM="${BASH_REMATCH[1]}"
+            PROGRAMS="$PROGRAMS${PROGRAMS:+, }$PROGRAM"
+            zapuskat=1
             # программа лежит в build/ (ее туда кладет make);
             # в Git Bash на Windows - exe, собранный zig в ../windows/build/
             EXE="./build/$PROGRAM"
@@ -243,11 +246,11 @@ for f in "${files[@]}"; do
     finish_test
     if [ $MEMCHECK -eq 1 ]; then
         if [ $zapuskat -eq 0 ]; then
-            ITOGI+=("$PROGRAM: not checked (program not found)")
+            ITOGI+=("$PROGRAMS: not checked (program not found)")
         elif [ $mem_oshibok -eq 0 ]; then
-            ITOGI+=("$PROGRAM: $zapuskov runs, no memory errors")
+            ITOGI+=("$PROGRAMS: $zapuskov runs, no memory errors")
         else
-            ITOGI+=("$PROGRAM: $zapuskov runs, memory errors in $mem_oshibok")
+            ITOGI+=("$PROGRAMS: $zapuskov runs, memory errors in $mem_oshibok")
         fi
     fi
 done
