@@ -1,0 +1,4 @@
+#define DM v0
+#define HU v1
+#define Lc v2
+DM HU Lc

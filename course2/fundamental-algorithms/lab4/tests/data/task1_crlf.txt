@@ -1,0 +1,4 @@
+#define A b
+#define C d e
+A C A
+CC A

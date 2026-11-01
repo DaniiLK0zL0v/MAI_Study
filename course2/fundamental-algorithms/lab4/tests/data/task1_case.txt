@@ -1,0 +1,4 @@
+#define pi 1
+#define PI 2
+#define Pi 3
+pi PI Pi pI

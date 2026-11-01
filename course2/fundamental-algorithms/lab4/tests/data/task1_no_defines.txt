@@ -1,0 +1,2 @@
+just text, PI is not defined
+second line

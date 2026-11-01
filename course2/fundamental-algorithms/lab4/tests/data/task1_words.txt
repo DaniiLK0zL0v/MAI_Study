@@ -1,0 +1,3 @@
+#define max MAXIMUM
+#define x X
+max(x,y) maxx xmax x1 1x x_x [x] {max} x-max max.x x	x

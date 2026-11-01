@@ -1,0 +1,6 @@
+#define PI 3.14159
+#define Area PI*r*r
+#define A 1
+#define 2E two-E
+PI and PIE and xPI, (PI)+1; Area; A_A 2E привет
+no newline PI

@@ -1,0 +1,5 @@
+#define E
+#define V   a  b  # % [x] ; "q"
+#define W V V
+#define T		tab
+<E>|V|W|T

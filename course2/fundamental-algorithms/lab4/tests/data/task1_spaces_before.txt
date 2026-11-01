@@ -1,0 +1,4 @@
+  #define A one
+	#define B two
+#defineC three
+A B C
