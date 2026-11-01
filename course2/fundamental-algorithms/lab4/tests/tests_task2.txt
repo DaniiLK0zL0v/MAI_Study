@@ -1,0 +1,225 @@
+# Тесты задания 2 (интерпретатор массивов). Ожидаемый вывод - эталон docs/src/эталоны/t2.py
+# (тот же генератор xorshift64, тот же seed). Пути к файлам - от папки github.
+
+program: lab4_task2
+
+name: демонстрация всех команд (файл для показа на защите) (seed 1)
+args: tests/data/task2_demo.txt --seed 1
+err: Warning in command 1 (line 1): 3 wrong elements skipped
+out: A (9): 10 -3 7 7 0 5 4 0 3
+out: Stats A:
+out:   size: 9
+out:   max: 10 (index 0)
+out:   min: -3 (index 1)
+out:   most frequent: 7 (2 times)
+out:   average: 3.666667
+out:   max deviation from average: 6.666667
+out: B (12): -7 18 8 -19 -19 -12 14 -2 7 -9 -14 -6
+out: B (12): -19 -19 -14 -12 -9 -7 -6 -2 7 8 14 18
+out: B[0..4]: 18 14 8 7 -2
+out: B (12): -6 7 18 -19 -2 8 14 -12 -9 -19 -7 -14
+out: A (21): 10 -3 7 7 0 5 4 0 3 -6 7 18 -19 -2 8 14 -12 -9 -19 -7 -14
+out: A (14): 10 -3 -6 7 18 -19 -2 8 14 -12 -9 -19 -7 -14
+out: C (3): -3 -6 7
+out: C[1] = -6
+out: C (0):
+out: Stats A:
+out:   size: 14
+out:   max: 18 (index 4)
+out:   min: -19 (index 5)
+out:   most frequent: -19 (2 times)
+out:   average: -2.428571
+out:   max deviation from average: 20.428571
+code: 0
+
+name: демонстрация всех команд (файл для показа на защите) (seed 2)
+args: tests/data/task2_demo.txt --seed 2
+err: Warning in command 1 (line 1): 3 wrong elements skipped
+out: A (9): 10 -3 7 7 0 5 4 0 3
+out: Stats A:
+out:   size: 9
+out:   max: 10 (index 0)
+out:   min: -3 (index 1)
+out:   most frequent: 7 (2 times)
+out:   average: 3.666667
+out:   max deviation from average: 6.666667
+out: B (12): 9 -6 -18 -6 2 -4 5 -3 -2 -14 19 12
+out: B (12): -18 -14 -6 -6 -4 -3 -2 2 5 9 12 19
+out: B[0..4]: 19 12 9 5 2
+out: B (12): -6 5 12 -6 -2 9 19 -18 -3 2 -4 -14
+out: A (21): 10 -3 7 7 0 5 4 0 3 -6 5 12 -6 -2 9 19 -18 -3 2 -4 -14
+out: A (14): 10 -3 -6 5 12 -6 -2 9 19 -18 -3 2 -4 -14
+out: C (3): -3 -6 5
+out: C[1] = -6
+out: C (0):
+out: Stats A:
+out:   size: 14
+out:   max: 19 (index 8)
+out:   min: -18 (index 9)
+out:   most frequent: -3 (2 times)
+out:   average: 0.071429
+out:   max deviation from average: 18.928571
+code: 0
+
+name: регистр букв не важен, пробелы и переносы строк где угодно
+args: tests/data/task2_case_spaces.txt --seed 1
+err: Warning in command 1 (line 1): 3 wrong elements skipped
+out: A (9): 10 -3 7 7 0 5 4 0 3
+out: A[2..4]: 7 7 0
+out: A (9): -3 0 0 3 4 5 7 7 10
+out: A (0):
+code: 0
+
+name: Stats: 500 чисел, один элемент, границы long long
+args: tests/data/task2_stats.txt --seed 1
+out: Stats S:
+out:   size: 500
+out:   max: 992 (index 66)
+out:   min: -999 (index 243)
+out:   most frequent: 902 (3 times)
+out:   average: -31.588000
+out:   max deviation from average: 1023.588000
+out: S[0..9]: -999 -996 -994 -987 -986 -981 -977 -970 -961 -957
+out: S[490..499]: 953 960 960 967 975 983 984 988 990 992
+out: Stats S:
+out:   size: 500
+out:   max: 992 (index 499)
+out:   min: -999 (index 0)
+out:   most frequent: 902 (3 times)
+out:   average: -31.588000
+out:   max deviation from average: 1023.588000
+out: Stats T:
+out:   size: 1
+out:   max: 5 (index 0)
+out:   min: 5 (index 0)
+out:   most frequent: 5 (1 times)
+out:   average: 5.000000
+out:   max deviation from average: 0.000000
+err: Warning in command 9 (line 3): 1 wrong elements skipped
+out: L (3): 9223372036854775807 -9223372036854775808 0
+out: Stats L:
+out:   size: 3
+out:   max: 9223372036854775807 (index 0)
+out:   min: -9223372036854775808 (index 1)
+out:   most frequent: 9223372036854775807 (1 times)
+out:   average: -0.333333
+out:   max deviation from average: 9223372036854775808.000000
+code: 0
+
+name: Stats пустого массива и Copy из пустого - ошибки
+args: tests/data/task2_frequent_tie.txt --seed 1
+err: Error in command 2 (line 1): the array is empty
+err: Error in command 3 (line 2): index or count is out of the array
+code: 1
+
+name: Rand: отрезок из одного числа, весь long long, 0 штук, ошибки границ
+args: tests/data/task2_rand_edge.txt --seed 1
+out: A (5): 7 7 7 7 7
+out: B (6): -2188662777950182536 -5146241856126489410 -6951615060390368793 2347586703317789300 8947876421188888736 -7764569437387842063
+out: C (0):
+err: Error in command 7 (line 4): wrong count or range (need 0 <= count <= 10000000 and lb <= rb)
+err: Error in command 8 (line 5): wrong count or range (need 0 <= count <= 10000000 and lb <= rb)
+err: Error in command 9 (line 6): wrong count or range (need 0 <= count <= 10000000 and lb <= rb)
+err: Error in command 10 (line 7): the number is wrong or too big: expected: Rand A, count, lb, rb;
+code: 1
+
+name: Concat A, A и Copy A, ..., A - массив сам с собой
+args: tests/data/task2_self_concat.txt --seed 1
+out: A (3): 6 8 9
+out: A (6): 6 8 9 6 8 9
+out: A (4): 8 9 6 8
+code: 0
+
+name: Remove: пустое удаление, удаление хвоста и ошибки
+args: tests/data/task2_remove_edges.txt --seed 1
+out: A (10): 63 85 87 10 72 16 87 53 64 92
+out: A (7): 63 85 87 10 72 16 87
+out: A (6): 85 87 10 72 16 87
+err: Error in command 9 (line 1): index or count is out of the array
+err: Error in command 10 (line 1): index or count is out of the array
+err: Error in command 11 (line 1): index or count is out of the array
+out: A (6): 85 87 10 72 16 87
+code: 1
+
+name: ошибки записи и выполнения - сообщение, дальше следующие команды
+args: tests/data/task2_errors.txt --seed 1
+err: Error in command 1 (line 1): unknown command
+err: Error in command 2 (line 2): index or count is out of the array
+err: Error in command 3 (line 3): the array is empty
+err: Error in command 4 (line 4): can not open, read or write the file
+err: Error in command 5 (line 5): syntax error: expected: Sort A+;  or  Sort A-;
+err: Error in command 6 (line 6): syntax error: expected: Print A, index;  Print A, from, to;  or  Print A, all;
+err: Error in command 7 (line 7): index or count is out of the array
+err: Error in command 8 (line 8): index or count is out of the array
+err: Error in command 9 (line 9): syntax error: expected: Concat A, B;
+err: Error in command 10 (line 10): syntax error: expected: Rand A, count, lb, rb;
+err: Error in command 11 (line 11): syntax error: expected: Free(A);
+err: Error in command 12 (line 12): syntax error: expected: Print A, all;
+err: Error in command 13 (line 13): syntax error: expected: Print A, all;
+err: Error in command 14 (line 14): syntax error: expected: Remove A, index, count;
+err: Error in command 15 (line 15): syntax error: a command name expected
+err: Error in command 16 (line 16): syntax error: a command name expected
+err: Warning in command 17 (line 17): 3 wrong elements skipped
+err: Error in command 18 (line 17): ';' expected at the end
+code: 1
+
+name: Load: только неправильные элементы, пустой файл, число 2^63 вне long long
+args: tests/data/task2_load_bad.txt --seed 1
+err: Warning in command 1 (line 1): 6 wrong elements skipped
+out: A (0):
+out: B (0):
+err: Warning in command 5 (line 1): 1 wrong elements skipped
+out: C (3): 9223372036854775807 -9223372036854775808 0
+code: 0
+
+name: Save и Load того же файла
+args: tests/data/task2_save.txt --seed 1
+out: B (5): 4 4 2 3 4
+code: 0
+file: tests/data/res2.txt
+fout: 4 4 2 3 4
+
+name: 100000 случайных чисел: сортировка, перемешивание, статистика
+args: tests/data/task2_big.txt --seed 1
+out: A[0..4]: -999984 -999966 -999949 -999945 -999934
+out: Stats A:
+out:   size: 100000
+out:   max: 1000000 (index 99999)
+out:   min: -999984 (index 0)
+out:   most frequent: 734741 (3 times)
+out:   average: -1437.073900
+out:   max deviation from average: 1001437.073900
+out: A[99995..99999]: -999934 -999945 -999949 -999966 -999984
+out: Stats B:
+out:   size: 1000
+out:   max: 980602 (index 0)
+out:   min: 960985 (index 999)
+out:   most frequent: 980324 (2 times)
+out:   average: 970597.869000
+out:   max deviation from average: 10004.131000
+code: 0
+
+name: Save в файл с инструкциями (./путь) - ошибка, файл не испорчен
+args: tests/data/task2_save_self.txt --seed 1
+err: Error in command 2 (line 1): can not save into the instructions file
+out: A (2): 1 1
+code: 1
+
+name: нет аргументов
+err: Usage: lab4_task2 <instructions file> [--seed N]
+code: 1
+
+name: неверный ключ
+args: tests/data/task2_demo.txt --sed 1
+err: Usage: lab4_task2 <instructions file> [--seed N]
+code: 1
+
+name: seed - не число
+args: tests/data/task2_demo.txt --seed x1
+err: Error: the seed must be a non-negative integer
+code: 1
+
+name: файла с инструкциями нет
+args: tests/data/task2_none.txt
+err: Error: can not read file 'tests/data/task2_none.txt'
+code: 1

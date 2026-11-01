@@ -1,0 +1,1 @@
+Load A, tests/data/task2_bad_only.txt; Print A, all; Load B, tests/data/task2_empty.txt; Print B, all; Load C, tests/data/task2_limits.txt; Print C, all;

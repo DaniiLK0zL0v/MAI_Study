@@ -1,0 +1,2 @@
+Rand Z, 0, 0, 0; Stats Z;
+Copy Z, 0, 0, Y;

@@ -1,0 +1,1 @@
+Rand A, 2, 1, 1; Save A, ./tests/data/task2_save_self.txt; Print A, all;

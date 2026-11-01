@@ -1,0 +1,3 @@
+Load S, tests/data/task2_numbers.txt; Stats S; Sort S+; Print S, 0, 9; Print S, 490, 499; Stats S;
+Rand T, 1, 5, 5; Stats T;
+Load L, tests/data/task2_limits.txt; Print L, all; Stats L;

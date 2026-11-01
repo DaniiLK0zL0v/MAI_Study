@@ -1,0 +1,1 @@
+Rand A, 5, 1, 5; Save A, tests/data/res2_tmp.txt; Load B, tests/data/res2_tmp.txt; Print B, all; Save A, tests/data/res2.txt;

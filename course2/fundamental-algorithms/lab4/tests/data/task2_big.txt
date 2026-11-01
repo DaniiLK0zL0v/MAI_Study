@@ -1,0 +1,1 @@
+Rand A, 100000, -1000000, 1000000; Sort A+; Print A, 0, 4; Stats A; Shuffle A; Sort A-; Print A, 99995, 99999; Copy A, 1000, 1999, B; Stats B;

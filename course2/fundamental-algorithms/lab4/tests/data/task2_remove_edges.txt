@@ -1,0 +1,1 @@
+Rand A, 10, 0, 100; Print A, all; Remove A, 0, 0; Remove A, 10, 0; Remove A, 7, 3; Print A, all; Remove A, 0, 1; Print A, all; Remove A, 5, 5; Remove A, -1, 1; Remove A, 6, 1; Print A, all;

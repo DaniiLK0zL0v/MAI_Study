@@ -1,0 +1,17 @@
+Lod A, x;
+Print A, 0;
+Stats A;
+Load A, tests/data/task2_no_such.txt;
+Sort A*;
+Print A;
+Print A, 1, 0;
+Copy A, 0, 0, B;
+Concat A, BB;
+Rand A, 3, 1;
+Free(A;
+Print A, all, 1;
+Print A, al;
+Remove A, x, 1;
+12;
+;
+Load A, tests/data/task2_in.txt; Print A, all

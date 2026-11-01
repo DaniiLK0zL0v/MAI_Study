@@ -1,0 +1,10 @@
+lOaD   a ,   tests/data/task2_in.txt  ;  print A,ALL;PRINT a , 2 , 4 ;
+
+  sort	A
++ ;
+Print
+ a
+,
+all
+;
+free a; Print A, all;

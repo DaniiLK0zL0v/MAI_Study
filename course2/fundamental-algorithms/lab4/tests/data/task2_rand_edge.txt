@@ -1,0 +1,7 @@
+Rand A, 5, 7, 7; Print A, all;
+Rand B, 6, -9223372036854775808, 9223372036854775807; Print B, all;
+Rand C, 0, 1, 2; Print C, all;
+Rand D, 3, 2, 1;
+Rand E, -1, 1, 2;
+Rand F, 10000001, 1, 2;
+Rand G, 4, 99999999999999999999, 1;
