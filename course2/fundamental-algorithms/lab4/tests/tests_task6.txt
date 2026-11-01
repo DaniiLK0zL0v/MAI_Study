@@ -1,0 +1,450 @@
+# Тесты задания 6 (почтовый сервис). Время - только командами step и wait (флаг --manual).
+# Ожидаемый вывод и журнал - модель docs/src/эталоны/t6.py с теми же правилами.
+
+program: lab4_task6
+
+name: пример: маршрут по кратчайшему пути, срочное письмо уходит первым, получение писем
+args: tests/data/task6_basic_map.txt tests/data/res6_basic.log --manual
+input: offices
+input: add_letter normal 1 1 4 hello world
+input: add_letter urgent 5 1 4 fast one
+input: add_letter normal 1 2 2 local
+input: letters
+input: step
+input: letters
+input: step 3
+input: letters
+input: take 1
+input: take 2
+input: take 3
+input: take 3
+input: letters
+input: exit
+out: Log file: tests/data/res6_basic.log
+out: Offices: 5
+out: office 1: 0 of 10 places used (0 in transit, 0 waiting), links: 2 5
+out: office 2: 0 of 10 places used (0 in transit, 0 waiting), links: 1 3
+out: office 3: 0 of 10 places used (0 in transit, 0 waiting), links: 2 4
+out: office 4: 0 of 10 places used (0 in transit, 0 waiting), links: 3 5
+out: office 5: 0 of 10 places used (0 in transit, 0 waiting), links: 1 4
+out: Letter 1 accepted in office 1
+out: Letter 2 accepted in office 1
+out: Letter 3 accepted in office 2
+out: Letters: 3
+out: letter 1: normal, priority 1, from office 1 to office 4, in transit, now in office 1, data: "hello world"
+out: letter 2: urgent, priority 5, from office 1 to office 4, in transit, now in office 1, data: "fast one"
+out: letter 3: normal, priority 1, from office 2 to office 2, delivered (waiting for the receiver), data: "local"
+out: Letters: 3
+out: letter 1: normal, priority 1, from office 1 to office 4, in transit, now in office 1, data: "hello world"
+out: letter 2: urgent, priority 5, from office 1 to office 4, in transit, now in office 5, data: "fast one"
+out: letter 3: normal, priority 1, from office 2 to office 2, delivered (waiting for the receiver), data: "local"
+out: Letters: 3
+out: letter 1: normal, priority 1, from office 1 to office 4, delivered (waiting for the receiver), data: "hello world"
+out: letter 2: urgent, priority 5, from office 1 to office 4, delivered (waiting for the receiver), data: "fast one"
+out: letter 3: normal, priority 1, from office 2 to office 2, delivered (waiting for the receiver), data: "local"
+out: Letter 1 is taken in office 4
+out: Letter 2 is taken in office 4
+out: Letter 3 is taken in office 2
+out: Error: there is no such letter in the system
+out: Letters: 3
+out: letter 1: normal, priority 1, from office 1 to office 4, taken by the receiver, data: "hello world"
+out: letter 2: urgent, priority 5, from office 1 to office 4, taken by the receiver, data: "fast one"
+out: letter 3: normal, priority 1, from office 2 to office 2, taken by the receiver, data: "local"
+code: 0
+file: tests/data/res6_basic.log
+fout: [tick 0] post service started with 5 offices
+fout: [tick 0] letter 1 created in office 1
+fout: [tick 0] letter 2 created in office 1
+fout: [tick 0] letter 3 created in office 2
+fout: [tick 0] letter 3 delivered to office 2
+fout: [tick 1] letter 2 moved from office 1 to office 5
+fout: [tick 2] letter 1 moved from office 1 to office 5
+fout: [tick 2] letter 2 moved from office 5 to office 4
+fout: [tick 2] letter 2 delivered to office 4
+fout: [tick 3] letter 1 moved from office 5 to office 4
+fout: [tick 3] letter 1 delivered to office 4
+fout: [tick 4] letter 1 taken by the receiver in office 4
+fout: [tick 4] letter 2 taken by the receiver in office 4
+fout: [tick 4] letter 3 taken by the receiver in office 2
+fout: [tick 4] post service stopped
+
+name: косая куча: сначала больший приоритет, при равном - письмо раньше
+args: tests/data/task6_priority_map.txt tests/data/res6_priority.log --manual
+input: add_letter normal 1 1 4 p1
+input: add_letter normal 3 1 4 p3
+input: add_letter normal 2 1 4 p2
+input: add_letter normal 3 1 4 p3
+input: add_letter normal 0 1 4 p0
+input: step
+input: letters
+input: step 2
+input: letters
+input: step 10
+input: letters
+out: Log file: tests/data/res6_priority.log
+out: Letter 1 accepted in office 1
+out: Letter 2 accepted in office 1
+out: Letter 3 accepted in office 1
+out: Letter 4 accepted in office 1
+out: Letter 5 accepted in office 1
+out: Letters: 5
+out: letter 1: normal, priority 1, from office 1 to office 4, in transit, now in office 1, data: "p1"
+out: letter 2: normal, priority 3, from office 1 to office 4, in transit, now in office 2, data: "p3"
+out: letter 3: normal, priority 2, from office 1 to office 4, in transit, now in office 1, data: "p2"
+out: letter 4: normal, priority 3, from office 1 to office 4, in transit, now in office 1, data: "p3"
+out: letter 5: normal, priority 0, from office 1 to office 4, in transit, now in office 1, data: "p0"
+out: Letters: 5
+out: letter 1: normal, priority 1, from office 1 to office 4, in transit, now in office 1, data: "p1"
+out: letter 2: normal, priority 3, from office 1 to office 4, delivered (waiting for the receiver), data: "p3"
+out: letter 3: normal, priority 2, from office 1 to office 4, in transit, now in office 2, data: "p2"
+out: letter 4: normal, priority 3, from office 1 to office 4, in transit, now in office 3, data: "p3"
+out: letter 5: normal, priority 0, from office 1 to office 4, in transit, now in office 1, data: "p0"
+out: Letters: 5
+out: letter 1: normal, priority 1, from office 1 to office 4, delivered (waiting for the receiver), data: "p1"
+out: letter 2: normal, priority 3, from office 1 to office 4, delivered (waiting for the receiver), data: "p3"
+out: letter 3: normal, priority 2, from office 1 to office 4, delivered (waiting for the receiver), data: "p2"
+out: letter 4: normal, priority 3, from office 1 to office 4, delivered (waiting for the receiver), data: "p3"
+out: letter 5: normal, priority 0, from office 1 to office 4, delivered (waiting for the receiver), data: "p0"
+code: 0
+file: tests/data/res6_priority.log
+fout: [tick 0] post service started with 4 offices
+fout: [tick 0] letter 1 created in office 1
+fout: [tick 0] letter 2 created in office 1
+fout: [tick 0] letter 3 created in office 1
+fout: [tick 0] letter 4 created in office 1
+fout: [tick 0] letter 5 created in office 1
+fout: [tick 1] letter 2 moved from office 1 to office 2
+fout: [tick 2] letter 4 moved from office 1 to office 2
+fout: [tick 2] letter 2 moved from office 2 to office 3
+fout: [tick 3] letter 3 moved from office 1 to office 2
+fout: [tick 3] letter 4 moved from office 2 to office 3
+fout: [tick 3] letter 2 moved from office 3 to office 4
+fout: [tick 3] letter 2 delivered to office 4
+fout: [tick 4] letter 1 moved from office 1 to office 2
+fout: [tick 4] letter 3 moved from office 2 to office 3
+fout: [tick 4] letter 4 moved from office 3 to office 4
+fout: [tick 4] letter 4 delivered to office 4
+fout: [tick 5] letter 5 moved from office 1 to office 2
+fout: [tick 5] letter 1 moved from office 2 to office 3
+fout: [tick 5] letter 3 moved from office 3 to office 4
+fout: [tick 5] letter 3 delivered to office 4
+fout: [tick 6] letter 5 moved from office 2 to office 3
+fout: [tick 6] letter 1 moved from office 3 to office 4
+fout: [tick 6] letter 1 delivered to office 4
+fout: [tick 7] letter 5 moved from office 3 to office 4
+fout: [tick 7] letter 5 delivered to office 4
+fout: [tick 13] post service stopped
+
+name: переполненное отделение: письмо ждёт, место занимают и доставленные письма
+args: tests/data/task6_full_map.txt tests/data/res6_full.log --manual
+input: add_office 9 1 2
+input: add_office 8 1 3
+input: add_letter normal 1 1 4 a
+input: add_letter normal 1 1 4 b
+input: add_letter normal 1 1 4 c
+input: add_letter normal 1 2 9 to9
+input: step
+input: offices
+input: step
+input: offices
+input: step 5
+input: letters
+out: Log file: tests/data/res6_full.log
+out: Office 9 added
+out: Office 8 added
+out: Letter 1 accepted in office 1
+out: Letter 2 accepted in office 1
+out: Letter 3 accepted in office 1
+out: Letter 4 accepted in office 2
+out: Offices: 6
+out: office 1: 2 of 10 places used (2 in transit, 0 waiting), links: 2
+out: office 2: 1 of 10 places used (1 in transit, 0 waiting), links: 1 3 9
+out: office 3: 0 of 10 places used (0 in transit, 0 waiting), links: 2 4 8
+out: office 4: 0 of 10 places used (0 in transit, 0 waiting), links: 3
+out: office 8: 0 of 1 places used (0 in transit, 0 waiting), links: 3
+out: office 9: 1 of 1 places used (0 in transit, 1 waiting), links: 2
+out: Offices: 6
+out: office 1: 1 of 10 places used (1 in transit, 0 waiting), links: 2
+out: office 2: 1 of 10 places used (1 in transit, 0 waiting), links: 1 3 9
+out: office 3: 1 of 10 places used (1 in transit, 0 waiting), links: 2 4 8
+out: office 4: 0 of 10 places used (0 in transit, 0 waiting), links: 3
+out: office 8: 0 of 1 places used (0 in transit, 0 waiting), links: 3
+out: office 9: 1 of 1 places used (0 in transit, 1 waiting), links: 2
+out: Letters: 4
+out: letter 1: normal, priority 1, from office 1 to office 4, delivered (waiting for the receiver), data: "a"
+out: letter 2: normal, priority 1, from office 1 to office 4, delivered (waiting for the receiver), data: "b"
+out: letter 3: normal, priority 1, from office 1 to office 4, delivered (waiting for the receiver), data: "c"
+out: letter 4: normal, priority 1, from office 2 to office 9, delivered (waiting for the receiver), data: "to9"
+code: 0
+file: tests/data/res6_full.log
+fout: [tick 0] post service started with 4 offices
+fout: [tick 0] office 9 added, capacity 1
+fout: [tick 0] office 8 added, capacity 1
+fout: [tick 0] letter 1 created in office 1
+fout: [tick 0] letter 2 created in office 1
+fout: [tick 0] letter 3 created in office 1
+fout: [tick 0] letter 4 created in office 2
+fout: [tick 1] letter 1 moved from office 1 to office 2
+fout: [tick 1] letter 4 moved from office 2 to office 9
+fout: [tick 1] letter 4 delivered to office 9
+fout: [tick 2] letter 2 moved from office 1 to office 2
+fout: [tick 2] letter 1 moved from office 2 to office 3
+fout: [tick 3] letter 3 moved from office 1 to office 2
+fout: [tick 3] letter 2 moved from office 2 to office 3
+fout: [tick 3] letter 1 moved from office 3 to office 4
+fout: [tick 3] letter 1 delivered to office 4
+fout: [tick 4] letter 3 moved from office 2 to office 3
+fout: [tick 4] letter 2 moved from office 3 to office 4
+fout: [tick 4] letter 2 delivered to office 4
+fout: [tick 5] letter 3 moved from office 3 to office 4
+fout: [tick 5] letter 3 delivered to office 4
+fout: [tick 7] post service stopped
+
+name: следующее отделение пути занято - письмо в ближайшее свободное (петля)
+args: tests/data/task6_redirect_map.txt tests/data/res6_redirect.log --manual
+input: remove_office 2
+input: add_office 2 1 1 3
+input: add_letter normal 1 3 2 x
+input: add_letter normal 1 3 2 y
+input: add_letter normal 1 2 1 z
+input: step
+input: offices
+input: step 3
+input: letters
+input: offices
+out: Log file: tests/data/res6_redirect.log
+out: Office 2 removed
+out: Office 2 added
+out: Letter 1 accepted in office 3
+out: Letter 2 accepted in office 3
+out: Letter 3 accepted in office 2
+out: Offices: 4
+out: office 1: 1 of 10 places used (0 in transit, 1 waiting), links: 2 4
+out: office 2: 0 of 1 places used (0 in transit, 0 waiting), links: 1 3
+out: office 3: 1 of 10 places used (1 in transit, 0 waiting), links: 2 4
+out: office 4: 1 of 10 places used (1 in transit, 0 waiting), links: 1 3
+out: Letters: 3
+out: letter 1: normal, priority 1, from office 3 to office 2, in transit, now in office 1, data: "x"
+out: letter 2: normal, priority 1, from office 3 to office 2, delivered (waiting for the receiver), data: "y"
+out: letter 3: normal, priority 1, from office 2 to office 1, delivered (waiting for the receiver), data: "z"
+out: Offices: 4
+out: office 1: 2 of 10 places used (1 in transit, 1 waiting), links: 2 4
+out: office 2: 1 of 1 places used (0 in transit, 1 waiting), links: 1 3
+out: office 3: 0 of 10 places used (0 in transit, 0 waiting), links: 2 4
+out: office 4: 0 of 10 places used (0 in transit, 0 waiting), links: 1 3
+code: 0
+file: tests/data/res6_redirect.log
+fout: [tick 0] post service started with 4 offices
+fout: [tick 0] office 2 removed
+fout: [tick 0] office 2 added, capacity 1
+fout: [tick 0] letter 1 created in office 3
+fout: [tick 0] letter 2 created in office 3
+fout: [tick 0] letter 3 created in office 2
+fout: [tick 1] letter 3 moved from office 2 to office 1
+fout: [tick 1] letter 3 delivered to office 1
+fout: [tick 1] letter 1 moved from office 3 to office 4
+fout: [tick 2] letter 2 moved from office 3 to office 2
+fout: [tick 2] letter 2 delivered to office 2
+fout: [tick 2] letter 1 moved from office 4 to office 1
+fout: [tick 3] letter 1 moved from office 1 to office 4
+fout: [tick 4] letter 1 moved from office 4 to office 1
+fout: [tick 4] post service stopped
+
+name: до получателя нет пути: письмо ходит по свободным соседям; отметка "недоставлено"
+args: tests/data/task6_unreachable_map.txt tests/data/res6_unreachable.log --manual
+input: add_letter urgent 1 1 4 lost
+input: step 4
+input: letters
+input: undelivered 1
+input: undelivered 1
+input: take 1
+input: letters
+out: Log file: tests/data/res6_unreachable.log
+out: Letter 1 accepted in office 1
+out: Letters: 1
+out: letter 1: urgent, priority 1, from office 1 to office 4, in transit, now in office 1, data: "lost"
+out: Letter 1 is marked as undelivered
+out: Error: there is no such letter in the system
+out: Error: there is no such letter in the system
+out: Letters: 1
+out: letter 1: urgent, priority 1, from office 1 to office 4, undelivered, data: "lost"
+code: 0
+file: tests/data/res6_unreachable.log
+fout: [tick 0] post service started with 4 offices
+fout: [tick 0] letter 1 created in office 1
+fout: [tick 1] letter 1 moved from office 1 to office 2
+fout: [tick 2] letter 1 moved from office 2 to office 1
+fout: [tick 3] letter 1 moved from office 1 to office 2
+fout: [tick 4] letter 1 moved from office 2 to office 1
+fout: [tick 4] letter 1 marked undelivered: by the operator
+fout: [tick 4] post service stopped
+
+name: удаление отделения: письма к нему и из него - недоставлены, остальные - соседям
+args: tests/data/task6_remove_map.txt tests/data/res6_remove.log --manual
+input: add_letter normal 1 1 3 a
+input: add_letter normal 1 2 4 b
+input: add_letter normal 1 3 1 c
+input: add_letter normal 2 1 2 d
+input: step
+input: letters
+input: remove_office 2
+input: letters
+input: offices
+input: remove_office 2
+input: step 5
+input: letters
+out: Log file: tests/data/res6_remove.log
+out: Letter 1 accepted in office 1
+out: Letter 2 accepted in office 2
+out: Letter 3 accepted in office 3
+out: Letter 4 accepted in office 1
+out: Letters: 4
+out: letter 1: normal, priority 1, from office 1 to office 3, in transit, now in office 1, data: "a"
+out: letter 2: normal, priority 1, from office 2 to office 4, in transit, now in office 3, data: "b"
+out: letter 3: normal, priority 1, from office 3 to office 1, in transit, now in office 2, data: "c"
+out: letter 4: normal, priority 2, from office 1 to office 2, delivered (waiting for the receiver), data: "d"
+out: Office 2 removed
+out: Letters: 4
+out: letter 1: normal, priority 1, from office 1 to office 3, in transit, now in office 1, data: "a"
+out: letter 2: normal, priority 1, from office 2 to office 4, undelivered, data: "b"
+out: letter 3: normal, priority 1, from office 3 to office 1, delivered (waiting for the receiver), data: "c"
+out: letter 4: normal, priority 2, from office 1 to office 2, undelivered, data: "d"
+out: Offices: 4
+out: office 1: 2 of 10 places used (1 in transit, 1 waiting), links: 5
+out: office 3: 0 of 10 places used (0 in transit, 0 waiting), links: 4
+out: office 4: 0 of 10 places used (0 in transit, 0 waiting), links: 3 5
+out: office 5: 0 of 10 places used (0 in transit, 0 waiting), links: 1 4
+out: Error: there is no such post office
+out: Letters: 4
+out: letter 1: normal, priority 1, from office 1 to office 3, delivered (waiting for the receiver), data: "a"
+out: letter 2: normal, priority 1, from office 2 to office 4, undelivered, data: "b"
+out: letter 3: normal, priority 1, from office 3 to office 1, delivered (waiting for the receiver), data: "c"
+out: letter 4: normal, priority 2, from office 1 to office 2, undelivered, data: "d"
+code: 0
+file: tests/data/res6_remove.log
+fout: [tick 0] post service started with 5 offices
+fout: [tick 0] letter 1 created in office 1
+fout: [tick 0] letter 2 created in office 2
+fout: [tick 0] letter 3 created in office 3
+fout: [tick 0] letter 4 created in office 1
+fout: [tick 1] letter 4 moved from office 1 to office 2
+fout: [tick 1] letter 4 delivered to office 2
+fout: [tick 1] letter 2 moved from office 2 to office 3
+fout: [tick 1] letter 3 moved from office 3 to office 2
+fout: [tick 1] letter 2 marked undelivered: its office is removed
+fout: [tick 1] letter 4 marked undelivered: its office is removed
+fout: [tick 1] letter 3 sent away from the removed office 2
+fout: [tick 1] letter 3 delivered to office 1
+fout: [tick 1] office 2 removed
+fout: [tick 2] letter 1 moved from office 1 to office 5
+fout: [tick 3] letter 1 moved from office 5 to office 4
+fout: [tick 4] letter 1 moved from office 4 to office 3
+fout: [tick 4] letter 1 delivered to office 3
+fout: [tick 6] post service stopped
+
+name: ошибки команд - сообщение, работа продолжается
+args: tests/data/task6_errors_map.txt tests/data/res6_errors.log --manual
+input: foo
+input: add_office
+input: add_office 1 5
+input: add_office 7 0
+input: add_office 7 2 99
+input: add_office x 1
+input: remove_office 99
+input: add_letter fast 1 1 2 d
+input: add_letter normal x 1 2
+input: add_letter normal 1 1 99
+input: undelivered 5
+input: take 5
+input: take x
+input: step -1
+input: step 100001
+input: wait -1
+input: letters x
+input: help me
+input: add_letter normal 1 1 3 waiting
+input: take 1
+input:   
+input: exit
+out: Log file: tests/data/res6_errors.log
+out: Error: wrong command, see help
+out: Error: wrong command, see help
+out: Error: a post office with this id already exists
+out: Error: wrong command, see help
+out: Error: there is no such post office
+out: Error: wrong command, see help
+out: Error: there is no such post office
+out: Error: wrong command, see help
+out: Error: wrong command, see help
+out: Error: there is no such post office
+out: Error: there is no such letter in the system
+out: Error: there is no such letter in the system
+out: Error: wrong command, see help
+out: Error: wrong command, see help
+out: Error: wrong command, see help
+out: Error: wrong command, see help
+out: Error: wrong command, see help
+out: Error: wrong command, see help
+out: Letter 1 accepted in office 1
+out: Error: the letter has not reached its post office yet
+code: 0
+file: tests/data/res6_errors.log
+fout: [tick 0] post service started with 4 offices
+fout: [tick 0] letter 1 created in office 1
+fout: [tick 0] post service stopped
+
+name: wait 1 - пять тактов по 0.2 секунды
+args: tests/data/task6_wait_map.txt tests/data/res6_wait.log --manual
+input: add_letter normal 1 1 4 slow
+input: wait 1
+input: letters
+out: Log file: tests/data/res6_wait.log
+out: Letter 1 accepted in office 1
+out: Letters: 1
+out: letter 1: normal, priority 1, from office 1 to office 4, delivered (waiting for the receiver), data: "slow"
+code: 0
+file: tests/data/res6_wait.log
+fout: [tick 0] post service started with 4 offices
+fout: [tick 0] letter 1 created in office 1
+fout: [tick 1] letter 1 moved from office 1 to office 2
+fout: [tick 2] letter 1 moved from office 2 to office 3
+fout: [tick 3] letter 1 moved from office 3 to office 4
+fout: [tick 3] letter 1 delivered to office 4
+fout: [tick 5] post service stopped
+
+name: list - все письма в файл
+args: tests/data/task6_basic_map.txt tests/data/res6_list.log --manual
+input: add_letter normal 7 1 3 note
+input: step 2
+input: list tests/data/res6_list.txt
+out: Log file: tests/data/res6_list.log
+out: Letter 1 accepted in office 1
+out: All letters are written to tests/data/res6_list.txt
+code: 0
+file: tests/data/res6_list.txt
+fout: Letters: 1
+fout: letter 1: normal, priority 7, from office 1 to office 3, delivered (waiting for the receiver), data: "note"
+
+name: файл связей с ошибкой
+args: tests/data/task6_bad_map.txt tests/data/res6_x.log --manual
+err: Error: wrong line 2 in 'tests/data/task6_bad_map.txt' (need two different ids)
+code: 1
+
+name: связь отделения с самим собой - ошибка
+args: tests/data/task6_self_map.txt tests/data/res6_x.log
+err: Error: wrong line 3 in 'tests/data/task6_self_map.txt' (need two different ids)
+code: 1
+
+name: нет аргументов
+err: Usage: lab4_task6 <mappings file> [<log file>] [--manual]
+code: 1
+
+name: лишний аргумент
+args: a b c
+err: Usage: lab4_task6 <mappings file> [<log file>] [--manual]
+code: 1
+
+name: файла связей нет
+args: tests/data/task6_none.txt tests/data/res6_x.log
+err: Error: can not read file 'tests/data/task6_none.txt'
+code: 1

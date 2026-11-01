@@ -1,0 +1,6 @@
+[tick 0] post service started with 5 offices
+[tick 0] letter 1 created in office 1
+[tick 1] letter 1 moved from office 1 to office 2
+[tick 2] letter 1 moved from office 2 to office 3
+[tick 2] letter 1 delivered to office 3
+[tick 2] post service stopped

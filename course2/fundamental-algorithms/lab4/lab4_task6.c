@@ -252,7 +252,14 @@ status_code add_link(office *o, const int other) {
         return ALLOC_ERROR;
     }
     o->links = tmp;
-    o->links[o->link_count++] = other;
+    /* связи храним по возрастанию id: поиск пути и выбор соседа одинаковы при каждом запуске */
+    size_t pos = o->link_count;
+    while (pos > 0 && o->links[pos - 1] > other) {
+        o->links[pos] = o->links[pos - 1];
+        pos--;
+    }
+    o->links[pos] = other;
+    o->link_count++;
     return OK;
 }
 
@@ -289,7 +296,7 @@ status_code create_office(post *p, const int id, const int capacity) {
 }
 
 /* Связать два существующих отделения */
-status_code connect(post *p, const int a, const int b) {
+status_code link_offices(post *p, const int a, const int b) {
     if (p == NULL || a == b) {
         return INVALID_ARGS;
     }
@@ -360,13 +367,6 @@ status_code next_hop(const post *p, const int from, const int to, int *next) {
     free(first_step);
     free(seen);
     return OK;
-}
-
-/* Связи отделения - по возрастанию id (для одинакового поиска при каждом запуске) */
-int compare_ints(const void *a, const void *b) {
-    int x = *(const int *)a;
-    int y = *(const int *)b;
-    return (x > y) - (x < y);
 }
 
 /* ===================== журнал ===================== */
@@ -586,9 +586,23 @@ status_code take_letter(post *p, letter *l) {
 
 /* ===================== такт ===================== */
 
-/* Куда отправить письмо из отделения o: следующий шаг пути или ближайший сосед со свободным местом */
-status_code choose_target(post *p, const office *o, const letter *l, office **target) {
-    if (p == NULL || o == NULL || l == NULL || target == NULL) {
+/* Есть ли в отделении место с учётом писем, которые уже идут в него на этом такте (reserved) */
+status_code has_room(const post *p, const office *o, const size_t *reserved, int *room) {
+    if (p == NULL || o == NULL || reserved == NULL || room == NULL) {
+        return INVALID_ARGS;
+    }
+    size_t load = 0;
+    office_load(o, &load);
+    *room = load + reserved[o - p->offices] < (size_t)o->capacity;
+    return OK;
+}
+
+/*
+ * Куда отправить письмо из отделения o: следующий шаг кратчайшего пути, а если там нет места или пути
+ * нет - ближайшее доступное отделение (сосед со свободным местом, с меньшим id). *target = NULL - некуда.
+ */
+status_code choose_target(post *p, const office *o, const letter *l, const size_t *reserved, office **target) {
+    if (p == NULL || o == NULL || l == NULL || reserved == NULL || target == NULL) {
         return INVALID_ARGS;
     }
     *target = NULL;
@@ -597,35 +611,36 @@ status_code choose_target(post *p, const office *o, const letter *l, office **ta
     if (sc != OK) {
         return sc;
     }
+    int room = 0;
     if (next != -1) {
         office *hop = NULL;
         find_office(p, next, &hop);
-        size_t load = 0;
-        office_load(hop, &load);
-        if (load < (size_t)hop->capacity) {
+        has_room(p, hop, reserved, &room);
+        if (room) {
             *target = hop;
             return OK;
         }
     }
-    /* путь закрыт - ближайшее доступное: сосед со свободным местом (с меньшим id) */
     for (size_t k = 0; k < o->link_count; k++) {
         office *neighbour = NULL;
         if (find_office(p, o->links[k], &neighbour) != OK || neighbour->id == next) {
             continue;
         }
-        size_t load = 0;
-        office_load(neighbour, &load);
-        if (load < (size_t)neighbour->capacity) {
+        has_room(p, neighbour, reserved, &room);
+        if (room) {
             *target = neighbour;
             return OK;
         }
     }
-    return OK;   /* некуда - письмо ждёт */
+    return OK;
 }
 
 /*
  * Один такт: из каждого отделения (по возрастанию id) самое важное письмо в пути уходит дальше.
- * Сначала решаем, куда идёт каждое письмо, и только потом переносим - чтобы письмо за такт сделало один шаг.
+ * 1) решаем, куда идёт верхнее письмо каждого отделения (письма ещё на местах, а уже назначенные
+ *    приходы "бронируют" место в отделении - так вместимость не превысится);
+ * 2) снимаем выбранные письма со своих куч; 3) кладём в новые отделения.
+ * Так каждое письмо за такт делает ровно один шаг.
  */
 status_code tick(post *p) {
     if (p == NULL) {
@@ -633,13 +648,22 @@ status_code tick(post *p) {
     }
     p->tick++;
     size_t n = p->office_count;
+    office **targets = (office **)calloc(n + 1, sizeof(office *));
+    size_t *reserved = (size_t *)calloc(n + 1, sizeof(size_t));
     letter **moving = (letter **)calloc(n + 1, sizeof(letter *));
-    if (moving == NULL) {
-        return ALLOC_ERROR;
-    }
-    status_code sc = OK;
+    status_code sc = (targets == NULL || reserved == NULL || moving == NULL) ? ALLOC_ERROR : OK;
     for (size_t i = 0; i < n && sc == OK; i++) {
-        if (p->offices[i].queue != NULL) {
+        if (p->offices[i].queue == NULL) {
+            continue;
+        }
+        const letter *top = p->offices[i].queue->item;   /* верх кучи - самое важное письмо */
+        sc = choose_target(p, &p->offices[i], top, reserved, &targets[i]);
+        if (sc == OK && targets[i] != NULL) {
+            reserved[targets[i] - p->offices]++;
+        }
+    }
+    for (size_t i = 0; i < n && sc == OK; i++) {
+        if (targets[i] != NULL) {
             sc = heap_pop(&p->offices[i].queue, &p->offices[i].queue_size, &moving[i]);
         }
     }
@@ -648,29 +672,24 @@ status_code tick(post *p) {
         if (l == NULL) {
             continue;
         }
-        office *from = &p->offices[i];
-        office *target = NULL;
-        sc = choose_target(p, from, l, &target);
-        if (sc == OK && target == NULL) {
-            sc = heap_push(&from->queue, &from->queue_size, l);   /* остаётся на месте */
-        } else if (sc == OK) {
-            sc = log_event(p, "letter ", l->id, " moved from office ", from->id, "");
-            if (sc == OK) {
-                char text[96];
-                char number[24];
-                strcpy(text, "letter ");
-                int_text(l->id, number);
-                strcat(text, number);
-                strcat(text, " arrived at office ");
-                int_text(target->id, number);
-                strcat(text, number);
-                sc = log_line(p, text);
-            }
-            if (sc == OK) {
-                sc = put_letter(p, target, l);
-            }
+        char text[96];
+        char number[24];
+        strcpy(text, "letter ");
+        int_text(l->id, number);
+        strcat(text, number);
+        strcat(text, " moved from office ");
+        int_text(p->offices[i].id, number);
+        strcat(text, number);
+        strcat(text, " to office ");
+        int_text(targets[i]->id, number);
+        strcat(text, number);
+        sc = log_line(p, text);
+        if (sc == OK) {
+            sc = put_letter(p, targets[i], l);
         }
     }
+    free(targets);
+    free(reserved);
     free(moving);
     return sc;
 }
@@ -720,8 +739,8 @@ status_code remove_office(post *p, const int id) {
             }
         }
         if (target == NULL) {
+            /* из кучи письмо уже снято - остаётся отметить состояние */
             l->office = -1;
-            l->state = IN_TRANSIT;   /* чтобы mark_undelivered приняла; из кучи письмо уже снято */
             l->state = UNDELIVERED;
             sc = log_event(p, "letter ", l->id, " marked undelivered: no room in the neighbours of office ", id,
                            "");
@@ -740,11 +759,12 @@ status_code remove_office(post *p, const int id) {
         office *x = &p->offices[i];
         for (size_t k = 0; k < x->link_count; k++) {
             if (x->links[k] == id) {
-                x->links[k] = x->links[--x->link_count];
+                /* сдвиг хвоста влево - порядок по возрастанию сохраняется */
+                memmove(x->links + k, x->links + k + 1, (x->link_count - k - 1) * sizeof(int));
+                x->link_count--;
                 break;
             }
         }
-        qsort(x->links, x->link_count, sizeof(int), compare_ints);
     }
     find_office(p, id, &o);
     free(o->links);
@@ -753,4 +773,586 @@ status_code remove_office(post *p, const int id) {
     memmove(o, o + 1, (p->office_count - index - 1) * sizeof(office));
     p->office_count--;
     return log_event(p, "office ", id, " removed", 0, NULL);
+}
+
+/* ===================== время ===================== */
+
+/* Сколько миллисекунд прошло с какого-то момента (только для разностей). В C99 таких часов нет -
+   берём у системы: Linux - clock_gettime(CLOCK_MONOTONIC), Windows - GetTickCount64 */
+status_code now_ms(long long *ms) {
+    if (ms == NULL) {
+        return INVALID_ARGS;
+    }
+#ifdef _WIN32
+    *ms = (long long)GetTickCount64();
+#else
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    *ms = (long long)t.tv_sec * 1000 + t.tv_nsec / 1000000;
+#endif
+    return OK;
+}
+
+status_code sleep_ms(const long long ms) {
+    if (ms < 0) {
+        return INVALID_ARGS;
+    }
+#ifdef _WIN32
+    Sleep((DWORD)ms);
+#else
+    struct timespec t;
+    t.tv_sec = (time_t)(ms / 1000);
+    t.tv_nsec = (long)(ms % 1000) * 1000000L;
+    nanosleep(&t, NULL);
+#endif
+    return OK;
+}
+
+/* ===================== ввод ===================== */
+
+/* Строка -> int: необязательный минус и цифры, без лишних символов */
+status_code parse_int(const char *s, int *value) {
+    if (s == NULL || value == NULL) {
+        return INVALID_ARGS;
+    }
+    size_t i = s[0] == '-' ? 1 : 0;
+    if (s[i] == '\0') {
+        return SYNTAX_ERROR;
+    }
+    long long result = 0;
+    for (; s[i] != '\0'; i++) {
+        if (s[i] < '0' || s[i] > '9') {
+            return SYNTAX_ERROR;
+        }
+        result = result * 10 + (s[i] - '0');
+        if (result > INT_MAX) {
+            return SYNTAX_ERROR;
+        }
+    }
+    *value = s[0] == '-' ? (int)-result : (int)result;
+    return OK;
+}
+
+/* Прочитать строку любой длины (без '\n' и '\r'); *end = 1 - ввод кончился */
+status_code read_line(FILE *file, char **line, int *end) {
+    if (file == NULL || line == NULL || end == NULL) {
+        return INVALID_ARGS;
+    }
+    size_t capacity = 64;
+    size_t n = 0;
+    char *buf = (char *)malloc(capacity);
+    if (buf == NULL) {
+        return ALLOC_ERROR;
+    }
+    int ch = fgetc(file);
+    *end = (ch == EOF);
+    while (ch != EOF && ch != '\n') {
+        if (n + 1 >= capacity) {
+            char *tmp = (char *)realloc(buf, capacity * 2);
+            if (tmp == NULL) {
+                free(buf);
+                return ALLOC_ERROR;
+            }
+            buf = tmp;
+            capacity *= 2;
+        }
+        buf[n++] = (char)ch;
+        ch = fgetc(file);
+    }
+    if (n > 0 && buf[n - 1] == '\r') {
+        n--;
+    }
+    buf[n] = '\0';
+    *line = buf;
+    return OK;
+}
+
+/* Разрезать строку на слова (по пробелам). Слова - указатели в line (line портится). max слов */
+status_code split_words(char *line, char **words, const size_t max, size_t *count) {
+    if (line == NULL || words == NULL || count == NULL) {
+        return INVALID_ARGS;
+    }
+    *count = 0;
+    char *p = line;
+    while (*p != '\0') {
+        while (*p == ' ' || *p == '\t') {
+            p++;
+        }
+        if (*p == '\0') {
+            break;
+        }
+        if (*count == max) {
+            return SYNTAX_ERROR;
+        }
+        words[(*count)++] = p;
+        while (*p != '\0' && *p != ' ' && *p != '\t') {
+            p++;
+        }
+        if (*p != '\0') {
+            *p++ = '\0';
+        }
+    }
+    return OK;
+}
+
+/* Файл связей: в каждой строке "id1 id2"; отделения создаются с вместимостью DEFAULT_CAPACITY */
+status_code load_mappings(post *p, const char *path, size_t *bad_line) {
+    if (p == NULL || path == NULL || bad_line == NULL) {
+        return INVALID_ARGS;
+    }
+    FILE *file = fopen(path, "r");
+    if (file == NULL) {
+        return FILE_ERROR;
+    }
+    status_code sc = OK;
+    size_t number = 0;
+    *bad_line = 0;
+    while (sc == OK) {
+        char *line = NULL;
+        int end = 0;
+        sc = read_line(file, &line, &end);
+        if (sc != OK || end) {
+            free(line);
+            break;
+        }
+        number++;
+        char *words[3];
+        size_t count = 0;
+        int a = 0;
+        int b = 0;
+        sc = split_words(line, words, 3, &count);
+        if (sc == OK && count == 0) {
+            free(line);
+            continue;   /* пустая строка */
+        }
+        if (sc == OK && (count != 2 || parse_int(words[0], &a) != OK || parse_int(words[1], &b) != OK || a < 0 ||
+                         b < 0 || a == b)) {
+            sc = SYNTAX_ERROR;
+        }
+        free(line);
+        office *o = NULL;
+        if (sc == OK && find_office(p, a, &o) != OK) {
+            sc = create_office(p, a, DEFAULT_CAPACITY);
+        }
+        if (sc == OK && find_office(p, b, &o) != OK) {
+            sc = create_office(p, b, DEFAULT_CAPACITY);
+        }
+        if (sc == OK) {
+            sc = link_offices(p, a, b);
+        }
+        if (sc != OK) {
+            *bad_line = number;
+        }
+    }
+    fclose(file);
+    return sc;
+}
+
+/* ===================== вывод ===================== */
+
+status_code print_letter(FILE *out, const letter *l) {
+    if (out == NULL || l == NULL) {
+        return INVALID_ARGS;
+    }
+    fprintf(out, "letter %d: %s, priority %d, from office %d to office %d, %s", l->id, l->type, l->priority, l->from,
+            l->to, state_name(l->state));
+    if (l->state == IN_TRANSIT) {
+        fprintf(out, ", now in office %d", l->office);
+    }
+    fprintf(out, ", data: \"%s\"\n", l->data);
+    return OK;
+}
+
+status_code print_letters(FILE *out, const post *p) {
+    if (out == NULL || p == NULL) {
+        return INVALID_ARGS;
+    }
+    fprintf(out, "Letters: %zu\n", p->letter_count);
+    for (size_t i = 0; i < p->letter_count; i++) {
+        print_letter(out, p->letters[i]);
+    }
+    return OK;
+}
+
+status_code print_offices(FILE *out, const post *p) {
+    if (out == NULL || p == NULL) {
+        return INVALID_ARGS;
+    }
+    fprintf(out, "Offices: %zu\n", p->office_count);
+    for (size_t i = 0; i < p->office_count; i++) {
+        const office *o = &p->offices[i];
+        fprintf(out, "office %d: %zu of %d places used (%zu in transit, %zu waiting), links:", o->id,
+                o->queue_size + o->waiting_count, o->capacity, o->queue_size, o->waiting_count);
+        for (size_t k = 0; k < o->link_count; k++) {
+            fprintf(out, " %d", o->links[k]);
+        }
+        fprintf(out, "%s\n", o->link_count == 0 ? " none" : "");
+    }
+    return OK;
+}
+
+status_code print_help(FILE *out) {
+    if (out == NULL) {
+        return INVALID_ARGS;
+    }
+    fprintf(out, "Commands:\n");
+    fprintf(out, "  add_office ID CAPACITY [LINKED_ID ...]   add a post office\n");
+    fprintf(out, "  remove_office ID                         remove a post office\n");
+    fprintf(out, "  add_letter TYPE PRIORITY FROM TO [DATA]  send a letter (TYPE: normal or urgent)\n");
+    fprintf(out, "  undelivered LETTER_ID                    mark a letter as undelivered\n");
+    fprintf(out, "  take LETTER_ID                           take a delivered letter\n");
+    fprintf(out, "  letters                                  show all letters\n");
+    fprintf(out, "  list FILE                                write all letters to a file\n");
+    fprintf(out, "  offices                                  show all post offices\n");
+    fprintf(out, "  step [N]                                 move letters N times now (default 1)\n");
+    fprintf(out, "  wait SECONDS                             wait (letters move every 0.2 s)\n");
+    fprintf(out, "  help                                     this list\n");
+    fprintf(out, "  exit                                     quit\n");
+    return OK;
+}
+
+status_code error_text(const status_code sc, const char **text) {
+    if (text == NULL) {
+        return INVALID_ARGS;
+    }
+    switch (sc) {
+        case SYNTAX_ERROR:      *text = "wrong command, see help"; break;
+        case NO_SUCH_OFFICE:    *text = "there is no such post office"; break;
+        case OFFICE_EXISTS:     *text = "a post office with this id already exists"; break;
+        case NO_SUCH_LETTER:    *text = "there is no such letter in the system"; break;
+        case OFFICE_FULL:       *text = "the post office is full"; break;
+        case NOT_DELIVERED_YET: *text = "the letter has not reached its post office yet"; break;
+        case FILE_ERROR:        *text = "can not write the file"; break;
+        case INVALID_ARGS:      *text = "wrong values"; break;
+        default:                *text = "internal error"; break;   /* другие статусы сюда не попадают */
+    }
+    return OK;
+}
+
+/* ===================== команды ===================== */
+
+/*
+ * Выполнить одну команду (слова уже разделены). *quit = 1 - команда exit.
+ * data - остаток строки после 5-го слова (технические данные письма), может быть пустым.
+ */
+status_code execute(post *p, char **w, const size_t n, const char *data, const int manual, int *quit) {
+    if (p == NULL || w == NULL || data == NULL || quit == NULL || n == 0) {
+        return INVALID_ARGS;
+    }
+    int x = 0;
+    int y = 0;
+    if (strcmp(w[0], "help") == 0 && n == 1) {
+        return print_help(stdout);
+    }
+    if (strcmp(w[0], "exit") == 0 && n == 1) {
+        *quit = 1;
+        return OK;
+    }
+    if (strcmp(w[0], "offices") == 0 && n == 1) {
+        return print_offices(stdout, p);
+    }
+    if (strcmp(w[0], "letters") == 0 && n == 1) {
+        return print_letters(stdout, p);
+    }
+    if (strcmp(w[0], "list") == 0 && n == 2) {
+        FILE *file = fopen(w[1], "w");
+        if (file == NULL) {
+            return FILE_ERROR;
+        }
+        print_letters(file, p);
+        if (fclose(file) != 0) {
+            return FILE_ERROR;
+        }
+        printf("All letters are written to %s\n", w[1]);
+        return OK;
+    }
+    if (strcmp(w[0], "add_office") == 0 && n >= 3) {
+        if (parse_int(w[1], &x) != OK || parse_int(w[2], &y) != OK || x < 0 || y <= 0) {
+            return SYNTAX_ERROR;
+        }
+        /* сначала проверяем связи: отделения должны существовать */
+        for (size_t i = 3; i < n; i++) {
+            int other = 0;
+            office *o = NULL;
+            if (parse_int(w[i], &other) != OK) {
+                return SYNTAX_ERROR;
+            }
+            if (find_office(p, other, &o) != OK) {
+                return NO_SUCH_OFFICE;
+            }
+        }
+        status_code sc = create_office(p, x, y);
+        for (size_t i = 3; i < n && sc == OK; i++) {
+            int other = 0;
+            parse_int(w[i], &other);
+            if (other != x) {
+                sc = link_offices(p, x, other);
+            }
+        }
+        if (sc == OK) {
+            sc = log_event(p, "office ", x, " added, capacity ", y, "");
+            printf("Office %d added\n", x);
+        }
+        return sc;
+    }
+    if (strcmp(w[0], "remove_office") == 0 && n == 2) {
+        if (parse_int(w[1], &x) != OK) {
+            return SYNTAX_ERROR;
+        }
+        status_code sc = remove_office(p, x);
+        if (sc == OK) {
+            printf("Office %d removed\n", x);
+        }
+        return sc;
+    }
+    if (strcmp(w[0], "add_letter") == 0 && n >= 5) {
+        int priority = 0;
+        if ((strcmp(w[1], "normal") != 0 && strcmp(w[1], "urgent") != 0) || parse_int(w[2], &priority) != OK ||
+            parse_int(w[3], &x) != OK || parse_int(w[4], &y) != OK) {
+            return SYNTAX_ERROR;
+        }
+        int id = 0;
+        status_code sc = add_letter(p, w[1], priority, x, y, data, &id);
+        if (sc == OK) {
+            printf("Letter %d accepted in office %d\n", id, x);
+        }
+        return sc;
+    }
+    if ((strcmp(w[0], "undelivered") == 0 || strcmp(w[0], "take") == 0) && n == 2) {
+        letter *l = NULL;
+        if (parse_int(w[1], &x) != OK) {
+            return SYNTAX_ERROR;
+        }
+        status_code sc = find_letter(p, x, &l);
+        if (sc == OK && w[0][0] == 'u') {
+            sc = mark_undelivered(p, l, "by the operator");
+            if (sc == OK) {
+                printf("Letter %d is marked as undelivered\n", x);
+            }
+        } else if (sc == OK) {
+            sc = take_letter(p, l);
+            if (sc == OK) {
+                printf("Letter %d is taken in office %d\n", x, l->office);
+            }
+        }
+        return sc;
+    }
+    if (strcmp(w[0], "step") == 0 && n <= 2) {
+        x = 1;
+        if (n == 2 && (parse_int(w[1], &x) != OK || x < 0 || x > MAX_TICKS_AT_ONCE)) {
+            return SYNTAX_ERROR;
+        }
+        return run_ticks(p, x);
+    }
+    if (strcmp(w[0], "wait") == 0 && n == 2) {
+        if (parse_int(w[1], &x) != OK || x < 0 || x > 3600) {
+            return SYNTAX_ERROR;
+        }
+        if (manual) {
+            return run_ticks(p, (long long)x * 1000 / TICK_MS);   /* время "понарошку" */
+        }
+        return sleep_ms((long long)x * 1000);   /* такты догонит цикл команд */
+    }
+    return SYNTAX_ERROR;
+}
+
+/* Цикл команд: строка -> (догнать такты) -> команда -> ответ */
+status_code command_loop(post *p, const int manual, const int interactive) {
+    if (p == NULL) {
+        return INVALID_ARGS;
+    }
+    long long last = 0;
+    now_ms(&last);
+    int quit = 0;
+    status_code sc = OK;
+    if (interactive) {
+        printf("Post service. Type help for the list of commands.\n");
+    }
+    while (!quit && sc == OK) {
+        if (interactive) {
+            printf("> ");
+            fflush(stdout);
+        }
+        char *line = NULL;
+        int end = 0;
+        sc = read_line(stdin, &line, &end);
+        if (sc != OK || end) {
+            free(line);
+            break;
+        }
+        /* настоящее время: сколько тактов прошло, пока ждали команду */
+        if (!manual) {
+            long long now = 0;
+            now_ms(&now);
+            long long ticks = (now - last) / TICK_MS;
+            last += ticks * TICK_MS;
+            sc = run_ticks(p, ticks > MAX_TICKS_AT_ONCE ? MAX_TICKS_AT_ONCE : ticks);
+        }
+        /* данные письма - всё после пятого слова (с пробелами внутри) */
+        const char *data = "";
+        size_t skip = 0;
+        size_t words_seen = 0;
+        while (line[skip] != '\0' && words_seen < 5) {
+            while (line[skip] == ' ' || line[skip] == '\t') {
+                skip++;
+            }
+            if (line[skip] == '\0') {
+                break;
+            }
+            while (line[skip] != '\0' && line[skip] != ' ' && line[skip] != '\t') {
+                skip++;
+            }
+            words_seen++;
+        }
+        while (line[skip] == ' ' || line[skip] == '\t') {
+            skip++;
+        }
+        char *data_copy = (char *)malloc(strlen(line + skip) + 1);
+        if (data_copy == NULL) {
+            free(line);
+            sc = ALLOC_ERROR;
+            break;
+        }
+        strcpy(data_copy, line + skip);
+        data = data_copy;
+
+        char *words[64];
+        size_t n = 0;
+        status_code result = split_words(line, words, 64, &n);
+        if (result == OK && n > 0) {
+            /* add_letter: слова после пятого - это данные, их не проверяем как аргументы */
+            if (strcmp(words[0], "add_letter") == 0 && n > 5) {
+                n = 5;
+            }
+            result = execute(p, words, n, data, manual, &quit);
+        }
+        if (result == ALLOC_ERROR) {
+            sc = result;
+        } else if (result != OK) {
+            const char *text = NULL;
+            error_text(result, &text);
+            printf("Error: %s\n", text);
+        }
+        if (!manual) {
+            /* wait спал - догоняем такты сразу */
+            long long now = 0;
+            now_ms(&now);
+            long long ticks = (now - last) / TICK_MS;
+            last += ticks * TICK_MS;
+            if (sc == OK) {
+                sc = run_ticks(p, ticks > MAX_TICKS_AT_ONCE ? MAX_TICKS_AT_ONCE : ticks);
+            }
+        }
+        fflush(stdout);
+        free(data_copy);
+        free(line);
+    }
+    return sc;
+}
+
+/* Освободить всё */
+status_code post_free(post *p) {
+    if (p == NULL) {
+        return INVALID_ARGS;
+    }
+    for (size_t i = 0; i < p->office_count; i++) {
+        letter *l = NULL;
+        while (p->offices[i].queue != NULL) {
+            heap_pop(&p->offices[i].queue, &p->offices[i].queue_size, &l);
+        }
+        free(p->offices[i].links);
+        free(p->offices[i].waiting);
+    }
+    free(p->offices);
+    for (size_t i = 0; i < p->letter_count; i++) {
+        free(p->letters[i]->data);
+        free(p->letters[i]);
+    }
+    free(p->letters);
+    return OK;
+}
+
+/* Случайное имя журнала: "post_" и 8 букв и цифр (свой генератор от времени) */
+status_code random_log_name(char *out, const size_t size) {
+    if (out == NULL || size < 20) {
+        return INVALID_ARGS;
+    }
+    const char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    unsigned long long state = (unsigned long long)time(NULL) ^ 0x9E3779B97F4A7C15ULL;
+    strcpy(out, "post_");
+    for (int i = 0; i < 8; i++) {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        out[5 + i] = alphabet[state % 62];
+    }
+    strcpy(out + 13, ".log");
+    return OK;
+}
+
+int main(int argc, char *argv[]) {
+    /* файл связей, необязательно файл журнала и --manual */
+    const char *mappings = NULL;
+    const char *log_path = NULL;
+    int manual = 0;
+    int wrong = 0;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--manual") == 0) {
+            wrong |= manual;
+            manual = 1;
+        } else if (mappings == NULL) {
+            mappings = argv[i];
+        } else if (log_path == NULL) {
+            log_path = argv[i];
+        } else {
+            wrong = 1;
+        }
+    }
+    if (wrong || mappings == NULL) {
+        fprintf(stderr, "Usage: lab4_task6 <mappings file> [<log file>] [--manual]\n");
+        return 1;
+    }
+    char random_name[32];
+    if (log_path == NULL) {
+        random_log_name(random_name, sizeof(random_name));
+        log_path = random_name;
+    }
+
+    post p = {NULL, 0, NULL, 0, 0, NULL};
+    size_t bad_line = 0;
+    status_code sc = load_mappings(&p, mappings, &bad_line);
+    if (sc != OK) {
+        if (sc == FILE_ERROR) {
+            fprintf(stderr, "Error: can not read file '%s'\n", mappings);
+        } else if (sc == SYNTAX_ERROR) {
+            fprintf(stderr, "Error: wrong line %zu in '%s' (need two different ids)\n", bad_line, mappings);
+        } else {
+            fprintf(stderr, "Error: not enough memory\n");
+        }
+        post_free(&p);
+        return 1;
+    }
+    p.log = fopen(log_path, "w");
+    if (p.log == NULL) {
+        fprintf(stderr, "Error: can not open log file '%s'\n", log_path);
+        post_free(&p);
+        return 1;
+    }
+    printf("Log file: %s\n", log_path);
+    log_event(&p, "post service started with ", (long long)p.office_count, " offices", 0, NULL);
+
+#ifdef _WIN32
+    int interactive = _isatty(_fileno(stdin));
+#else
+    int interactive = isatty(fileno(stdin));
+#endif
+    sc = command_loop(&p, manual, interactive);
+    log_line(&p, "post service stopped");
+    fclose(p.log);
+    post_free(&p);
+    if (sc != OK) {
+        fprintf(stderr, "Error: not enough memory\n");
+        return 1;
+    }
+    return 0;
 }
