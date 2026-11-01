@@ -1,0 +1,5 @@
+read(A, 16); write(A, 2); write(A, 36);
+read(B, 10); write(B, 16);
+read(C, 10);
+Z := \A; write(Z, 10);
+read(D, 2); write(D, 2);

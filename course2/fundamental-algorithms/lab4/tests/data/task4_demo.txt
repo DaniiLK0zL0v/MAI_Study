@@ -1,0 +1,13 @@
+% демонстрация: все операции над векторами
+read(A, 2); read(B, 2);
+C := A + B; write(C, 2);
+C := A & B; write(C, 2);
+{ импликации } C := A -> B; write(C, 16);
+C := A <- B; write(C, 16);
+C := A ~ B; write(C, 16);
+C := A <> B; write(C, 2);
+C := A +> B; write(C, 2);
+C := A ? B; write(C, 16);
+C := A ! B; write(C, 16);
+D := \A; write(D, 16);
+read(E, 36); write(E, 10); write(E, 36);

@@ -1,0 +1,463 @@
+# Тесты задания 4 (булевы векторы). Ожидаемый вывод - эталон docs/src/эталоны/t4.py.
+# Без /trace трассировка идёт в стандартный вывод вместе с результатами write.
+
+program: lab4_task4
+
+name: демонстрация всех операций (файл для показа на защите)
+args: tests/data/task4_demo.txt
+input: 1100
+input: 1010
+input: zz
+out: 1 (line 2): read(A, 2)
+out:     before: A = undefined
+out:     input: 1100
+out:     after:  A = 12
+out: 2 (line 2): read(B, 2)
+out:     before: B = undefined
+out:     input: 1010
+out:     after:  B = 10
+out: 3 (line 3): C := A + B
+out:     before: C = undefined, A = 12, B = 10
+out:     after:  C = 14
+out: 4 (line 3): write(C, 2)
+out:     before: C = 14
+out: 1110
+out:     output: 1110
+out: 5 (line 4): C := A & B
+out:     before: C = 14, A = 12, B = 10
+out:     after:  C = 8
+out: 6 (line 4): write(C, 2)
+out:     before: C = 8
+out: 1000
+out:     output: 1000
+out: 7 (line 5): C := A -> B
+out:     before: C = 8, A = 12, B = 10
+out:     after:  C = 18446744073709551611
+out: 8 (line 5): write(C, 16)
+out:     before: C = 18446744073709551611
+out: FFFFFFFFFFFFFFFB
+out:     output: FFFFFFFFFFFFFFFB
+out: 9 (line 6): C := A <- B
+out:     before: C = 18446744073709551611, A = 12, B = 10
+out:     after:  C = 18446744073709551613
+out: 10 (line 6): write(C, 16)
+out:     before: C = 18446744073709551613
+out: FFFFFFFFFFFFFFFD
+out:     output: FFFFFFFFFFFFFFFD
+out: 11 (line 7): C := A ~ B
+out:     before: C = 18446744073709551613, A = 12, B = 10
+out:     after:  C = 18446744073709551609
+out: 12 (line 7): write(C, 16)
+out:     before: C = 18446744073709551609
+out: FFFFFFFFFFFFFFF9
+out:     output: FFFFFFFFFFFFFFF9
+out: 13 (line 8): C := A <> B
+out:     before: C = 18446744073709551609, A = 12, B = 10
+out:     after:  C = 6
+out: 14 (line 8): write(C, 2)
+out:     before: C = 6
+out: 110
+out:     output: 110
+out: 15 (line 9): C := A +> B
+out:     before: C = 6, A = 12, B = 10
+out:     after:  C = 4
+out: 16 (line 9): write(C, 2)
+out:     before: C = 4
+out: 100
+out:     output: 100
+out: 17 (line 10): C := A ? B
+out:     before: C = 4, A = 12, B = 10
+out:     after:  C = 18446744073709551607
+out: 18 (line 10): write(C, 16)
+out:     before: C = 18446744073709551607
+out: FFFFFFFFFFFFFFF7
+out:     output: FFFFFFFFFFFFFFF7
+out: 19 (line 11): C := A ! B
+out:     before: C = 18446744073709551607, A = 12, B = 10
+out:     after:  C = 18446744073709551601
+out: 20 (line 11): write(C, 16)
+out:     before: C = 18446744073709551601
+out: FFFFFFFFFFFFFFF1
+out:     output: FFFFFFFFFFFFFFF1
+out: 21 (line 12): D := \A
+out:     before: D = undefined, A = 12
+out:     after:  D = 18446744073709551603
+out: 22 (line 12): write(D, 16)
+out:     before: D = 18446744073709551603
+out: FFFFFFFFFFFFFFF3
+out:     output: FFFFFFFFFFFFFFF3
+out: 23 (line 13): read(E, 36)
+out:     before: E = undefined
+out:     input: zz
+out:     after:  E = 1295
+out: 24 (line 13): write(E, 10)
+out:     before: E = 1295
+out: 1295
+out:     output: 1295
+out: 25 (line 13): write(E, 36)
+out:     before: E = 1295
+out: ZZ
+out:     output: ZZ
+code: 0
+
+name: регистр не важен, пробелы и переносы строк где угодно, несколько операторов в строке
+args: tests/data/task4_case_spaces.txt
+input: 12
+input: Ff
+out: 1 (line 1): READ ( a , 10 )
+out:     before: A = undefined
+out:     input: 12
+out:     after:  A = 12
+out: 2 (line 1): Read(b,16)
+out:     before: B = undefined
+out:     input: Ff
+out:     after:  B = 255
+out: 3 (line 2): c := a + b
+out:     before: C = undefined, A = 12, B = 255
+out:     after:  C = 255
+out: 4 (line 7): WRITE(C, 8)
+out:     before: C = 255
+out: 377
+out:     output: 377
+out: 5 (line 7): x:=\c
+out:     before: X = undefined, C = 255
+out:     after:  X = 18446744073709551360
+out: 6 (line 7): Write(X,2)
+out:     before: X = 18446744073709551360
+out: 1111111111111111111111111111111111111111111111111111111100000000
+out:     output: 1111111111111111111111111111111111111111111111111111111100000000
+out: 7 (line 8): y := x -> a
+out:     before: Y = undefined, X = 18446744073709551360, A = 12
+out:     after:  Y = 255
+out: 8 (line 8): write(y , 10)
+out:     before: Y = 255
+out: 255
+out:     output: 255
+code: 0
+
+name: комментарии % и { } (вложенные)
+args: tests/data/task4_comments.txt
+input: 7
+out: 1 (line 5): read(A, 10)
+out:     before: A = undefined
+out:     input: 7
+out:     after:  A = 7
+out: 2 (line 6): B := A & A
+out:     before: B = undefined, A = 7
+out:     after:  B = 7
+out: 3 (line 6): write(B, 10)
+out:     before: B = 7
+out: 7
+out:     output: 7
+out: 4 (line 7): write(A,2)
+out:     before: A = 7
+out: 111
+out:     output: 111
+code: 0
+
+name: синтаксические, смысловые ошибки и ошибки ввода - сообщение, дальше следующий оператор
+args: tests/data/task4_errors.txt
+input: 5
+input: 102
+input: 1g
+input: x
+input: 99999999999999999999
+out: 1 (line 1): A := B + C
+out:     before: A = undefined, B = undefined, C = undefined
+out:     error: semantic error: variable B has no value
+out: 2 (line 2): read(A, 37)
+out:     error: semantic error: the base must be from 2 to 36
+out: 3 (line 3): read(A, 1)
+out:     error: semantic error: the base must be from 2 to 36
+out: 4 (line 4): write(Z, 2)
+out:     before: Z = undefined
+out:     error: semantic error: variable Z has no value
+out: 5 (line 5): A := B
+out:     error: syntax error: unknown operation (+ & -> <- ~ <> +> ? !)
+out: 6 (line 6): A := B $ C
+out:     error: syntax error: unknown operation (+ & -> <- ~ <> +> ? !)
+out: 7 (line 7): AB := C + D
+out:     error: syntax error: expected: A := B op C;  A := \B;  read(D, base);  or  write(Q, base);
+out: 8 (line 8): A1 := B + C
+out:     error: syntax error: expected: A := B op C;  A := \B;  read(D, base);  or  write(Q, base);
+out: 9 (line 9): read(A 10)
+out:     error: syntax error: expected: read(D, base);
+out: 10 (line 10): read(A, 10)
+out:     before: A = undefined
+out:     input: 5
+out:     after:  A = 5
+out: 11 (line 11): B := \A
+out:     before: B = undefined, A = 5
+out:     after:  B = 18446744073709551610
+out: 12 (line 11): write(B, 10)
+out:     before: B = 18446744073709551610
+out: 18446744073709551610
+out:     output: 18446744073709551610
+out: 13 (line 12): read(C, 2)
+out:     before: C = undefined
+out:     input: 102
+out:     error: runtime error: the input is not a number in this base or is too big
+out: 14 (line 13): read(D, 16)
+out:     before: D = undefined
+out:     input: 1g
+out:     error: runtime error: the input is not a number in this base or is too big
+out: 15 (line 14): read(E, 10)
+out:     before: E = undefined
+out:     input: x
+out:     error: runtime error: the input is not a number in this base or is too big
+out: 16 (line 15): C := A write(A, 10)
+out:     error: syntax error: unknown operation (+ & -> <- ~ <> +> ? !)
+code: 1
+
+name: границы 64 бит: 2^64-1 читается, 2^64 - ошибка; отрицание; ноль
+args: tests/data/task4_limits.txt
+input: FFFFFFFFFFFFFFFF
+input: 18446744073709551615
+input: 18446744073709551616
+input: 0
+out: 1 (line 1): read(A, 16)
+out:     before: A = undefined
+out:     input: FFFFFFFFFFFFFFFF
+out:     after:  A = 18446744073709551615
+out: 2 (line 1): write(A, 2)
+out:     before: A = 18446744073709551615
+out: 1111111111111111111111111111111111111111111111111111111111111111
+out:     output: 1111111111111111111111111111111111111111111111111111111111111111
+out: 3 (line 1): write(A, 36)
+out:     before: A = 18446744073709551615
+out: 3W5E11264SGSF
+out:     output: 3W5E11264SGSF
+out: 4 (line 2): read(B, 10)
+out:     before: B = undefined
+out:     input: 18446744073709551615
+out:     after:  B = 18446744073709551615
+out: 5 (line 2): write(B, 16)
+out:     before: B = 18446744073709551615
+out: FFFFFFFFFFFFFFFF
+out:     output: FFFFFFFFFFFFFFFF
+out: 6 (line 3): read(C, 10)
+out:     before: C = undefined
+out:     input: 18446744073709551616
+out:     error: runtime error: the input is not a number in this base or is too big
+out: 7 (line 4): Z := \A
+out:     before: Z = undefined, A = 18446744073709551615
+out:     after:  Z = 0
+out: 8 (line 4): write(Z, 10)
+out:     before: Z = 0
+out: 0
+out:     output: 0
+out: 9 (line 5): read(D, 2)
+out:     before: D = undefined
+out:     input: 0
+out:     after:  D = 0
+out: 10 (line 5): write(D, 2)
+out:     before: D = 0
+out: 0
+out:     output: 0
+code: 1
+
+name: пустой файл
+args: tests/data/task4_empty.txt
+code: 0
+
+name: ошибка: { без }
+args: tests/data/task4_bad_comment_open.txt
+input: 1
+err: Error: wrong brackets of a comment in line 2
+code: 1
+
+name: ошибка: } без {
+args: tests/data/task4_bad_comment_close.txt
+input: 1
+err: Error: wrong brackets of a comment in line 2
+code: 1
+
+name: демонстрация всех операций (файл для показа на защите) - трассировка в файл (/trace перед файлом программы)
+args: /trace tests/data/res4_demo.txt tests/data/task4_demo.txt
+input: 1100
+input: 1010
+input: zz
+out: 1110
+out: 1000
+out: FFFFFFFFFFFFFFFB
+out: FFFFFFFFFFFFFFFD
+out: FFFFFFFFFFFFFFF9
+out: 110
+out: 100
+out: FFFFFFFFFFFFFFF7
+out: FFFFFFFFFFFFFFF1
+out: FFFFFFFFFFFFFFF3
+out: 1295
+out: ZZ
+code: 0
+file: tests/data/res4_demo.txt
+fout: 1 (line 2): read(A, 2)
+fout:     before: A = undefined
+fout:     input: 1100
+fout:     after:  A = 12
+fout: 2 (line 2): read(B, 2)
+fout:     before: B = undefined
+fout:     input: 1010
+fout:     after:  B = 10
+fout: 3 (line 3): C := A + B
+fout:     before: C = undefined, A = 12, B = 10
+fout:     after:  C = 14
+fout: 4 (line 3): write(C, 2)
+fout:     before: C = 14
+fout:     output: 1110
+fout: 5 (line 4): C := A & B
+fout:     before: C = 14, A = 12, B = 10
+fout:     after:  C = 8
+fout: 6 (line 4): write(C, 2)
+fout:     before: C = 8
+fout:     output: 1000
+fout: 7 (line 5): C := A -> B
+fout:     before: C = 8, A = 12, B = 10
+fout:     after:  C = 18446744073709551611
+fout: 8 (line 5): write(C, 16)
+fout:     before: C = 18446744073709551611
+fout:     output: FFFFFFFFFFFFFFFB
+fout: 9 (line 6): C := A <- B
+fout:     before: C = 18446744073709551611, A = 12, B = 10
+fout:     after:  C = 18446744073709551613
+fout: 10 (line 6): write(C, 16)
+fout:     before: C = 18446744073709551613
+fout:     output: FFFFFFFFFFFFFFFD
+fout: 11 (line 7): C := A ~ B
+fout:     before: C = 18446744073709551613, A = 12, B = 10
+fout:     after:  C = 18446744073709551609
+fout: 12 (line 7): write(C, 16)
+fout:     before: C = 18446744073709551609
+fout:     output: FFFFFFFFFFFFFFF9
+fout: 13 (line 8): C := A <> B
+fout:     before: C = 18446744073709551609, A = 12, B = 10
+fout:     after:  C = 6
+fout: 14 (line 8): write(C, 2)
+fout:     before: C = 6
+fout:     output: 110
+fout: 15 (line 9): C := A +> B
+fout:     before: C = 6, A = 12, B = 10
+fout:     after:  C = 4
+fout: 16 (line 9): write(C, 2)
+fout:     before: C = 4
+fout:     output: 100
+fout: 17 (line 10): C := A ? B
+fout:     before: C = 4, A = 12, B = 10
+fout:     after:  C = 18446744073709551607
+fout: 18 (line 10): write(C, 16)
+fout:     before: C = 18446744073709551607
+fout:     output: FFFFFFFFFFFFFFF7
+fout: 19 (line 11): C := A ! B
+fout:     before: C = 18446744073709551607, A = 12, B = 10
+fout:     after:  C = 18446744073709551601
+fout: 20 (line 11): write(C, 16)
+fout:     before: C = 18446744073709551601
+fout:     output: FFFFFFFFFFFFFFF1
+fout: 21 (line 12): D := \A
+fout:     before: D = undefined, A = 12
+fout:     after:  D = 18446744073709551603
+fout: 22 (line 12): write(D, 16)
+fout:     before: D = 18446744073709551603
+fout:     output: FFFFFFFFFFFFFFF3
+fout: 23 (line 13): read(E, 36)
+fout:     before: E = undefined
+fout:     input: zz
+fout:     after:  E = 1295
+fout: 24 (line 13): write(E, 10)
+fout:     before: E = 1295
+fout:     output: 1295
+fout: 25 (line 13): write(E, 36)
+fout:     before: E = 1295
+fout:     output: ZZ
+
+name: синтаксические, смысловые ошибки и ошибки ввода - сообщение, дальше следующий оператор - трассировка в файл (/trace перед файлом программы)
+args: /trace tests/data/res4_errors.txt tests/data/task4_errors.txt
+input: 5
+input: 102
+input: 1g
+input: x
+input: 99999999999999999999
+out: 18446744073709551610
+err: Error in statement 1 (line 1): semantic error: variable B has no value
+err: Error in statement 2 (line 2): semantic error: the base must be from 2 to 36
+err: Error in statement 3 (line 3): semantic error: the base must be from 2 to 36
+err: Error in statement 4 (line 4): semantic error: variable Z has no value
+err: Error in statement 5 (line 5): syntax error: unknown operation (+ & -> <- ~ <> +> ? !)
+err: Error in statement 6 (line 6): syntax error: unknown operation (+ & -> <- ~ <> +> ? !)
+err: Error in statement 7 (line 7): syntax error: expected: A := B op C;  A := \B;  read(D, base);  or  write(Q, base);
+err: Error in statement 8 (line 8): syntax error: expected: A := B op C;  A := \B;  read(D, base);  or  write(Q, base);
+err: Error in statement 9 (line 9): syntax error: expected: read(D, base);
+err: Error in statement 13 (line 12): runtime error: the input is not a number in this base or is too big
+err: Error in statement 14 (line 13): runtime error: the input is not a number in this base or is too big
+err: Error in statement 15 (line 14): runtime error: the input is not a number in this base or is too big
+err: Error in statement 16 (line 15): syntax error: unknown operation (+ & -> <- ~ <> +> ? !)
+code: 1
+file: tests/data/res4_errors.txt
+fout: 1 (line 1): A := B + C
+fout:     before: A = undefined, B = undefined, C = undefined
+fout:     error: semantic error: variable B has no value
+fout: 2 (line 2): read(A, 37)
+fout:     error: semantic error: the base must be from 2 to 36
+fout: 3 (line 3): read(A, 1)
+fout:     error: semantic error: the base must be from 2 to 36
+fout: 4 (line 4): write(Z, 2)
+fout:     before: Z = undefined
+fout:     error: semantic error: variable Z has no value
+fout: 5 (line 5): A := B
+fout:     error: syntax error: unknown operation (+ & -> <- ~ <> +> ? !)
+fout: 6 (line 6): A := B $ C
+fout:     error: syntax error: unknown operation (+ & -> <- ~ <> +> ? !)
+fout: 7 (line 7): AB := C + D
+fout:     error: syntax error: expected: A := B op C;  A := \B;  read(D, base);  or  write(Q, base);
+fout: 8 (line 8): A1 := B + C
+fout:     error: syntax error: expected: A := B op C;  A := \B;  read(D, base);  or  write(Q, base);
+fout: 9 (line 9): read(A 10)
+fout:     error: syntax error: expected: read(D, base);
+fout: 10 (line 10): read(A, 10)
+fout:     before: A = undefined
+fout:     input: 5
+fout:     after:  A = 5
+fout: 11 (line 11): B := \A
+fout:     before: B = undefined, A = 5
+fout:     after:  B = 18446744073709551610
+fout: 12 (line 11): write(B, 10)
+fout:     before: B = 18446744073709551610
+fout:     output: 18446744073709551610
+fout: 13 (line 12): read(C, 2)
+fout:     before: C = undefined
+fout:     input: 102
+fout:     error: runtime error: the input is not a number in this base or is too big
+fout: 14 (line 13): read(D, 16)
+fout:     before: D = undefined
+fout:     input: 1g
+fout:     error: runtime error: the input is not a number in this base or is too big
+fout: 15 (line 14): read(E, 10)
+fout:     before: E = undefined
+fout:     input: x
+fout:     error: runtime error: the input is not a number in this base or is too big
+fout: 16 (line 15): C := A write(A, 10)
+fout:     error: syntax error: unknown operation (+ & -> <- ~ <> +> ? !)
+
+name: нет аргументов
+err: Usage: lab4_task4 <statements file> [/trace <trace file>]
+code: 1
+
+name: /trace без файла
+args: tests/data/task4_demo.txt /trace
+err: Usage: lab4_task4 <statements file> [/trace <trace file>]
+code: 1
+
+name: два файла программы
+args: tests/data/task4_demo.txt tests/data/task4_empty.txt
+err: Usage: lab4_task4 <statements file> [/trace <trace file>]
+code: 1
+
+name: трассировка в файл программы (через ./) - ошибка
+args: tests/data/task4_demo.txt /trace ./tests/data/task4_demo.txt
+err: Error: the trace file must not be the statements file
+code: 1
+
+name: файла нет
+args: tests/data/task4_none.txt
+err: Error: can not read file 'tests/data/task4_none.txt'
+code: 1

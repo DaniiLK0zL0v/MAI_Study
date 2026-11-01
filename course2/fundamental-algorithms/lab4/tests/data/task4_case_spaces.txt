@@ -1,0 +1,8 @@
+READ ( a , 10 ) ;Read(b,16);
+  c
+:=
+a
++
+b
+;WRITE(C, 8);x:=\c;Write(X,2);
+y := x -> a ; write(y , 10);
