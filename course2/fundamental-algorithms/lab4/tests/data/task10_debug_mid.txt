@@ -1,0 +1,8 @@
+x = 1;
+y = add(x, # BREAKPOINT
+ x);
+output(y);
+#BREAKPOINT
+#  BREAKPOINT  
+# breakpoint - не точка останова (регистр)
+output(x);

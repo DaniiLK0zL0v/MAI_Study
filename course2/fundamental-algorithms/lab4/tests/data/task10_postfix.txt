@@ -1,0 +1,8 @@
+()op
+right=
+ADD plus
+mult times
+NOT inv
+= is
+output show
+input read

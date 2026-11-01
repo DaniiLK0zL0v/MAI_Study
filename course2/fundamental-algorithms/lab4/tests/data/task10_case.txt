@@ -1,0 +1,2 @@
+X = 1; x = 2; ADD_1 = Add(X, x);
+OUTPUT(ADD_1); output(MULT(x, 0Ff)); output(X);

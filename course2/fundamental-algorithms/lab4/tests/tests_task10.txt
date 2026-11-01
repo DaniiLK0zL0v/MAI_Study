@@ -1,0 +1,482 @@
+# Тесты задания 10 (интерпретатор). Ожидаемый вывод - эталон docs/src/эталоны/t10.py.
+# Порядок важен: тест без файла настроек берёт настройки предыдущего теста (они запоминаются).
+
+program: lab4_task10
+
+name: пример из условия (base_assign 16, output называется print)
+args: tests/data/task10_print.txt tests/data/task10_example.txt --base_assign 16
+out: 400
+code: 0
+
+name: файл настроек из условия: right=, (op), синонимы, комментарии # и [ ]; вывод в двоичной системе
+args: tests/data/task10_example_settings.txt tests/data/task10_example_right.txt --base_assign 16 --base_output 2
+out: 110010000
+out: 101101111
+code: 0
+
+name: без файла настроек - запомненные настройки предыдущего запуска
+args: tests/data/task10_example_right.txt --base_output 16 --base_assign 16
+out: 190
+out: 16F
+code: 0
+
+name: все команды; арифметика по модулю 2^32; pow - быстрое возведение в степень
+args: tests/data/task10_default.txt tests/data/task10_ops.txt
+out: 107
+out: 93
+out: 4294967203
+out: 700
+out: 14
+out: 2
+out: 343
+out: 0
+out: 577888395
+out: 1
+out: 99
+out: 4
+out: 103
+out: 4294967195
+out: 4294967295
+out: 0
+out: 1
+out: 100
+code: 0
+
+name: регистр: команды и цифры - без учёта регистра, имена переменных - с учётом
+args: tests/data/task10_default.txt tests/data/task10_case.txt --base_assign 16 --base_output 36
+out: 3
+out: E6
+out: 1
+code: 0
+
+name: ()op и right=: (a, b)plus is s, (x)read
+args: tests/data/task10_postfix.txt tests/data/task10_postfix_prog.txt
+input: 9
+out: 17
+out: 4294967278
+out: 81
+out: 3
+code: 0
+
+name: значки вместо названий, (op): цепочка слева направо, скобки для группировки
+args: tests/data/task10_signs.txt tests/data/task10_signs_prog.txt
+out: 2054
+out: 5
+out: 63481
+out: 65535
+out: 20
+code: 0
+
+name: ()op для унарных и (op) для бинарных; самый длинный значок (!= и !)
+args: tests/data/task10_mixed.txt tests/data/task10_mixed_prog.txt
+out: 8
+out: 9
+out: 247
+out: 11
+code: 0
+
+name: названия add и sub поменяны местами
+args: tests/data/task10_swap.txt tests/data/task10_swap_prog.txt
+out: 7
+out: 13
+code: 0
+
+name: комментарии: однострочные, вложенные многострочные, внутри выражения
+args: tests/data/task10_default.txt tests/data/task10_comments.txt
+out: 5
+out: 5
+out: 6
+code: 0
+
+name: input: основание base_input 16, output - base_output 8
+args: tests/data/task10_default.txt tests/data/task10_io.txt --base_input 16 --base_output 8
+input: ff
+input:  1A 
+out: 431
+out: 377
+code: 0
+
+name: input: не число в base_input
+args: tests/data/task10_default.txt tests/data/task10_io.txt --base_input 16
+input: 12
+input: 1G
+err: Error: line 2: input: '1G' is not a number in base_input
+code: 1
+
+name: input: не помещается в 32 бита
+args: tests/data/task10_default.txt tests/data/task10_io.txt --base_input 16
+input: 100000000
+input: 1
+err: Error: line 1: input: '100000000' does not fit in 32 bits
+code: 1
+
+name: input: ввод кончился
+args: tests/data/task10_default.txt tests/data/task10_io.txt --base_input 16
+input: 7
+err: Error: line 2: input: the standard input ended
+code: 1
+
+name: отладчик: значение и дамп памяти, все переменные, изменение, объявление (римские, цекендорфово), отмена, продолжение
+args: tests/data/task10_default.txt tests/data/task10_debug.txt --base_assign 16 --debug
+input: 1
+input: a
+input: 2
+input: 3
+input: b
+input: 0FF
+input: 4
+input: z
+input: 2
+input: XIV
+input: 4
+input: w
+input: 1
+input: 010011
+input: 5
+input: w
+input: 1
+input: w
+input: 6
+input: 2
+input: 6
+input: 7
+out: Breakpoint at line 3
+out: a = 1F4
+out: memory: 11110100 00000001 00000000 00000000
+out: a = 1F4
+out: b = FFFFFE0B
+out: b = FF
+out: memory: 11111111 00000000 00000000 00000000
+out: z = E
+out: memory: 00001110 00000000 00000000 00000000
+out: w = A
+out: memory: 00001010 00000000 00000000 00000000
+out: variable 'w' is undeclared
+out: Debugger error: variable 'w' is not known
+out: 755
+out: Breakpoint at line 5
+out: a = 1F4
+out: b = FF
+out: c = 2F3
+out: z = E
+out: 14
+out: Breakpoint at line 7
+code: 0
+
+name: отладчик: ошибки - сообщение, диалог продолжается; 7 - завершить работу
+args: -d tests/data/task10_default.txt tests/data/task10_debug.txt --base_assign 16
+input: 0
+input: 8
+input: 12
+input: 1
+input: q
+input: 1
+input: 9x
+input: 1
+input: add
+input: 3
+input: a
+input: xyz
+input: 3
+input: a
+input: 100000000
+input: 4
+input: a
+input: 4
+input: n
+input: 3
+input: 4
+input: n
+input: 2
+input: IIII
+input: 4
+input: n
+input: 2
+input: MMMM
+input: 4
+input: n
+input: 1
+input: 0111
+input: 4
+input: n
+input: 1
+input: 012
+input: 4
+input: n
+input: 1
+input: 0000000000000000000000000000000000000000000000000011
+input: 4
+input: n
+input: 1
+input: 01
+input: 1
+input: n
+input: 5
+input: nn
+input: 7
+out: Breakpoint at line 3
+out: Debugger error: choose a number from 1 to 7
+out: Debugger error: choose a number from 1 to 7
+out: Debugger error: choose a number from 1 to 7
+out: Debugger error: variable 'q' is not known
+out: Debugger error: '9x' is not a variable name
+out: Debugger error: 'add' is not a variable name
+out: Debugger error: 'xyz' is not a number in base 16
+out: Debugger error: '100000000' does not fit in 32 bits
+out: Debugger error: variable 'a' is already known
+out: Debugger error: choose 1 or 2
+out: Debugger error: 'IIII' is not a Roman number from I to MMMCMXCIX
+out: Debugger error: 'MMMM' is not a Roman number from I to MMMCMXCIX
+out: Debugger error: '0111' is not a Zeckendorf representation
+out: Debugger error: '012' is not a Zeckendorf representation
+out: Debugger error: '0000000000000000000000000000000000000000000000000011' does not fit in 32 bits
+out: n = 0
+out: memory: 00000000 00000000 00000000 00000000
+out: n = 0
+out: memory: 00000000 00000000 00000000 00000000
+out: Debugger error: variable 'nn' is not known
+code: 0
+
+name: отладчик: точка останова внутри инструкции, разные пробелы; без --debug комментарий не останавливает
+args: /debug tests/data/task10_default.txt tests/data/task10_debug_mid.txt
+input: 2
+input: 6
+input: 2
+input: 6
+input: 5
+input: x
+input: 6
+out: Breakpoint at line 2
+out: x = 1
+out: 2
+out: Breakpoint at line 5
+out: x = 1
+out: y = 2
+out: Breakpoint at line 6
+out: variable 'x' is undeclared
+err: Error: line 8: variable 'x' is not declared
+code: 1
+
+name: без --debug точек останова нет
+args: tests/data/task10_default.txt tests/data/task10_debug_mid.txt
+out: 2
+out: 1
+code: 0
+
+name: отладчик: ввод кончился - выполнение продолжается
+args: tests/data/task10_default.txt tests/data/task10_debug.txt --base_assign 16 --debug
+input: 2
+out: Breakpoint at line 3
+out: a = 1F4
+out: b = FFFFFE0B
+out: 4294967295
+out: Breakpoint at line 5
+err: Error: line 6: variable 'z' is not declared
+code: 1
+
+name: отладчик: отменённую переменную нельзя использовать
+args: tests/data/task10_default.txt tests/data/task10_debug.txt --base_assign 16 --debug
+input: 5
+input: a
+input: 6
+out: Breakpoint at line 3
+out: variable 'a' is undeclared
+err: Error: line 4: variable 'a' is not declared
+code: 1
+
+name: ошибка: необъявленная переменная - ошибка выполнения, остановка
+args: tests/data/task10_default.txt tests/data/task10_err_undeclared.txt
+out: 1
+err: Error: line 3: variable 'b' is not declared
+code: 1
+
+name: ошибка: деление на ноль
+args: tests/data/task10_default.txt tests/data/task10_err_div_zero.txt
+err: Error: line 2: division by zero
+code: 1
+
+name: ошибка: остаток от деления на ноль
+args: tests/data/task10_default.txt tests/data/task10_err_rem_zero.txt
+err: Error: line 2: division by zero
+code: 1
+
+name: ошибка: нет ';'
+args: tests/data/task10_default.txt tests/data/task10_err_no_semicolon.txt
+err: Error: line 2: unexpected 'output' (';' expected)
+code: 1
+
+name: ошибка: неизвестный значок
+args: tests/data/task10_default.txt tests/data/task10_err_unknown_sign.txt
+err: Error: line 1: unknown sign '+'
+code: 1
+
+name: ошибка: символ не ASCII
+args: tests/data/task10_default.txt tests/data/task10_err_unknown_symbol.txt
+err: Error: line 2: unknown symbol with code 208
+code: 1
+
+name: ошибка: цифра не из base_assign
+args: tests/data/task10_default.txt tests/data/task10_err_bad_constant.txt
+err: Error: line 2: wrong constant '1A' for base_assign
+code: 1
+
+name: ошибка: константа больше 32 бит
+args: tests/data/task10_default.txt tests/data/task10_err_big_constant.txt
+err: Error: line 2: constant '4294967296' does not fit in 32 bits
+code: 1
+
+name: ошибка: результат - не в переменную
+args: tests/data/task10_default.txt tests/data/task10_err_not_variable.txt
+err: Error: line 1: only a variable can get the result of '='
+code: 1
+
+name: ошибка: инструкция ничего не делает
+args: tests/data/task10_default.txt tests/data/task10_err_nothing.txt
+err: Error: line 2: the instruction does nothing (need an assignment, input or output)
+code: 1
+
+name: ошибка: output внутри выражения
+args: tests/data/task10_default.txt tests/data/task10_err_io_inside.txt
+err: Error: line 2: input and output can not be inside an expression
+code: 1
+
+name: ошибка: input не в переменную
+args: tests/data/task10_default.txt tests/data/task10_err_input_const.txt
+err: Error: line 1: input needs a variable
+code: 1
+
+name: ошибка: '=' внутри выражения
+args: tests/data/task10_default.txt tests/data/task10_err_assign_inside.txt
+err: Error: line 1: unexpected '=' (with these settings the command can not stand here)
+code: 1
+
+name: ошибка: запись ()op при настройках op()
+args: tests/data/task10_default.txt tests/data/task10_err_wrong_place.txt
+err: Error: line 1: unexpected ',' (')' expected)
+code: 1
+
+name: ошибка: '[' без ']'
+args: tests/data/task10_default.txt tests/data/task10_err_comment_open.txt
+out: 1
+err: Error: line 2: '[' without ']'
+code: 1
+
+name: ошибка: ']' без '['
+args: tests/data/task10_default.txt tests/data/task10_err_comment_close.txt
+err: Error: line 1: ']' without '['
+code: 1
+
+name: ошибка: программа кончилась посреди инструкции
+args: tests/data/task10_default.txt tests/data/task10_err_end.txt
+err: Error: line 2: unexpected end of the program (a variable, a constant or a command expected)
+code: 1
+
+name: ошибка: нет ','
+args: tests/data/task10_default.txt tests/data/task10_err_missing_comma.txt
+err: Error: line 1: unexpected '2' (',' expected)
+code: 1
+
+name: ошибка: нет '(' после команды
+args: tests/data/task10_default.txt tests/data/task10_err_missing_paren.txt
+err: Error: line 1: unexpected '1' ('(' after the command expected)
+code: 1
+
+name: ошибка: название команды - не имя переменной
+args: tests/data/task10_default.txt tests/data/task10_err_command_name.txt
+err: Error: line 1: unexpected '=' ('(' after the command expected)
+code: 1
+
+name: ошибка: слишком длинная инструкция
+args: tests/data/task10_default.txt tests/data/task10_err_long.txt
+err: Error: line 1: the instruction is too long (more than 2000 commands and operands)
+code: 1
+
+name: ошибка: слишком глубокая вложенность скобок
+args: tests/data/task10_default.txt tests/data/task10_err_deep.txt
+err: Error: line 1: the expression is nested too deeply
+code: 1
+
+name: файл настроек: неизвестное правило
+args: tests/data/task10_bad_rule.txt tests/data/task10_example.txt
+err: Error: settings 'tests/data/task10_bad_rule.txt' line 1: unknown rule (need left=, right=, op(), ()op or (op))
+code: 1
+
+name: файл настроек: неизвестная команда
+args: tests/data/task10_bad_command.txt tests/data/task10_example.txt
+err: Error: settings 'tests/data/task10_bad_command.txt' line 2: unknown command (need not, input, output, add, mult, sub, pow, div, rem, xor, and, or or =)
+code: 1
+
+name: файл настроек: синоним из букв и значков
+args: tests/data/task10_bad_synonym.txt tests/data/task10_example.txt
+err: Error: settings 'tests/data/task10_bad_synonym.txt' line 1: wrong synonym (need a name of letters, digits and '_' or a sign like <>)
+code: 1
+
+name: файл настроек: три слова в строке
+args: tests/data/task10_bad_words.txt tests/data/task10_example.txt
+err: Error: settings 'tests/data/task10_bad_words.txt' line 1: too many words (need a rule or '<command> <synonym>')
+code: 1
+
+name: файл настроек: одинаковые названия (без учёта регистра)
+args: tests/data/task10_bad_same.txt tests/data/task10_example.txt
+err: Error: settings 'tests/data/task10_bad_same.txt': commands 'add' and 'mult' have the same name 'sum'
+code: 1
+
+name: файл настроек: синоним совпал с названием другой команды
+args: tests/data/task10_bad_same2.txt tests/data/task10_example.txt
+err: Error: settings 'tests/data/task10_bad_same2.txt': commands 'add' and 'sub' have the same name 'sub'
+code: 1
+
+name: файл настроек: '[' без ']'
+args: tests/data/task10_bad_open.txt tests/data/task10_example.txt
+err: Error: settings 'tests/data/task10_bad_open.txt' line 2: '[' without ']'
+code: 1
+
+name: файл настроек: ']' без '['
+args: tests/data/task10_bad_close.txt tests/data/task10_example.txt
+err: Error: settings 'tests/data/task10_bad_close.txt' line 1: ']' without '['
+code: 1
+
+name: файла настроек нет
+args: tests/data/task10_none.txt tests/data/task10_example.txt
+err: Error: can not read file 'tests/data/task10_none.txt'
+code: 1
+
+name: файла программы нет
+args: tests/data/task10_default.txt tests/data/task10_none.txt
+err: Error: can not read file 'tests/data/task10_none.txt'
+code: 1
+
+name: неправильные аргументы: ''
+args: 
+err: Usage: lab4_task10 [<settings file>] <program file> [--base_assign N] [--base_input N] [--base_output N] [--debug | -d | /debug]
+code: 1
+
+name: неправильные аргументы: 'a b c'
+args: a b c
+err: Usage: lab4_task10 [<settings file>] <program file> [--base_assign N] [--base_input N] [--base_output N] [--debug | -d | /debug]
+code: 1
+
+name: неправильные аргументы: 'a --base_input'
+args: a --base_input
+err: Usage: lab4_task10 [<settings file>] <program file> [--base_assign N] [--base_input N] [--base_output N] [--debug | -d | /debug]
+code: 1
+
+name: неправильные аргументы: 'a --base_output 8 --base_output 8'
+args: a --base_output 8 --base_output 8
+err: Usage: lab4_task10 [<settings file>] <program file> [--base_assign N] [--base_input N] [--base_output N] [--debug | -d | /debug]
+code: 1
+
+name: неправильное основание: 'a --base_assign 1'
+args: a --base_assign 1
+err: Error: base_assign must be a number from 2 to 36
+code: 1
+
+name: неправильное основание: 'a --base_input 37'
+args: a --base_input 37
+err: Error: base_input must be a number from 2 to 36
+code: 1
+
+name: неправильное основание: 'a --base_output x'
+args: a --base_output x
+err: Error: base_output must be a number from 2 to 36
+code: 1

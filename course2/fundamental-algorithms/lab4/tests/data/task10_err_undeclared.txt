@@ -1,0 +1,4 @@
+a = 1;
+output(a);
+output(add(a, b));
+output(a);

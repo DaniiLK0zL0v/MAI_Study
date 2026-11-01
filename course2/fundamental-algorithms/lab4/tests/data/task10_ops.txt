@@ -1,0 +1,5 @@
+a = 100; b = 7;
+output(add(a, b)); output(sub(a, b)); output(sub(b, a)); output(mult(a, b));
+output(div(a, b)); output(rem(a, b)); output(pow(b, 3)); output(pow(2, 32)); output(pow(3, 1000000007));
+output(pow(0, 0)); output(xor(a, b)); output(and(a, b)); output(or(a, b)); output(not(a)); output(not(0));
+big = 4294967295; output(add(big, 1)); output(mult(big, big)); output(a);

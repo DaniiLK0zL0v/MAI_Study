@@ -1,0 +1,13 @@
+(op)
+add +
+sub -
+mult *
+div /
+rem %
+pow **
+xor ^
+and &
+or |
+= :=
+not ~
+# унарные остаются op(): ~(x)

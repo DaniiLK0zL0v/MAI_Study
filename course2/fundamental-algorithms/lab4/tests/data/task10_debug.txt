@@ -1,0 +1,8 @@
+a = 1F4;
+b = not(a);
+# BREAKPOINT
+c = add(a, b);
+output(c);   # BREAKPOINT
+output(z);
+# BREAKPOINT
+output(w);

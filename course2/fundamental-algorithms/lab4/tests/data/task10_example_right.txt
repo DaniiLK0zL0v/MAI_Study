@@ -1,0 +1,6 @@
+[ та же программа для файла настроек из условия ]
+1F4 -> var_1;
+var_1 mult 4 -> var_2;
+(var_2 / 5) sum (var_1 % 2) -> Var3;
+print(Var3);
+Var3 >< 0FF -> x; print(x);
