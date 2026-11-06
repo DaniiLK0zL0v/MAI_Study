@@ -93,17 +93,85 @@ public class Main {
 
         // ===== 6. Проверка неправильных значений =====
         printSection("6. Wrong values (exceptions)");
-        // каждая попытка должна закончиться исключением IllegalArgumentException
-        expectError("card number with 15 digits",
-                () -> new BankCard("Test", "Bank", "RUB", "123456789012345", "01/30", 0));
-        expectError("expiry date 13/30", () -> card.setExpiryDate("13/30"));
-        expectError("currency \"RUBLE\"", () -> card.setCurrency("RUBLE"));
-        expectError("empty holder name", () -> new FinancialInstrument("  ", "Bank", "RUB"));
-        expectError("negative balance", () -> card.setBalance(-1));
-        expectError("pay -100.00", () -> card.pay(-100_00));
-        expectError("credit limit 0", () -> credit.setCreditLimit(0));
-        expectError("interest rate 150", () -> credit.setInterestRate(150));
-        expectError("interest for 0 months", () -> credit.calculateInterest(0));
+        // Каждая попытка ниже должна закончиться исключением IllegalArgumentException.
+        // Как работает try/catch:
+        //   - в блоке try выполняется опасный вызов;
+        //   - если метод бросил исключение, остаток try пропускается и сразу выполняется catch;
+        //   - если исключения не было, выполняется строка после вызова ("no error (wrong!)"),
+        //     а catch пропускается. Так мы видим, что проверка в классе не сработала.
+        // e.getMessage() - текст, который передали в new IllegalArgumentException("...").
+
+        // номер карты из 15 цифр вместо 16 - ошибку бросает конструктор BankCard
+        try {
+            new BankCard("Test", "Bank", "RUB", "123456789012345", "01/30", 0);
+            System.out.println("card number with 15 digits: no error (wrong!)");
+        } catch (IllegalArgumentException e) {
+            System.out.println("card number with 15 digits: error: " + e.getMessage());
+        }
+
+        // месяца 13 не бывает
+        try {
+            card.setExpiryDate("13/30");
+            System.out.println("expiry date 13/30: no error (wrong!)");
+        } catch (IllegalArgumentException e) {
+            System.out.println("expiry date 13/30: error: " + e.getMessage());
+        }
+
+        // код валюты - ровно 3 латинские буквы
+        try {
+            card.setCurrency("RUBLE");
+            System.out.println("currency \"RUBLE\": no error (wrong!)");
+        } catch (IllegalArgumentException e) {
+            System.out.println("currency \"RUBLE\": error: " + e.getMessage());
+        }
+
+        // имя из одних пробелов считается пустым
+        try {
+            new FinancialInstrument("  ", "Bank", "RUB");
+            System.out.println("empty holder name: no error (wrong!)");
+        } catch (IllegalArgumentException e) {
+            System.out.println("empty holder name: error: " + e.getMessage());
+        }
+
+        // баланс дебетовой карты не может быть меньше нуля
+        try {
+            card.setBalance(-1);
+            System.out.println("negative balance: no error (wrong!)");
+        } catch (IllegalArgumentException e) {
+            System.out.println("negative balance: error: " + e.getMessage());
+        }
+
+        // сумма оплаты должна быть больше нуля
+        try {
+            card.pay(-100_00);
+            System.out.println("pay -100.00: no error (wrong!)");
+        } catch (IllegalArgumentException e) {
+            System.out.println("pay -100.00: error: " + e.getMessage());
+        }
+
+        // кредитный лимит должен быть больше нуля
+        try {
+            credit.setCreditLimit(0);
+            System.out.println("credit limit 0: no error (wrong!)");
+        } catch (IllegalArgumentException e) {
+            System.out.println("credit limit 0: error: " + e.getMessage());
+        }
+
+        // процентная ставка - от 0 до 100
+        try {
+            credit.setInterestRate(150);
+            System.out.println("interest rate 150: no error (wrong!)");
+        } catch (IllegalArgumentException e) {
+            System.out.println("interest rate 150: error: " + e.getMessage());
+        }
+
+        // проценты считаются хотя бы за 1 месяц
+        try {
+            credit.calculateInterest(0);
+            System.out.println("interest for 0 months: no error (wrong!)");
+        } catch (IllegalArgumentException e) {
+            System.out.println("interest for 0 months: error: " + e.getMessage());
+        }
 
         printTitle("done");
     }
@@ -114,26 +182,14 @@ public class Main {
      */
     private static void report(String action, OperationResult result, BankCard card) {
         String line = action + " -> " + result + " | balance " + Money.format(card.getBalance());
-        // instanceof - проверка "этот объект - CreditCard?"; в Java 16+ сразу дает переменную нужного типа
-        if (card instanceof CreditCard creditCard) {
+        // instanceof - проверка "этот объект на самом деле CreditCard?"
+        if (card instanceof CreditCard) {
+            // приведение типа: у переменной типа BankCard нет метода getDebt(),
+            // поэтому смотрим на тот же объект через переменную типа CreditCard
+            CreditCard creditCard = (CreditCard) card;
             line += ", debt " + Money.format(creditCard.getDebt());
         }
         System.out.println(line);
-    }
-
-    /**
-     * Выполнить action и убедиться, что он бросил IllegalArgumentException.
-     * Runnable - стандартный интерфейс "действие без параметров"; лямбда () -> ... - его реализация.
-     */
-    private static void expectError(String description, Runnable action) {
-        try {
-            action.run();
-            // сюда попадаем, только если исключения не было - это ошибка в проверках классов
-            System.out.println(description + ": no error (wrong!)");
-        } catch (IllegalArgumentException e) {
-            // ожидаемый случай: печатаем текст исключения
-            System.out.println(description + ": error: " + e.getMessage());
-        }
     }
 
     // заголовок всей программы
